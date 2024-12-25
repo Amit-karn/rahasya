@@ -64,7 +64,7 @@ const AddSecret = ({
   };
 
   const handleEncryptAndAddSecret = () => {
-    setEncryptedSecret(newSecret.secretValue+"ENC:hvfbhjjjjjjj561651≤6561561561561561156156166666666666666666666666jjjjjjjjjjjjjjjjjjjjjjjjjjjd");
+    setEncryptedSecret(newSecret.secretValue+"ENC:hvfbhjjjjjjj561651≤6561561561561561156156166666666666");
     setShowConfirmation(true);
   };
 
@@ -253,7 +253,7 @@ const AddSecret = ({
         </DialogActions>
       </Dialog>
 
-      <Dialog open={showConfirmation} onClose={handleClose}>
+      <Dialog open={showConfirmation} onClose={handleClose} maxWidth="lg">
         <DialogTitle>Confirm Secret Details</DialogTitle>
         <DialogContent>
         <Typography variant="body1">

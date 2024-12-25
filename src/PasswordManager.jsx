@@ -32,6 +32,7 @@ const PasswordManager = () => {
   const [message, setMessage] = useState("");
   const [openStatusbar, setOpenStatusbar] = useState(false);
   const [addNewSecret, setAddNewSecret] = useState(false);
+  const [isGenerateFile, setIsGenerateFile] = useState(false);
 
   const addToSecretsList = (key, secret) => {
     setFileContent((prevContent) => {
@@ -80,6 +81,7 @@ const PasswordManager = () => {
     setMessage("");
     setOpenStatusbar(false);
     setFile(null);
+    setIsGenerateFile(false);
     const selectedFile = event.target.files[0];
     if (selectedFile && validateFileTypeAndSize(selectedFile)) {
       // Read the file content to display in the preview
@@ -109,6 +111,13 @@ const PasswordManager = () => {
     }
   };
 
+  const handleFileChangeWhenNewFileIsGenerated = (event) => {
+    const userConfirmed = window.confirm("Loading a new file will erase all the current data. Do you want to proceed?");
+    if (userConfirmed) {
+        handleFileChange(event);
+    }
+  };
+
   const removeSecret = (key) => () => {
     setFileContent((prevContent) => {
       const newSecrets = { ...prevContent.secrets };
@@ -119,7 +128,7 @@ const PasswordManager = () => {
 
   const isEmptyObj = (obj) => {
     return Object.keys(obj).length === 0;
-  }
+  };
 
   return (
     <Container maxWidth fixed sx={{ marginLeft: 10, padding: 2 }}>
@@ -131,7 +140,12 @@ const PasswordManager = () => {
           marginTop={1}
           marginBottom={1}
         >
-          <Button variant="contained" color="primary" startIcon={<Home />} />
+          <Stack direction="row" spacing={2}>
+            <Button variant="contained" color="primary" startIcon={<Home />} />
+            {isGenerateFile && (
+              <FileUpload file={file} handleFileChange={handleFileChangeWhenNewFileIsGenerated} buttonVariant={"outlined"}/>
+            )}
+          </Stack>
           <Button variant="text" color="primary" startIcon={<Help />}>
             How it works?
           </Button>
@@ -155,7 +169,7 @@ const PasswordManager = () => {
           alignItems="flex-start"
           divider={!file && <Typography>- or -</Typography>}
         >
-          <FileUpload file={file} handleFileChange={handleFileChange} />
+          {!isGenerateFile && <FileUpload file={file} handleFileChange={handleFileChange} buttonVariant={ file ? "outlined": "contained"} />}
           {file ? (
             <>
               <Button
@@ -182,9 +196,14 @@ const PasswordManager = () => {
               startIcon={<AddCircleOutline />}
               component="span"
               size="small"
-              onClick={() => setAddNewSecret(true)}
+              onClick={() => {
+                setAddNewSecret(true);
+                setIsGenerateFile(true);
+                // check condition if while adding drst element i cancel and dont' add,
+                //  check when loading a file everything is removedfrom UI, a popup should come
+              }}
             >
-              Generate New File
+              {isGenerateFile ? "Add Secret": "Generate New File"}
             </Button>
           )}
         </Stack>

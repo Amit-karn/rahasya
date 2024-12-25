@@ -2,7 +2,7 @@ import PropTypes from "prop-types";
 import { Button, Input, Typography } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add"; // For the plus sign icon
 
-function FileUpload({ file, handleFileChange }) {
+function FileUpload({ file, handleFileChange, buttonVariant }) {
     return (
         <div>
             <Input
@@ -16,7 +16,7 @@ function FileUpload({ file, handleFileChange }) {
             {/* Button to trigger file upload */}
             <label htmlFor="file-upload-input">
                 <Button
-                    variant={file ? "outlined" : "contained"}
+                    variant={buttonVariant || "contained"}
                     color="primary"
                     startIcon={<AddIcon />}
                     component="span"
@@ -39,6 +39,7 @@ function FileUpload({ file, handleFileChange }) {
 FileUpload.propTypes = {
     file: PropTypes.object,
     handleFileChange: PropTypes.func.isRequired,
+    buttonVariant: PropTypes.oneOf(["outlined", "contained", "text"]).isRequired,
 };
 
 export default FileUpload;
