@@ -10,11 +10,11 @@ import {
   Checkbox,
   IconButton,
   InputAdornment,
-  Typography
+  Typography,
 } from "@mui/material";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 import PropTypes from "prop-types";
-import { maskMasterKey } from "../utils/DataUtils";
+import { maskMasterKey, maskSecret } from "../utils/DataUtils";
 
 const AddSecret = ({
   openPopup,
@@ -27,8 +27,6 @@ const AddSecret = ({
   const [newSecret, setNewSecret] = useState({
     keyName: "",
     secretValue: "",
-    masterKey: masterKey || "",
-    algorithm: algorithm || "",
     aad: "", // Additional authenticated data
   });
   const [keyError, setKeyError] = useState("");
@@ -37,8 +35,16 @@ const AddSecret = ({
   const [useAAD, setUseAAD] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [showSecret, setShowSecret] = useState(false);
-  const [encryptedSecret, setEncryptedSecret] = useState("");
   const [showConfirmationSecret, setShowConfirmationSecret] = useState(false);
+  const [encryptionResult, setEncryptionResult] = useState({
+    keyName: "",
+    secretValue: "",
+    algorithm: "",
+    masterKey: "",
+    aad: "", // Additional authenticated data
+    encryptedSecret: ""
+  });
+  const [loading, setLoading] = useState(false);
 
   const handlePopupChange = (e) => {
     const { name, value } = e.target;
@@ -65,7 +71,16 @@ const AddSecret = ({
   };
 
   const handleEncryptAndAddSecret = () => {
-    setEncryptedSecret(newSecret.secretValue+"ENC:hvfbhjjjjjjj561651≤6561561561561561156156166666666666");
+    setEncryptionResult(
+      {
+        keyName: newSecret.keyName+"ENC",
+        secretValue: newSecret.secretValue+"ENC",
+        algorithm: algorithm,
+        masterKey: masterKey,
+        aad: newSecret.aad+"ENC", // Additional authenticated data
+        encryptedSecret: `ENC[${newSecret.secretValue}:hvfbhjjjjjjj561651≤6561561561561561156156166666666666]`
+      }
+    );
     setShowConfirmation(true);
   };
 
@@ -75,8 +90,6 @@ const AddSecret = ({
     setNewSecret({
       keyName: "",
       secretValue: "",
-      masterKey: masterKey || "",
-      algorithm: algorithm || "",
       aad: "",
     });
     setShowConfirmation(false);
@@ -87,8 +100,6 @@ const AddSecret = ({
     setNewSecret({
       keyName: "",
       secretValue: "",
-      masterKey: masterKey || "",
-      algorithm: algorithm || "",
       aad: "",
     });
   };
@@ -112,11 +123,6 @@ const AddSecret = ({
       secretError === "" &&
       aadError === ""
     );
-  };
-
-  const maskSecret = (secret) => {
-    if (secret.length <= 2) return secret;
-    return `${"*".repeat(secret.length - 2)}${secret.slice(-2)}`;
   };
 
   const handleClickShowSecret = () => {
@@ -170,8 +176,7 @@ const AddSecret = ({
                     </IconButton>
                   </InputAdornment>
                 ),
-              },
-            }}
+            }}}
           />
           <TextField
             required
@@ -180,12 +185,11 @@ const AddSecret = ({
             label="Master Key"
             type="text"
             fullWidth
-            value={maskMasterKey(newSecret.masterKey)}
+            value={maskMasterKey(masterKey)}
             slotProps={{
               input: {
                 readOnly: true,
-              },
-            }}
+            }}}
           />
           <TextField
             margin="dense"
@@ -193,12 +197,11 @@ const AddSecret = ({
             label="Algorithm"
             type="text"
             fullWidth
-            value={newSecret.algorithm}
+            value={algorithm}
             slotProps={{
               input: {
                 readOnly: true,
-              },
-            }}
+            }}}
           />
           <FormControlLabel
             control={
@@ -252,14 +255,14 @@ const AddSecret = ({
       <Dialog open={showConfirmation} onClose={handleClose} maxWidth="lg">
         <DialogTitle>Confirm Secret Details</DialogTitle>
         <DialogContent>
-        <Typography variant="body1">
-            <strong>Key Name:</strong> {newSecret.keyName}
+          <Typography variant="body1">
+            <strong>Key Name:</strong> {encryptionResult.keyName}
           </Typography>
           <Typography variant="body1">
             <strong>Secret: </strong>
             {showConfirmationSecret
-              ? newSecret.secretValue
-              : maskSecret(newSecret.secretValue)}
+              ? encryptionResult.secretValue
+              : maskSecret(encryptionResult.secretValue)}
             <IconButton
               aria-label="toggle confirmation secret visibility"
               onClick={handleClickShowConfirmationSecret}
@@ -268,18 +271,22 @@ const AddSecret = ({
               {showConfirmationSecret ? <Visibility /> : <VisibilityOff />}
             </IconButton>
           </Typography>
-          <Typography variant="body1" >
-            <strong>Encrypted Secret:</strong> {encryptedSecret}
+          <Typography variant="body1">
+            <strong>Encrypted Secret:</strong> {encryptionResult.encryptedSecret}
           </Typography>
-          <Typography variant="body1" sx={{
-                  wordWrap: "break-word"}}>
-            <strong>Master Key:</strong> {maskMasterKey(newSecret.masterKey)}
+          <Typography
+            variant="body1"
+            sx={{
+              wordWrap: "break-word",
+            }}
+          >
+            <strong>Master Key:</strong> {maskMasterKey(encryptionResult.masterKey)}
           </Typography>
-          <Typography variant="body1" >
-            <strong>Algorithm:</strong> {newSecret.algorithm}
+          <Typography variant="body1">
+            <strong>Algorithm:</strong> {encryptionResult.algorithm}
           </Typography>
-          <Typography variant="body1" >
-            <strong>AAD:</strong> {useAAD ? newSecret.aad : "No AAD used"}
+          <Typography variant="body1">
+            <strong>AAD:</strong> {useAAD ? encryptionResult.aad : "No AAD used"}
           </Typography>
         </DialogContent>
         <DialogActions>

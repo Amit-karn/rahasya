@@ -11,25 +11,41 @@ import {
   InputAdornment,
   IconButton,
 } from "@mui/material";
-import {
-  Visibility,
-  VisibilityOff,
-} from "@mui/icons-material";
+import { Visibility, VisibilityOff } from "@mui/icons-material";
 import { maskMasterKey } from "../utils/DataUtils";
+import generateEncryptionKey from "../utils/EncryptionUtils";
 
-const AddMasterKey = ({ masterKey, setMasterKey, openMasterKeyDialog, setOpenMasterKeyDialog}) => {
+const AddMasterKey = ({
+  masterKey,
+  setMasterKey,
+  openMasterKeyDialog,
+  setOpenMasterKeyDialog,
+  setStatusBar,
+}) => {
   const [tempMasterKey, setTempMasterKey] = useState("");
   const [isGeneratingKey, setIsGeneratingKey] = useState(false);
-  const [showSecret, setShowSecret] = useState(false);
   const [showMasterKey, setShowMasterKey] = useState(false);
+  const [showEncryptionKey, setShowEncryptionKey] = useState(false);
+  const [error, setError] = useState("");
+
+  const resetState = () => {
+    setIsGeneratingKey(false);
+    setOpenMasterKeyDialog(false);
+    setTempMasterKey("");
+    setShowMasterKey(false);
+    setShowEncryptionKey(false);
+    setError("");
+  }
 
   const generateMasterKey = async () => {
+    if (tempMasterKey.length < 16 || tempMasterKey.length > 32) {
+      setError("Master key length must be between 16 and 32 characters.");
+      return;
+    }
     setIsGeneratingKey(true);
     try {
-      // Simulate key generation - replace with actual key generation logic
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      let generatedKey = `generated_${Date.now()}_${tempMasterKey}`;
-      generatedKey = generatedKey + "E".repeat(256);
+      // key generation
+      let generatedKey = await generateEncryptionKey(tempMasterKey);
       setMasterKey(generatedKey);
       setOpenMasterKeyDialog(false);
       setTempMasterKey("");
@@ -37,9 +53,8 @@ const AddMasterKey = ({ masterKey, setMasterKey, openMasterKeyDialog, setOpenMas
       setTempMasterKey("");
       setMasterKey("");
     } finally {
-      setIsGeneratingKey(false);
-      setOpenMasterKeyDialog(false);
-      setTempMasterKey("");
+      resetState();
+      setStatusBar(true, "Error in <b>key generation</b>. Please refresh and try again.", true);
     }
   };
 
@@ -47,15 +62,16 @@ const AddMasterKey = ({ masterKey, setMasterKey, openMasterKeyDialog, setOpenMas
     if (reason !== "backdropClick" && reason !== "escapeKeyDown") {
       setOpenMasterKeyDialog(false);
       setTempMasterKey("");
+      setError("");
     }
   };
 
   const handleClickShowSecret = () => {
-    setShowSecret(!showSecret);
+    setShowMasterKey(!showMasterKey);
   };
 
   const handleClickShowMasterKey = () => {
-    setShowMasterKey(!showMasterKey);
+    setShowEncryptionKey(!showEncryptionKey);
   };
 
   return (
@@ -66,7 +82,7 @@ const AddMasterKey = ({ masterKey, setMasterKey, openMasterKeyDialog, setOpenMas
       fullWidth
     >
       <DialogTitle>
-        {masterKey ? "Update Master Key" : "Set Master Key"}
+        {masterKey ? "Update Master Key" : "Add Master Key"}
       </DialogTitle>
       <DialogContent>
         {masterKey && (
@@ -81,13 +97,13 @@ const AddMasterKey = ({ masterKey, setMasterKey, openMasterKeyDialog, setOpenMas
               }}
             >
               <strong>Master Key: </strong>
-              {showMasterKey ? masterKey : maskMasterKey(masterKey)}
+              {showEncryptionKey ? masterKey : maskMasterKey(masterKey)}
               <IconButton
                 aria-label="toggle confirmation secret visibility"
                 onClick={handleClickShowMasterKey}
                 edge="end"
               >
-                {showMasterKey ? <Visibility /> : <VisibilityOff />}
+                {showEncryptionKey ? <Visibility /> : <VisibilityOff />}
               </IconButton>
             </Typography>
           </>
@@ -97,33 +113,47 @@ const AddMasterKey = ({ masterKey, setMasterKey, openMasterKeyDialog, setOpenMas
           autoFocus
           margin="dense"
           label={masterKey ? "Enter New Master Key" : "Enter Master Key"}
-          type={showSecret ? "text" : "password"}
+          type={showMasterKey ? "text" : "password"}
           fullWidth
           variant="outlined"
           value={tempMasterKey}
-          onChange={(e) => setTempMasterKey(e.target.value)}
+          onChange={(e) => {
+            setTempMasterKey(e.target.value);
+            if (e.target.value.length >= 16 && e.target.value.length <= 32) {
+              setError("");
+            } else {
+              setError(
+                "Master key length must be between 16 and 32 characters."
+              );
+            }
+          }}
+          error={!!error}
+          helperText={error}
           slotProps={{
-            input: {
-              endAdornment: (
-                <InputAdornment position="end">
-                  <IconButton
-                    aria-label="toggle secret visibility"
-                    onClick={handleClickShowSecret}
-                    edge="end"
-                  >
-                    {showSecret ? <Visibility /> : <VisibilityOff />}
-                  </IconButton>
-                </InputAdornment>
-              ),
-            },
+            endAdornment: (
+              <InputAdornment position="end">
+                <IconButton
+                  aria-label="toggle secret visibility"
+                  onClick={handleClickShowSecret}
+                  edge="end"
+                >
+                  {showMasterKey ? <Visibility /> : <VisibilityOff />}
+                </IconButton>
+              </InputAdornment>
+            ),
           }}
         />
       </DialogContent>
       <DialogActions>
-        <Button onClick={handleMasterKeyDialogClose}>Cancel</Button>
+        <Button
+          onClick={handleMasterKeyDialogClose}
+          disabled={!!isGeneratingKey}
+        >
+          Cancel
+        </Button>
         <Button
           onClick={generateMasterKey}
-          disabled={!tempMasterKey || isGeneratingKey}
+          disabled={!tempMasterKey || isGeneratingKey || error}
           variant="contained"
         >
           {isGeneratingKey ? "Generating..." : "Confirm"}
@@ -134,10 +164,11 @@ const AddMasterKey = ({ masterKey, setMasterKey, openMasterKeyDialog, setOpenMas
 };
 
 AddMasterKey.propTypes = {
-    masterKey: PropTypes.string.isRequired,
-    setMasterKey: PropTypes.func.isRequired,
-    openMasterKeyDialog: PropTypes.bool.isRequired,
-    setOpenMasterKeyDialog: PropTypes.func.isRequired
+  masterKey: PropTypes.string.isRequired,
+  setMasterKey: PropTypes.func.isRequired,
+  openMasterKeyDialog: PropTypes.bool.isRequired,
+  setOpenMasterKeyDialog: PropTypes.func.isRequired,
+  setStatusBar: PropTypes.func.isRequired,
 };
 
 export default AddMasterKey;

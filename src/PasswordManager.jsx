@@ -1,4 +1,4 @@
-import { useLayoutEffect, useState } from "react";
+import { useLayoutEffect, useState, useEffect } from "react";
 import {
   Container,
   Box,
@@ -17,13 +17,14 @@ import {
 } from "@mui/icons-material";
 import FileUpload from "./components/FileUpload";
 import StatusBar from "./components/StatusBar";
-import { readFileLineByLineSync } from "./utils/EncryptionFileUtils";
+import { readFileLineByLineSync } from "./utils/FileUtils";
 import AddSecret from "./components/AddSecret";
 import passwordManagerConfig from "./config/PasswordManagerConfig";
 import { bytesToMB, maskMasterKey } from "./utils/DataUtils";
 import TopHeader from "./components/TopHeader";
 import SecretItem from "./components/SecretItem";
 import AddMasterKey from "./components/AddMasterKey";
+import MessageDialog from "./components/MessageDialog";
 
 const PasswordManager = () => {
   // State variables
@@ -39,6 +40,10 @@ const PasswordManager = () => {
   const [addNewSecret, setAddNewSecret] = useState(false);
   const [masterKey, setMasterKey] = useState("");
   const [openMasterKeyDialog, setOpenMasterKeyDialog] = useState(false);
+
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [dialogTitle, setDialogTitle] = useState("");
+  const [dialogMessage, setDialogMessage] = useState("");
 
   // Effects
   useLayoutEffect(() => {
@@ -57,6 +62,12 @@ const PasswordManager = () => {
       }
     }
   }, [fileContentJson.secrets, isGenerateFile, addNewSecret]);
+
+  useEffect(() => {
+    if (!masterKey) {
+      showDialog("Master Key Required", "Please add your master key to proceed.");
+    }
+  }, []);
 
   // Helper functions
   const resetState = () => {
@@ -84,7 +95,13 @@ const PasswordManager = () => {
   const unloadMasterKey = () => {
     resetState();
     setMasterKey("");
-    setStatusbar(false, "Master key unloaded", true);
+    setStatusbar(false, "Master key removed. Application state reset.", true);
+  };
+
+  const showDialog = (title, message) => {
+    setDialogTitle(title);
+    setDialogMessage(message);
+    setDialogOpen(true);
   };
 
   // Function to show master key not added status
@@ -299,7 +316,7 @@ const PasswordManager = () => {
             size="small"
             onClick={() => setOpenMasterKeyDialog(true)}
           >
-            {masterKey ? "Update Master Key" : "Set Master Key"}
+            {masterKey ? "Update Master Key" : "Add Master Key"}
           </Button>
           {masterKey && (
             <Stack direction="row" spacing={2} alignItems="center">
@@ -407,27 +424,31 @@ const PasswordManager = () => {
         }}
         openMasterKeyDialog={openMasterKeyDialog}
         setOpenMasterKeyDialog={setOpenMasterKeyDialog}
+        setStatusBar={setStatusbar}
       />
 
       {/* Status Bar and Add Secret Section */}
-      
-        <StatusBar
-          isError={isError}
-          message={message}
-          openStatusbar={openStatusbar}
-          setOpenStatusbar={setOpenStatusbar}
-          key={new Date().getMilliseconds()}
-        />
-      
 
+      <StatusBar
+        isError={isError}
+        message={message}
+        openStatusbar={openStatusbar}
+        setOpenStatusbar={setOpenStatusbar}
+      />
       <AddSecret
-          openPopup={addNewSecret}
-          setOpenPopup={setAddNewSecret}
-          algorithm={passwordManagerConfig.algorithm}
-          masterKey={masterKey}
-          addToSecretsList={addToFileContentJsonSecretsSection}
-          existingSecrets={Object.keys(fileContentJson.secrets)}
-        />
+        openPopup={addNewSecret}
+        setOpenPopup={setAddNewSecret}
+        algorithm={passwordManagerConfig.algorithm}
+        masterKey={masterKey}
+        addToSecretsList={addToFileContentJsonSecretsSection}
+        existingSecrets={Object.keys(fileContentJson.secrets)}
+      />
+      <MessageDialog
+        open={dialogOpen}
+        onClose={() => setDialogOpen(false)}
+        title={dialogTitle}
+        message={dialogMessage}
+      />
     </Container>
   );
 };
