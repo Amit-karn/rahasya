@@ -48,6 +48,31 @@ const AddSecret = ({
   });
   const [loading, setLoading] = useState(false);
 
+  const resetState = () => {
+    setNewSecret({
+      keyName: "",
+      secretValue: "",
+      aad: "",
+    });
+    setKeyError("");
+    setSecretError("");
+    setAadError("");
+    setUseAAD(false);
+    setShowConfirmation(false);
+    setShowSecret(false);
+    setShowConfirmationSecret(false);
+    setEncryptionResult({
+      keyName: "",
+      secretValue: "",
+      algorithm: "",
+      masterKey: "",
+      aad: "",
+      encryptedSecret: ""
+    });
+    setLoading(false);
+    setOpenPopup(false);
+  };
+
   const handlePopupChange = (e) => {
     const { name, value } = e.target;
     if (name === "keyName") {
@@ -72,7 +97,7 @@ const AddSecret = ({
     setNewSecret((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleEncryptAndAddSecret = () => {
+  const handleEncrypt = () => {
     setLoading(true);
     setTimeout(() => {
       setEncryptionResult({
@@ -90,22 +115,11 @@ const AddSecret = ({
 
   const handleConfirmEncryptAndAdd = () => {
     addToSecretsList(newSecret.keyName, newSecret.secretValue, newSecret.aad);
-    setOpenPopup(false);
-    setNewSecret({
-      keyName: "",
-      secretValue: "",
-      aad: "",
-    });
-    setShowConfirmation(false);
+    resetState();
   };
 
   const handleCancel = () => {
-    setOpenPopup(false);
-    setNewSecret({
-      keyName: "",
-      secretValue: "",
-      aad: "",
-    });
+    resetState();
   };
 
   const handleClose = (event, reason) => {
@@ -116,9 +130,9 @@ const AddSecret = ({
 
   const isFormValid = () => {
     const isSecretValid =
-      newSecret.secretValue.length >= 16 && newSecret.secretValue.length <= 32;
+      newSecret.secretValue.length >= passwordManagerConfig.secretMinLength && newSecret.secretValue.length <= passwordManagerConfig.secretMaxLength;
     const isAADValid =
-      !useAAD || (newSecret.aad.length >= 8 && newSecret.aad.length <= 16);
+      !useAAD || (newSecret.aad.length >= passwordManagerConfig.aadMinLength && newSecret.aad.length <= passwordManagerConfig.aadMaxLength);
     return (
       newSecret.keyName.trim() !== "" &&
       isSecretValid &&
@@ -246,7 +260,7 @@ const AddSecret = ({
             Cancel
           </Button>
           <Button
-            onClick={handleEncryptAndAddSecret}
+            onClick={handleEncrypt}
             color="primary"
             variant="contained"
             disabled={!isFormValid() || loading}
@@ -259,7 +273,7 @@ const AddSecret = ({
 
       <Dialog open={showConfirmation} onClose={handleClose} maxWidth="lg">
         <DialogTitle>Confirm Secret Details</DialogTitle>
-        <DialogContent>
+        <DialogContent sx={{display: "flex", flexDirection: "column", gap: 1}}>
           <Typography variant="body1">
             <strong>Key Name:</strong> {encryptionResult.keyName}
           </Typography>

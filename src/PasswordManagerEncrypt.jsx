@@ -12,10 +12,9 @@ import {
 import {
   AddCircleOutline,
   LibraryAddOutlined,
-  VpnKeyOutlined,
+  Lock,
   DeleteForeverOutlined,
   Close,
-  LockOpenOutlined,
 } from "@mui/icons-material";
 import FileUpload from "./components/FileUpload";
 import StatusBar from "./components/StatusBar";
@@ -27,10 +26,8 @@ import TopHeader from "./components/TopHeader";
 import SecretItem from "./components/SecretItem";
 import AddMasterKey from "./components/AddMasterKey";
 import MessageDialog from "./components/MessageDialog";
-import PreviewPanel from "./components/PreviewPanel";
-import DownloadFile from "./components/DownloadFile";
 
-const PasswordManager = () => {
+const PasswordManagerEncrypt = () => {
   // State variables
   const [isGenerateFile, setIsGenerateFile] = useState(false);
   const [file, setFile] = useState(null);
@@ -155,7 +152,7 @@ const PasswordManager = () => {
     const secretKeys = Object.keys(fileContentJson.secrets);
     const integrityKeys = Object.keys(fileContentJson.integrity);
 
-    return `This is an auto generated File. Please don't tamper with it.\n<<<<>>>>\n${secretKeys
+    return `This is an auto generated File. Please don"t tamper with it.\n<<<<>>>>\n${secretKeys
       .map((key) => `${key}: ${fileContentJson.secrets[key]}`)
       .join("\n")}\n<<<<<>>>>>\n${integrityKeys
       .map((key) => `${key}: ${fileContentJson.integrity[key]}`)
@@ -250,20 +247,6 @@ const PasswordManager = () => {
     return Object.keys(obj).length === 0;
   };
 
-  const handleDownload = () => {
-    const date = new Date().toISOString().split("T")[0];
-    const fileName = `rahasya_encrypted_${date}.txt`;
-    const fileContent = generateFileContentForPreview(fileContentJson);
-    const blob = new Blob([fileContent], { type: "text/plain" });
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.download = fileName;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(link);
-  };
-
   return (
     <Container
       maxWidth={false}
@@ -273,29 +256,65 @@ const PasswordManager = () => {
           sm: 3, // 24px padding on small screens
           md: 4, // 32px padding on medium and up screens
         },
-        width: "90%",
+        width: "100%",
         margin: "0 auto", // Center the container
       }}
     >
       {/* Top header Starts */}
-      <TopHeader />
+      {isGenerateFile ? (
+        <TopHeader
+          node={
+            <FileUpload
+              file={file}
+              handleFileChange={handleFileUploadWhenNewFileGenerationInProgress}
+              buttonVariant={"outlined"}
+              reset={resetState}
+              disabled={!masterKey}
+              isGenerateFile={isGenerateFile}
+            />
+          }
+        />
+      ) : (
+        <TopHeader />
+      )}
 
-      {/* Upload File Section Starts */}
+      {/* Upload/Generate File Section Starts */}
       <Stack
         direction="row"
         justifyContent="space-between"
         alignItems="center"
         marginTop={2}
-        gap={{ xs: 3, md: 2 }}
+        gap={{xs: 3, md: 2}}
       >
-        <FileUpload
-          file={file}
-          handleFileChange={handleFileUpload}
-          buttonVariant={file ? "outlined" : "contained"}
-          reset={resetState}
-          disabled={!masterKey}
-          isGenerateFile={isGenerateFile}
-        />
+        <Stack
+          direction="row"
+          spacing={2}
+          alignItems="flex-start"
+          justifyContent="flex-start"
+          divider={!file && <Typography>- or -</Typography>}
+        >
+          {!isGenerateFile && (
+            <FileUpload
+              file={file}
+              handleFileChange={handleFileUpload}
+              buttonVariant={file ? "outlined" : "contained"}
+              reset={resetState}
+              disabled={!masterKey}
+              isGenerateFile={isGenerateFile}
+            />
+          )}
+          <Button
+            variant="contained"
+            color="primary"
+            startIcon={file ? <AddCircleOutline /> : <LibraryAddOutlined />}
+            component="div"
+            size="small"
+            onClick={file ? () => setAddNewSecret(true) : startNewFileCreation}
+            disabled={!masterKey}
+          >
+            {file || isGenerateFile ? "Add Secret" : "Generate New File"}
+          </Button>
+        </Stack>
         <Stack
           direction={{ xs: "column", md: "row" }}
           spacing={2}
@@ -305,7 +324,7 @@ const PasswordManager = () => {
           <Button
             variant={masterKey ? "outlined" : "contained"}
             color="primary"
-            startIcon={<VpnKeyOutlined />}
+            startIcon={<Lock />}
             size="small"
             onClick={() => setOpenMasterKeyDialog(true)}
           >
@@ -322,16 +341,6 @@ const PasswordManager = () => {
             </Stack>
           )}
         </Stack>
-        {fileContentJson && !isEmptyObj(fileContentJson.secrets) && (
-        //   <Button
-        //     variant="contained"
-        //     color="primary"
-        //     onClick={handleDownload}
-        //   >
-        //     Download
-        //   </Button>
-            <DownloadFile content={generateFileContentForPreview(fileContentJson)} />
-        )}
       </Stack>
 
       {/* Display Secrets Section */}
@@ -367,10 +376,12 @@ const PasswordManager = () => {
                 <SecretItem
                   key={key}
                   keyName={key}
-                  icon={<LockOpenOutlined />}
+                  icon={
+                    <DeleteForeverOutlined sx={{ m: 0, p: 0, width: "auto" }} />
+                  }
                   secret={fileContentJson.secrets[key]}
                   handleClick={removeSecret(key)}
-                  buttonContent={"decrypt"}
+                  buttonContent={"remove"}
                 />
               ))}
             </Stack>
@@ -383,9 +394,36 @@ const PasswordManager = () => {
               maxHeight: { xs: "40vh", md: "100%" },
             }}
           >
-            <PreviewPanel
-              fileContent={generateFileContentForPreview(fileContentJson)}
-            />
+            <Paper
+              sx={{
+                backgroundColor: "#f3f4f6",
+                width: "100%",
+                height: "100%",
+                overflow: "auto",
+                "&::-webkit-scrollbar": {
+                  display: "none",
+                },
+                msOverflowStyle: "none",
+                scrollbarWidth: "none",
+              }}
+              elevation={0}
+            >
+              <Typography
+                variant="body1"
+                component="pre"
+                sx={{
+                  whiteSpace: "pre-wrap",
+                  wordWrap: "break-word",
+                  margin: 0,
+                  padding: { xs: 2, md: 1.5 },
+                  fontFamily: "monospace",
+                  fontSize: { xs: "0.675rem", md: "0.875rem" },
+                }}
+              >
+                {generateFileContentForPreview(fileContentJson)}
+              </Typography>
+            </Paper>
+            {/* <Button >test</Button> */}
           </Box>
         </Box>
       )}
@@ -396,15 +434,7 @@ const PasswordManager = () => {
         setMasterKey={(key) => {
           resetState();
           setMasterKey(key);
-          setStatusbar(
-            false,
-            `${
-              masterKey
-                ? "Master key updated successfully"
-                : "Master key added successfully"
-            }`,
-            true
-          );
+          setStatusbar(false, `${masterKey ? "Master key updated successfully": "Master key added successfully"}`, true);
         }}
         openMasterKeyDialog={openMasterKeyDialog}
         setOpenMasterKeyDialog={setOpenMasterKeyDialog}
@@ -417,6 +447,15 @@ const PasswordManager = () => {
         message={message}
         openStatusbar={openStatusbar}
         setOpenStatusbar={setOpenStatusbar}
+      />
+      {/* Add Secret Section */}
+      <AddSecret
+        openPopup={addNewSecret}
+        setOpenPopup={setAddNewSecret}
+        algorithm={passwordManagerConfig.algorithm}
+        masterKey={masterKey}
+        addToSecretsList={addToFileContentJsonSecretsSection}
+        existingSecrets={Object.keys(fileContentJson.secrets)}
       />
       <MessageDialog
         open={dialogOpen}
@@ -431,7 +470,7 @@ const PasswordManager = () => {
           <Button
             variant={masterKey ? "outlined" : "contained"}
             color="primary"
-            startIcon={<VpnKeyOutlined />}
+            startIcon={<Lock />}
             size="small"
             onClick={() => {
               setDialogOpen(false);
@@ -447,4 +486,4 @@ const PasswordManager = () => {
   );
 };
 
-export default PasswordManager;
+export default PasswordManagerEncrypt;

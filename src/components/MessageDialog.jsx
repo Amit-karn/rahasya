@@ -1,15 +1,19 @@
 import PropTypes from "prop-types";
-import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Button } from "@mui/material";
+import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Button, Typography } from "@mui/material";
 
 const MessageDialog = ({ open, onClose, title, message, node }) => {
   return (
     <Dialog open={open} onClose={onClose}>
-      <DialogTitle>{title}</DialogTitle>
+      <DialogTitle>
+        <Typography variant="h6">{title}</Typography>
+      </DialogTitle>
       <DialogContent>
-        <DialogContentText >{message}</DialogContentText>
+        <DialogContentText sx={{ color: 'primary.main', fontWeight: 'bold' }}>
+          {message}
+        </DialogContentText>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} color="primary">
+        <Button onClick={onClose} color="primary" variant="outlined">
           Close
         </Button>
         {node}

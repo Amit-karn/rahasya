@@ -10,6 +10,7 @@ import {
   DialogActions,
   InputAdornment,
   IconButton,
+  CircularProgress,
 } from "@mui/material";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 import { maskMasterKey } from "../utils/DataUtils";
@@ -36,11 +37,16 @@ const AddMasterKey = ({
     setShowMasterKey(false);
     setShowEncryptionKey(false);
     setError("");
-  }
+  };
 
   const generateMasterKey = async () => {
-    if (tempMasterKey.length < passwordManagerConfig.masterKeyMinLength || tempMasterKey.length > passwordManagerConfig.masterKeyMaxLength) {
-      setError(`Master key length must be between ${passwordManagerConfig.masterKeyMinLength} and ${passwordManagerConfig.masterKeyMaxLength} characters.`);
+    if (
+      tempMasterKey.length < passwordManagerConfig.masterKeyMinLength ||
+      tempMasterKey.length > passwordManagerConfig.masterKeyMaxLength
+    ) {
+      setError(
+        `Master key length must be between ${passwordManagerConfig.masterKeyMinLength} and ${passwordManagerConfig.masterKeyMaxLength} characters.`
+      );
       return;
     }
     setIsGeneratingKey(true);
@@ -53,7 +59,11 @@ const AddMasterKey = ({
     } catch {
       setTempMasterKey("");
       setMasterKey("");
-      setStatusBar(true, "Error in <b>key generation</b>. Please refresh and try again.", true);
+      setStatusBar(
+        true,
+        "Error in <b>key generation</b>. Please refresh and try again.",
+        true
+      );
     } finally {
       resetState();
     }
@@ -79,7 +89,7 @@ const AddMasterKey = ({
     <Dialog
       open={openMasterKeyDialog}
       onClose={handleMasterKeyDialogClose}
-      maxWidth="md"
+      maxWidth="sm"
       fullWidth
     >
       <DialogTitle>
@@ -120,7 +130,10 @@ const AddMasterKey = ({
           value={tempMasterKey}
           onChange={(e) => {
             setTempMasterKey(e.target.value);
-            if (e.target.value.length >= passwordManagerConfig.masterKeyMinLength && e.target.value.length <= passwordManagerConfig.masterKeyMaxLength) {
+            if (
+              e.target.value.length >= passwordManagerConfig.masterKeyMinLength &&
+              e.target.value.length <= passwordManagerConfig.masterKeyMaxLength
+            ) {
               setError("");
             } else {
               setError(
@@ -131,17 +144,19 @@ const AddMasterKey = ({
           error={!!error}
           helperText={error}
           slotProps={{
-            endAdornment: (
-              <InputAdornment position="end">
-                <IconButton
-                  aria-label="toggle secret visibility"
-                  onClick={handleClickShowSecret}
-                  edge="end"
-                >
-                  {showMasterKey ? <Visibility /> : <VisibilityOff />}
-                </IconButton>
-              </InputAdornment>
-            ),
+            input: {
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton
+                    aria-label="toggle secret visibility"
+                    onClick={handleClickShowSecret}
+                    edge="end"
+                  >
+                    {showMasterKey ? <Visibility /> : <VisibilityOff />}
+                  </IconButton>
+                </InputAdornment>
+              ),
+            },
           }}
         />
       </DialogContent>
@@ -156,6 +171,7 @@ const AddMasterKey = ({
           onClick={generateMasterKey}
           disabled={!tempMasterKey || isGeneratingKey || error}
           variant="contained"
+          startIcon={isGeneratingKey ? <CircularProgress size={24} /> : null}
         >
           {isGeneratingKey ? "Generating..." : "Confirm"}
         </Button>
