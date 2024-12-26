@@ -7,25 +7,30 @@ import {
   Button,
   Typography,
   Stack,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  InputAdornment,
+  IconButton,
 } from "@mui/material";
 import {
-  Add,
-  Cancel,
-  Key,
-  Help,
-  Home,
-  Remove,
   AddCircleOutline,
   LibraryAddOutlined,
+  Visibility,
+  VisibilityOff,
+  Lock,
+  DeleteForeverOutlined
 } from "@mui/icons-material";
 import FileUpload from "./components/FileUpload";
 import StatusBar from "./components/StatusBar";
 import { readFileLineByLineSync } from "./utils/EncryptionFileUtils";
 import AddSecret from "./components/AddSecret";
 import passwordManagerConfig from "./config/PasswordManagerConfig";
-import { bytesToMB } from "./utils/DataUtils";
+import { bytesToMB, maskMasterKey } from "./utils/DataUtils";
 import TopHeader from "./components/TopHeader";
 import SecretItem from "./components/SecretItem";
+import AddMasterKey from "./components/AddMasterKey";
 
 const PasswordManager = () => {
   // State variables
@@ -39,6 +44,9 @@ const PasswordManager = () => {
   const [isError, setIsError] = useState(false);
   const [message, setMessage] = useState("");
   const [addNewSecret, setAddNewSecret] = useState(false);
+
+  const [masterKey, setMasterKey] = useState("");
+  const [openMasterKeyDialog, setOpenMasterKeyDialog] = useState(false);
 
   // Effects
   useLayoutEffect(() => {
@@ -81,7 +89,12 @@ const PasswordManager = () => {
     setOpenStatusbar(openStatusbar);
   };
 
+  const isMasterKeySet = () => {
+    return masterKey? true: false;
+  }
+
   const addToFileContentJsonSecretsSection = (key, secret) => {
+    if (!isMasterKeySet)
     setFileContentJson((prevContent) => ({
       ...prevContent,
       secrets: { [key]: secret, ...prevContent.secrets },
@@ -253,7 +266,22 @@ const PasswordManager = () => {
             {file || isGenerateFile ? "Add Secret" : "Generate New File"}
           </Button>
         </Stack>
-        <Typography variant="h4">Password Manager</Typography>
+        <Stack direction="row" spacing={2} alignItems="center">
+          <Button
+            variant={masterKey ? "outlined" : "contained"}
+            color="primary"
+            startIcon={<Lock />}
+            size="small"
+            onClick={() => setOpenMasterKeyDialog(true)}
+          >
+            {masterKey ? "Update Master Key" : "Set Master Key"}
+          </Button>
+          {masterKey && (
+            <Typography variant="subtitle2" color="primary">
+              Master Key: {maskMasterKey(masterKey)}
+            </Typography>
+          )}
+        </Stack>
       </Stack>
 
       {/* Display Secrets Section */}
@@ -289,9 +317,10 @@ const PasswordManager = () => {
                 <SecretItem
                   key={key}
                   keyName={key}
-                  icon={<Remove sx={{ m: 0, p: 0, width: "auto" }} />}
+                  icon={<DeleteForeverOutlined sx={{ m: 0, p: 0, width: "auto"}} />}
                   secret={fileContentJson.secrets[key]}
                   handleClick={removeSecret(key)}
+                  buttonContent={"remove"}
                 />
               ))}
             </Stack>
@@ -337,6 +366,9 @@ const PasswordManager = () => {
         </Box>
       )}
 
+      {/* Add Master Key Dialog */}
+      <AddMasterKey masterKey={masterKey} setMasterKey={setMasterKey} openMasterKeyDialog={openMasterKeyDialog} setOpenMasterKeyDialog={setOpenMasterKeyDialog}/>
+
       {/* Status Bar and Add Secret Section */}
       {openStatusbar && (
         <StatusBar
@@ -352,7 +384,7 @@ const PasswordManager = () => {
           openPopup={addNewSecret}
           setOpenPopup={setAddNewSecret}
           algorithm={passwordManagerConfig.algorithm}
-          masterKey="test123"
+          masterKey={masterKey}
           addToSecretsList={addToFileContentJsonSecretsSection}
           existingSecrets={Object.keys(fileContentJson.secrets)}
         />

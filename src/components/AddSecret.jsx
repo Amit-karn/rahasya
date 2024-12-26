@@ -14,6 +14,7 @@ import {
 } from "@mui/material";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 import PropTypes from "prop-types";
+import { maskMasterKey } from "../utils/DataUtils";
 
 const AddSecret = ({
   openPopup,
@@ -111,11 +112,6 @@ const AddSecret = ({
       secretError === "" &&
       aadError === ""
     );
-  };
-
-  const maskMasterKey = (key) => {
-    if (key.length <= 5) return key;
-    return `${key.slice(0, 2)}${"*".repeat(key.length - 5)}${key.slice(-3)}`;
   };
 
   const maskSecret = (secret) => {
@@ -275,7 +271,8 @@ const AddSecret = ({
           <Typography variant="body1" >
             <strong>Encrypted Secret:</strong> {encryptedSecret}
           </Typography>
-          <Typography variant="body1" >
+          <Typography variant="body1" sx={{
+                  wordWrap: "break-word"}}>
             <strong>Master Key:</strong> {maskMasterKey(newSecret.masterKey)}
           </Typography>
           <Typography variant="body1" >

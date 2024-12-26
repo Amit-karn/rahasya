@@ -1,7 +1,7 @@
 import PropTypes from "prop-types";
 import { Box, TextField, Button } from "@mui/material";
 
-const SecretItem = ({ keyName, secret, icon, handleClick }) => {
+const SecretItem = ({ keyName, secret, icon, handleClick, buttonContent }) => {
   return (
     <Box
       sx={{
@@ -34,7 +34,11 @@ const SecretItem = ({ keyName, secret, icon, handleClick }) => {
           endIcon={null}
           startIcon={icon}
           onClick={handleClick}
-        />
+          sx={{fontSize: 12}}
+          disableElevation
+        >
+            {buttonContent}
+        </Button>
     </Box>
   );
 };
@@ -44,6 +48,7 @@ SecretItem.propTypes = {
   secret: PropTypes.string.isRequired,
   icon: PropTypes.element.isRequired,
   handleClick: PropTypes.func.isRequired,
+  buttonContent: PropTypes.string
 };
 
 export default SecretItem;
