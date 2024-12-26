@@ -1,13 +1,14 @@
 import PropTypes from "prop-types";
 import { Button, Input, Typography, Stack, IconButton } from "@mui/material";
 import { AddCircleOutline, CloseOutlined } from "@mui/icons-material";
+import passwordManagerConfig from "../config/PasswordManagerConfig";
 
 function FileUpload({ file, handleFileChange, buttonVariant, reset, disabled }) {
   return (
     <div>
       <Input
         type="file"
-        inputProps={{ accept: ".txt" }}
+        inputProps={{ accept: passwordManagerConfig.acceptFileExtension }}
         style={{ display: "none" }}
         onChange={handleFileChange}
         id="file-upload-input"

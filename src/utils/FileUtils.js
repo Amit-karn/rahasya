@@ -7,9 +7,9 @@
  */
 function readFileLineByLineSync(fileContent) {
     try {
-        const lines = fileContent.split('\n');  // Split content by newlines
+        const lines = fileContent.split("\n");  // Split content by newlines
         //remove any empty lines from end
-        while (lines.length > 0 && lines[lines.length - 1].trim() === '') {
+        while (lines.length > 0 && lines[lines.length - 1].trim() === "") {
             lines.pop();
         }
         // Validate file format before processing
@@ -25,16 +25,16 @@ function readFileLineByLineSync(fileContent) {
 
         // Process lines to separate secrets and integrity sections
         for (const line of lines) {
-            if (line.trim() === '<<<<>>>>') {
+            if (line.trim() === "<<<<>>>>") {
                 // Toggle between secrets and integrity sections based on markers
                 if (!isInsideSecrets) {
                     isInsideSecrets = true;
                 } else {
                     isInsideSecrets = false;
                 }
-            } else if (line.trim() === '<<<<<>>>>>') {
+            } else if (line.trim() === "<<<<<>>>>>") {
                 isInsideIntegrity = true;
-            } else if (line.trim() === '>>>><<<<') {
+            } else if (line.trim() === ">>>><<<<") {
                 break;  // Exit the loop
             } else {
                 if (isInsideIntegrity) {
@@ -59,7 +59,7 @@ function readFileLineByLineSync(fileContent) {
 
         return ["success", finalResult];
     } catch (error) {
-        console.error('Error reading file: ' + error.message);
+        console.error("Error reading file: " + error.message);
         return ["error", error.message];
     }
 }
@@ -79,11 +79,11 @@ function isValidFileFormat(lines) {
         if (lines.length == 0) {
             return false;
         }
-        if (lines[lines.length - 1].trim() !== '>>>><<<<') {
+        if (lines[lines.length - 1].trim() !== ">>>><<<<") {
             return false;
         }
-        let hmacLine = lines[lines.length - 2].trim().split(':');
-        if (hmacLine[0] !== 'HMAC') {
+        let hmacLine = lines[lines.length - 2].trim().split(":");
+        if (hmacLine[0] !== "HMAC") {
             return false;
         }
         return validateFileHmac(hmacLine[1], lines.slice(0, lines.length - 2));
@@ -100,7 +100,7 @@ function isValidFileFormat(lines) {
 function processSecrets(lines) {
     const secrets = {};
     lines.forEach((line) => {
-        const [key, value] = line.split(':').map((item) => item.trim());
+        const [key, value] = line.split(":").map((item) => item.trim());
         if (key && value) {
             secrets[key] = value;
         }
@@ -116,7 +116,7 @@ function processSecrets(lines) {
 function processIntegrity(lines) {
     const integrity = {};
     lines.forEach((line) => {
-        const [key, value] = line.split(':').map((item) => item.trim());
+        const [key, value] = line.split(":").map((item) => item.trim());
         if (key && value) {
             integrity[key] = value;
         }
@@ -132,9 +132,9 @@ function processIntegrity(lines) {
  */
 function validateFileHmac(hmac, lines) {
     // Implement your HMAC validation logic here
-    // For now, we'll just return true for the sake of example
+    // For now, we"ll just return true for the sake of example
     // Trim each line and join in single string
-    let fileContent = lines.map(line => line.trim()).join('');
+    let fileContent = lines.map(line => line.trim()).join("");
     return true;
 }
 

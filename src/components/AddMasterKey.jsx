@@ -13,7 +13,8 @@ import {
 } from "@mui/material";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 import { maskMasterKey } from "../utils/DataUtils";
-import generateEncryptionKey from "../utils/EncryptionUtils";
+import { generateEncryptionKey } from "../utils/EncryptionUtils";
+import passwordManagerConfig from "../config/PasswordManagerConfig";
 
 const AddMasterKey = ({
   masterKey,
@@ -38,13 +39,13 @@ const AddMasterKey = ({
   }
 
   const generateMasterKey = async () => {
-    if (tempMasterKey.length < 16 || tempMasterKey.length > 32) {
-      setError("Master key length must be between 16 and 32 characters.");
+    if (tempMasterKey.length < passwordManagerConfig.masterKeyMinLength || tempMasterKey.length > passwordManagerConfig.masterKeyMaxLength) {
+      setError(`Master key length must be between ${passwordManagerConfig.masterKeyMinLength} and ${passwordManagerConfig.masterKeyMaxLength} characters.`);
       return;
     }
     setIsGeneratingKey(true);
     try {
-      // key generation
+      setStatusBar(false, "", false);
       let generatedKey = await generateEncryptionKey(tempMasterKey);
       setMasterKey(generatedKey);
       setOpenMasterKeyDialog(false);
@@ -52,9 +53,9 @@ const AddMasterKey = ({
     } catch {
       setTempMasterKey("");
       setMasterKey("");
+      setStatusBar(true, "Error in <b>key generation</b>. Please refresh and try again.", true);
     } finally {
       resetState();
-      setStatusBar(true, "Error in <b>key generation</b>. Please refresh and try again.", true);
     }
   };
 
@@ -119,11 +120,11 @@ const AddMasterKey = ({
           value={tempMasterKey}
           onChange={(e) => {
             setTempMasterKey(e.target.value);
-            if (e.target.value.length >= 16 && e.target.value.length <= 32) {
+            if (e.target.value.length >= passwordManagerConfig.masterKeyMinLength && e.target.value.length <= passwordManagerConfig.masterKeyMaxLength) {
               setError("");
             } else {
               setError(
-                "Master key length must be between 16 and 32 characters."
+                `Master key length must be between ${passwordManagerConfig.masterKeyMinLength} and ${passwordManagerConfig.masterKeyMaxLength} characters.`
               );
             }
           }}

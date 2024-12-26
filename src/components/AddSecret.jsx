@@ -11,10 +11,12 @@ import {
   IconButton,
   InputAdornment,
   Typography,
+  CircularProgress,
 } from "@mui/material";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 import PropTypes from "prop-types";
 import { maskMasterKey, maskSecret } from "../utils/DataUtils";
+import passwordManagerConfig from "../config/PasswordManagerConfig";
 
 const AddSecret = ({
   openPopup,
@@ -55,14 +57,14 @@ const AddSecret = ({
         setKeyError("");
       }
     } else if (name === "secretValue") {
-      if (value.length < 16 || value.length > 32) {
-        setSecretError("Secret: It should be between 16 and 32 characters.");
+      if (value.length < passwordManagerConfig.secretMinLength || value.length > passwordManagerConfig.secretMaxLength) {
+        setSecretError(`Secret: It should be between ${passwordManagerConfig.secretMinLength} and ${passwordManagerConfig.secretMaxLength} characters.`);
       } else {
         setSecretError("");
       }
-    } else if (name === "aad" && useAAD) {
-      if (value.length < 8 || value.length > 16) {
-        setAadError("AAD: The length should be between 8 and 16 characters.");
+    } else if (useAAD && name === "aad") {
+      if (value.length < passwordManagerConfig.aadMinLength || value.length > passwordManagerConfig.aadMaxLength) {
+        setAadError(`AAD: The length should be between ${passwordManagerConfig.aadMinLength} and ${passwordManagerConfig.aadMaxLength} characters.`);
       } else {
         setAadError("");
       }
@@ -71,17 +73,19 @@ const AddSecret = ({
   };
 
   const handleEncryptAndAddSecret = () => {
-    setEncryptionResult(
-      {
-        keyName: newSecret.keyName+"ENC",
-        secretValue: newSecret.secretValue+"ENC",
+    setLoading(true);
+    setTimeout(() => {
+      setEncryptionResult({
+        keyName: newSecret.keyName + "ENC",
+        secretValue: newSecret.secretValue + "ENC",
         algorithm: algorithm,
         masterKey: masterKey,
-        aad: newSecret.aad+"ENC", // Additional authenticated data
+        aad: newSecret.aad + "ENC", // Additional authenticated data
         encryptedSecret: `ENC[${newSecret.secretValue}:hvfbhjjjjjjj561651≤6561561561561561156156166666666666]`
-      }
-    );
-    setShowConfirmation(true);
+      });
+      setLoading(false);
+      setShowConfirmation(true);
+    }, 5000); // Simulate a delay of 2 seconds
   };
 
   const handleConfirmEncryptAndAdd = () => {
@@ -172,10 +176,10 @@ const AddSecret = ({
                       onClick={handleClickShowSecret}
                       edge="end"
                     >
-                      {showSecret ? <Visibility />: <VisibilityOff /> }
-                    </IconButton>
-                  </InputAdornment>
-                ),
+                    {showSecret ? <Visibility /> : <VisibilityOff />}
+                  </IconButton>
+                </InputAdornment>
+              ),
             }}}
           />
           <TextField
@@ -238,16 +242,17 @@ const AddSecret = ({
           )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCancel} color="primary" variant="outlined">
+          <Button onClick={handleCancel} color="primary" variant="outlined" disabled={loading}>
             Cancel
           </Button>
           <Button
             onClick={handleEncryptAndAddSecret}
             color="primary"
             variant="contained"
-            disabled={!isFormValid()}
+            disabled={!isFormValid() || loading}
+            startIcon={loading ? <CircularProgress size={24} /> : null}
           >
-            Encrypt
+            {loading ? "Encrypting..." : "Encrypt"}
           </Button>
         </DialogActions>
       </Dialog>

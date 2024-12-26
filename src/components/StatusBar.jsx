@@ -1,5 +1,5 @@
-import { Snackbar, Alert } from '@mui/material';
-import PropTypes from 'prop-types';
+import { Snackbar, Alert } from "@mui/material";
+import PropTypes from "prop-types";
 
 const StatusBar = ({ isError, message, openStatusbar, setOpenStatusbar }) => (
         <Snackbar 

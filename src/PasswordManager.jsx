@@ -65,7 +65,10 @@ const PasswordManager = () => {
 
   useEffect(() => {
     if (!masterKey) {
-      showDialog("Master Key Required", "Please add your master key to proceed.");
+      showDialog(
+        "Master Key Required",
+        "Please add your master key to proceed."
+      );
     }
   }, []);
 
@@ -95,7 +98,11 @@ const PasswordManager = () => {
   const unloadMasterKey = () => {
     resetState();
     setMasterKey("");
-    setStatusbar(false, "Master key removed. Application state reset.", true);
+    setStatusbar(
+      false,
+      "Master key removed and application state has been reset.",
+      true
+    );
   };
 
   const showDialog = (title, message) => {
@@ -144,7 +151,7 @@ const PasswordManager = () => {
     const secretKeys = Object.keys(fileContentJson.secrets);
     const integrityKeys = Object.keys(fileContentJson.integrity);
 
-    return `This is an auto generated File. Please don't tamper with it.\n<<<<>>>>\n${secretKeys
+    return `This is an auto generated File. Please don"t tamper with it.\n<<<<>>>>\n${secretKeys
       .map((key) => `${key}: ${fileContentJson.secrets[key]}`)
       .join("\n")}\n<<<<<>>>>>\n${integrityKeys
       .map((key) => `${key}: ${fileContentJson.integrity[key]}`)
@@ -448,6 +455,21 @@ const PasswordManager = () => {
         onClose={() => setDialogOpen(false)}
         title={dialogTitle}
         message={dialogMessage}
+        node={
+          <Button
+            variant={masterKey ? "outlined" : "contained"}
+            color="primary"
+            startIcon={<Lock />}
+            size="small"
+            onClick={() => {
+              setDialogOpen(false);
+              setOpenMasterKeyDialog(true);
+            }}
+            disableElevation
+          >
+            Add Master Key
+          </Button>
+        }
       />
     </Container>
   );

@@ -6,7 +6,7 @@ const SecretItem = ({ keyName, secret, icon, handleClick, buttonContent }) => {
     <Box
       sx={{
         display: "flex",
-        gap: 1, // Similar to spacing in Stack
+        gap: 1,
         width: "100%",
       }}
     >
