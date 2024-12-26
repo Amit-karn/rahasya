@@ -2,7 +2,7 @@ import PropTypes from "prop-types";
 import { Button, Input, Typography, Stack, IconButton } from "@mui/material";
 import { AddCircleOutline, CloseOutlined } from "@mui/icons-material";
 
-function FileUpload({ file, handleFileChange, buttonVariant, reset }) {
+function FileUpload({ file, handleFileChange, buttonVariant, reset, disabled }) {
   return (
     <div>
       <Input
@@ -11,6 +11,7 @@ function FileUpload({ file, handleFileChange, buttonVariant, reset }) {
         style={{ display: "none" }}
         onChange={handleFileChange}
         id="file-upload-input"
+        disabled={disabled}
       />
 
       {/* Button to trigger file upload */}
@@ -22,6 +23,7 @@ function FileUpload({ file, handleFileChange, buttonVariant, reset }) {
           component="span"
           size="small"
           width="20%"
+          disabled={disabled}
         >
           {file ? "Reload file" : "Upload Existing File"}
         </Button>
@@ -70,6 +72,7 @@ FileUpload.propTypes = {
   handleFileChange: PropTypes.func.isRequired,
   buttonVariant: PropTypes.oneOf(["outlined", "contained", "text"]).isRequired,
   reset: PropTypes.func.isRequired,
+  disabled: PropTypes.bool.isRequired
 };
 
 export default FileUpload;

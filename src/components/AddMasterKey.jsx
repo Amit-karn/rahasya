@@ -15,7 +15,7 @@ import {
   Visibility,
   VisibilityOff,
 } from "@mui/icons-material";
-import { maskMasterKey } from "./utils/DataUtils";
+import { maskMasterKey } from "../utils/DataUtils";
 
 const AddMasterKey = ({ masterKey, setMasterKey, openMasterKeyDialog, setOpenMasterKeyDialog}) => {
   const [tempMasterKey, setTempMasterKey] = useState("");

@@ -3,24 +3,17 @@ import {
   Container,
   Box,
   Paper,
-  TextField,
+  IconButton,
   Button,
   Typography,
   Stack,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  InputAdornment,
-  IconButton,
 } from "@mui/material";
 import {
   AddCircleOutline,
   LibraryAddOutlined,
-  Visibility,
-  VisibilityOff,
   Lock,
-  DeleteForeverOutlined
+  DeleteForeverOutlined,
+  Close,
 } from "@mui/icons-material";
 import FileUpload from "./components/FileUpload";
 import StatusBar from "./components/StatusBar";
@@ -44,7 +37,6 @@ const PasswordManager = () => {
   const [isError, setIsError] = useState(false);
   const [message, setMessage] = useState("");
   const [addNewSecret, setAddNewSecret] = useState(false);
-
   const [masterKey, setMasterKey] = useState("");
   const [openMasterKeyDialog, setOpenMasterKeyDialog] = useState(false);
 
@@ -89,12 +81,26 @@ const PasswordManager = () => {
     setOpenStatusbar(openStatusbar);
   };
 
-  const isMasterKeySet = () => {
-    return masterKey? true: false;
-  }
+  const unloadMasterKey = () => {
+    resetState();
+    setMasterKey("");
+    setStatusbar(false, "Master key unloaded", true);
+  };
+
+  // Function to show master key not added status
+  const showMasterKeyNotAddedStatus = () => {
+    setStatusbar(
+      true,
+      "Master key not added. Please add your master key.",
+      true
+    );
+  };
 
   const addToFileContentJsonSecretsSection = (key, secret) => {
-    if (!isMasterKeySet)
+    if (!masterKey) {
+      showMasterKeyNotAddedStatus();
+      return;
+    }
     setFileContentJson((prevContent) => ({
       ...prevContent,
       secrets: { [key]: secret, ...prevContent.secrets },
@@ -102,6 +108,10 @@ const PasswordManager = () => {
   };
 
   const startNewFileCreation = () => {
+    if (!masterKey) {
+      showMasterKeyNotAddedStatus();
+      return;
+    }
     setAddNewSecret(true);
     setIsGenerateFile(true);
   };
@@ -146,6 +156,10 @@ const PasswordManager = () => {
   };
 
   const handleFileUpload = (event) => {
+    if (!masterKey) {
+      showMasterKeyNotAddedStatus();
+      return;
+    }
     resetState();
     const uploadedFile = event.target.files[0];
     if (uploadedFile && validateFileTypeAndSize(uploadedFile)) {
@@ -171,6 +185,10 @@ const PasswordManager = () => {
   };
 
   const handleFileUploadWhenNewFileGenerationInProgress = (event) => {
+    if (!masterKey) {
+      showMasterKeyNotAddedStatus();
+      return;
+    }
     const userConfirmed = window.confirm(
       "Loading a new file will erase all the current data. Do you want to proceed?"
     );
@@ -180,6 +198,10 @@ const PasswordManager = () => {
   };
 
   const removeSecret = (key) => () => {
+    if (!masterKey) {
+      showMasterKeyNotAddedStatus();
+      return;
+    }
     if (fileContentJson && Object.keys(fileContentJson.secrets).length === 1) {
       const userConfirmed = window.confirm(
         "This action will remove all secrets and reset application state. Do you want to proceed?"
@@ -222,6 +244,7 @@ const PasswordManager = () => {
               handleFileChange={handleFileUploadWhenNewFileGenerationInProgress}
               buttonVariant={"outlined"}
               reset={resetState}
+              disabled={!masterKey}
             />
           }
         />
@@ -253,6 +276,7 @@ const PasswordManager = () => {
               handleFileChange={handleFileUpload}
               buttonVariant={file ? "outlined" : "contained"}
               reset={resetState}
+              disabled={!masterKey}
             />
           )}
           <Button
@@ -262,6 +286,7 @@ const PasswordManager = () => {
             component="div"
             size="small"
             onClick={file ? () => setAddNewSecret(true) : startNewFileCreation}
+            disabled={!masterKey}
           >
             {file || isGenerateFile ? "Add Secret" : "Generate New File"}
           </Button>
@@ -277,9 +302,14 @@ const PasswordManager = () => {
             {masterKey ? "Update Master Key" : "Set Master Key"}
           </Button>
           {masterKey && (
-            <Typography variant="subtitle2" color="primary">
-              Master Key: {maskMasterKey(masterKey)}
-            </Typography>
+            <Stack direction="row" spacing={2} alignItems="center">
+              <Typography variant="subtitle2" color="primary">
+                Master Key: {maskMasterKey(masterKey)}
+              </Typography>
+              <IconButton size="small" onClick={unloadMasterKey}>
+                <Close />
+              </IconButton>
+            </Stack>
           )}
         </Stack>
       </Stack>
@@ -317,7 +347,9 @@ const PasswordManager = () => {
                 <SecretItem
                   key={key}
                   keyName={key}
-                  icon={<DeleteForeverOutlined sx={{ m: 0, p: 0, width: "auto"}} />}
+                  icon={
+                    <DeleteForeverOutlined sx={{ m: 0, p: 0, width: "auto" }} />
+                  }
                   secret={fileContentJson.secrets[key]}
                   handleClick={removeSecret(key)}
                   buttonContent={"remove"}
@@ -367,20 +399,28 @@ const PasswordManager = () => {
       )}
 
       {/* Add Master Key Dialog */}
-      <AddMasterKey masterKey={masterKey} setMasterKey={setMasterKey} openMasterKeyDialog={openMasterKeyDialog} setOpenMasterKeyDialog={setOpenMasterKeyDialog}/>
+      <AddMasterKey
+        masterKey={masterKey}
+        setMasterKey={(key) => {
+          setMasterKey(key);
+          setStatusbar(false, "Master key added successfully", true);
+        }}
+        openMasterKeyDialog={openMasterKeyDialog}
+        setOpenMasterKeyDialog={setOpenMasterKeyDialog}
+      />
 
       {/* Status Bar and Add Secret Section */}
-      {openStatusbar && (
+      
         <StatusBar
           isError={isError}
           message={message}
           openStatusbar={openStatusbar}
           setOpenStatusbar={setOpenStatusbar}
+          key={new Date().getMilliseconds()}
         />
-      )}
+      
 
-      {addNewSecret && (
-        <AddSecret
+      <AddSecret
           openPopup={addNewSecret}
           setOpenPopup={setAddNewSecret}
           algorithm={passwordManagerConfig.algorithm}
@@ -388,7 +428,6 @@ const PasswordManager = () => {
           addToSecretsList={addToFileContentJsonSecretsSection}
           existingSecrets={Object.keys(fileContentJson.secrets)}
         />
-      )}
     </Container>
   );
 };
