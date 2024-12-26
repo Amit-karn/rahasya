@@ -28,23 +28,19 @@ import TopHeader from "./components/TopHeader";
 import SecretItem from "./components/SecretItem";
 
 const PasswordManager = () => {
-  //Generate New File
+  // State variables
   const [isGenerateFile, setIsGenerateFile] = useState(false);
-  //load Existing file
   const [file, setFile] = useState(null);
   const [fileContentJson, setFileContentJson] = useState({
     secrets: {},
     integrity: {},
-  }); // To store the content of the file
-
-  //To show success/error message
+  });
   const [openStatusbar, setOpenStatusbar] = useState(false);
   const [isError, setIsError] = useState(false);
   const [message, setMessage] = useState("");
-
-  //Add New Secret
   const [addNewSecret, setAddNewSecret] = useState(false);
 
+  // Effects
   useLayoutEffect(() => {
     if (
       isGenerateFile &&
@@ -52,7 +48,7 @@ const PasswordManager = () => {
       !addNewSecret
     ) {
       const userConfirmed = window.confirm(
-        "No secrets added. Do you want to reset the application state ?"
+        "No secrets added. Do you want to reset the application state?"
       );
       if (userConfirmed) {
         resetState();
@@ -62,9 +58,10 @@ const PasswordManager = () => {
     }
   }, [fileContentJson.secrets, isGenerateFile, addNewSecret]);
 
+  // Helper functions
   const resetState = () => {
     setIsGenerateFile(false);
-    setFileContentJson({ secrets: {}, integrity: {} }); // Reset the file content
+    setFileContentJson({ secrets: {}, integrity: {} });
     setIsError(false);
     setMessage("");
     setOpenStatusbar(false);
@@ -85,12 +82,10 @@ const PasswordManager = () => {
   };
 
   const addToFileContentJsonSecretsSection = (key, secret) => {
-    setFileContentJson((prevContent) => {
-      return {
-        ...prevContent,
-        secrets: { [key]: secret, ...prevContent.secrets },
-      };
-    });
+    setFileContentJson((prevContent) => ({
+      ...prevContent,
+      secrets: { [key]: secret, ...prevContent.secrets },
+    }));
   };
 
   const startNewFileCreation = () => {
@@ -109,10 +104,9 @@ const PasswordManager = () => {
     const secretKeys = Object.keys(fileContentJson.secrets);
     const integrityKeys = Object.keys(fileContentJson.integrity);
 
-    return `This is an auto generated File. Please don't tamper with it.\n
-      <<<<>>>>\n${secretKeys
-        .map((key) => `${key}: ${fileContentJson.secrets[key]}`)
-        .join("\n")}\n<<<<<>>>>>\n${integrityKeys
+    return `This is an auto generated File. Please don't tamper with it.\n<<<<>>>>\n${secretKeys
+      .map((key) => `${key}: ${fileContentJson.secrets[key]}`)
+      .join("\n")}\n<<<<<>>>>>\n${integrityKeys
       .map((key) => `${key}: ${fileContentJson.integrity[key]}`)
       .join("\n")}\n>>>><<<<`;
   };
@@ -142,7 +136,6 @@ const PasswordManager = () => {
     resetState();
     const uploadedFile = event.target.files[0];
     if (uploadedFile && validateFileTypeAndSize(uploadedFile)) {
-      // Read the file content to display in the preview
       processAndDisplayUploadedFile(uploadedFile);
     }
   };
@@ -176,7 +169,7 @@ const PasswordManager = () => {
   const removeSecret = (key) => () => {
     if (fileContentJson && Object.keys(fileContentJson.secrets).length === 1) {
       const userConfirmed = window.confirm(
-        "This action will remove all secrets and resert application state. Do you want to proceed ?"
+        "This action will remove all secrets and reset application state. Do you want to proceed?"
       );
       if (userConfirmed) {
         resetState();
@@ -195,8 +188,19 @@ const PasswordManager = () => {
   };
 
   return (
-    <Container maxWidth fixed sx={{ marginLeft: 10, padding: 2 }}>
-      {/* Top header Starts*/}
+    <Container
+      maxWidth={false}
+      sx={{
+        padding: {
+          xs: 2, // 16px padding on extra-small screens
+          sm: 3, // 24px padding on small screens
+          md: 4, // 32px padding on medium and up screens
+        },
+        width: "100%",
+        margin: "0 auto", // Center the container
+      }}
+    >
+      {/* Top header Starts */}
       {isGenerateFile ? (
         <TopHeader
           node={
@@ -204,6 +208,7 @@ const PasswordManager = () => {
               file={file}
               handleFileChange={handleFileUploadWhenNewFileGenerationInProgress}
               buttonVariant={"outlined"}
+              reset={resetState}
             />
           }
         />
@@ -234,6 +239,7 @@ const PasswordManager = () => {
               file={file}
               handleFileChange={handleFileUpload}
               buttonVariant={file ? "outlined" : "contained"}
+              reset={resetState}
             />
           )}
           <Button
@@ -242,12 +248,9 @@ const PasswordManager = () => {
             startIcon={file ? <AddCircleOutline /> : <LibraryAddOutlined />}
             component="div"
             size="small"
-            // sx={
-            //   file && { position: "sticky", top: 0, zIndex: 1, marginBottom: 2 }
-            // }
             onClick={file ? () => setAddNewSecret(true) : startNewFileCreation}
           >
-            {file ? "Add Secret" : "Generate New File"}
+            {file || isGenerateFile ? "Add Secret" : "Generate New File"}
           </Button>
         </Stack>
         <Typography variant="h4">Password Manager</Typography>
@@ -259,7 +262,7 @@ const PasswordManager = () => {
           sx={{
             display: "flex",
             flexDirection: { xs: "column", md: "row" },
-            gap: 2,
+            gap: { xs: 2, md: 1 },
             marginTop: 1,
             height: { xs: "80vh", md: "calc(100vh - 200px)" },
             width: "100%",
@@ -272,16 +275,16 @@ const PasswordManager = () => {
               overflow: "auto",
               maxHeight: { xs: "40vh", md: "100%" },
               height: "100%",
-              padding: 2,
+              padding: { xs: 2, md: 1.5 },
               "&::-webkit-scrollbar": {
                 display: "none",
               },
               msOverflowStyle: "none",
               scrollbarWidth: "none",
-              width: { xs: "100%", md: "50%" },
+              width: { xs: "95%", md: "45%" },
             }}
           >
-            <Stack direction="column" spacing={2}>
+            <Stack direction="column" spacing={1.5}>
               {Object.keys(fileContentJson.secrets).map((key) => (
                 <SecretItem
                   key={key}
@@ -297,7 +300,7 @@ const PasswordManager = () => {
           {/* Right Panel */}
           <Box
             sx={{
-              width: { xs: "100%", md: "50%" },
+              width: { xs: "95%", md: "45%" },
               maxHeight: { xs: "40vh", md: "100%" },
             }}
           >
@@ -322,9 +325,9 @@ const PasswordManager = () => {
                   whiteSpace: "pre-wrap",
                   wordWrap: "break-word",
                   margin: 0,
-                  padding: 2,
+                  padding: { xs: 2, md: 1.5 },
                   fontFamily: "monospace",
-                  fontSize: { xs: "0.875rem", md: "1rem" },
+                  fontSize: { xs: "0.675rem", md: "0.875rem" },
                 }}
               >
                 {generateFileContentForPreview(fileContentJson)}
