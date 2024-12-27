@@ -327,7 +327,7 @@ const CredentialDecryptor = () => {
           <Box
             sx={{
               width: { xs: "95%", md: "45%" },
-              maxHeight: { xs: "40vh", md: "100%" },
+              height: { xs: "40vh", md: "100%" },
               display: "flex", // Add this
               flexDirection: "column", // Add this
               overflow: "hidden", // Add this

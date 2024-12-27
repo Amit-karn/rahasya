@@ -5,6 +5,7 @@ import FileEncryptor from './components/FileEncryptor';
 import ShaHash from './components/ShaHash';
 import Base64Tool from './components/Base64Tool';
 import FileToImage from './components/FileToImage';
+import passwordManagerConfig from './config/PasswordManagerConfig';
 
 const CryptoTools = () => {
   return (
@@ -50,7 +51,7 @@ const CryptoTools = () => {
             letterSpacing: '0.05em',
           }}
         >
-          रahasya
+          {passwordManagerConfig.rahaysa}
         </Typography>
       </Box>
 

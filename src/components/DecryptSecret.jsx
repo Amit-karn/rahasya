@@ -240,7 +240,7 @@ const DecryptSecret = ({
       <Dialog open={showConfirmation} onClose={handleClose} maxWidth="lg">
         <DialogTitle>Decrypted Secret Details</DialogTitle>
         <DialogContent
-          sx={{ display: "flex", flexDirection: "column", gap: 1 }}
+          sx={{ display: "flex", flexDirection: "column", gap: 1, wordBreak: "break-word" }}
         >
           <Typography variant="body1">
             <strong>Key Name:</strong> {decryptionResult.keyName}
