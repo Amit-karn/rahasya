@@ -2,6 +2,7 @@ import { createTheme, ThemeProvider, Button } from "@mui/material";
 import "./App.css";
 import CredentialEncryptor from "./CredentialEncryptor";
 import CredentialDecryptor from "./CredentialDecryptor";
+import CryptoTools from "./CryptoTools";
 import { BrowserRouter, Routes, Route } from "react-router";
 
 function App() {
@@ -21,8 +22,8 @@ function App() {
     <ThemeProvider theme={theme}>
       <BrowserRouter>
         <Routes>
-          {/* <Route path="/" element={<div> Coming soon </div>} /> */}
-          <Route path="/" element={<CredentialEncryptor />} />
+          <Route path="/" element={<CryptoTools />} />
+          <Route path="/cred-encrypt" element={<CredentialEncryptor />} />
           <Route path="/cred-decrypt" element={<CredentialDecryptor />} />
         </Routes>
       </BrowserRouter>

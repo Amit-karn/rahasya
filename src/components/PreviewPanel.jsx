@@ -11,10 +11,9 @@ const PreviewPanel = ({ fileContent }) => {
         display: 'flex',  // Add flex display
         flexDirection: 'column', // Stack children vertically
         overflow: "hidden", // Change to hidden to prevent double scrollbars
-        borderLeft: "1px solid black",
         position: 'relative', // Add positioning context
       }}
-      elevation={0}
+      variant='outlined'
     >
       <Typography
         variant="body1"

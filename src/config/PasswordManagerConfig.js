@@ -9,7 +9,8 @@ const passwordManagerConfig = {
     secretMaxLength: 32,
     masterKeyMinLength: 16,
     masterKeyMaxLength: 32,
-    homePage: "/"
+    homePage: "/",
+    rahaysa: "रahasya"
 };
 
 
