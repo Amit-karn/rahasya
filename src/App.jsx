@@ -1,6 +1,8 @@
 import { createTheme, ThemeProvider, Button } from "@mui/material";
-import "./App.css"
-import PasswordManager from "./PasswordManager"
+import "./App.css";
+import CredentialEncryptor from "./CredentialEncryptor";
+import CredentialDecryptor from "./CredentialDecryptor";
+import { BrowserRouter, Routes, Route } from "react-router";
 
 function App() {
   const theme = createTheme({
@@ -13,12 +15,19 @@ function App() {
       },
     },
   });
+  //Portable Encrypted Credential Locker
 
   return (
     <ThemeProvider theme={theme}>
-      <PasswordManager />
+      <BrowserRouter>
+        <Routes>
+          {/* <Route path="/" element={<div> Coming soon </div>} /> */}
+          <Route path="/" element={<CredentialEncryptor />} />
+          <Route path="/cred-decrypt" element={<CredentialDecryptor />} />
+        </Routes>
+      </BrowserRouter>
     </ThemeProvider>
-  )
+  );
 }
 
-export default App
+export default App;

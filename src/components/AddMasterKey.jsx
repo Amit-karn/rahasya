@@ -169,7 +169,7 @@ const AddMasterKey = ({
         </Button>
         <Button
           onClick={generateMasterKey}
-          disabled={!tempMasterKey || isGeneratingKey || error}
+          disabled={!!(!tempMasterKey || isGeneratingKey || error)}
           variant="contained"
           startIcon={isGeneratingKey ? <CircularProgress size={24} /> : null}
         >

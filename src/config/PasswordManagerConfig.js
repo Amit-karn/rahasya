@@ -8,7 +8,8 @@ const passwordManagerConfig = {
     secretMinLength: 16,
     secretMaxLength: 32,
     masterKeyMinLength: 16,
-    masterKeyMaxLength: 32
+    masterKeyMaxLength: 32,
+    homePage: "/"
 };
 
 

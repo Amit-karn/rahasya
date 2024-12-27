@@ -5,7 +5,7 @@ const MessageDialog = ({ open, onClose, title, message, node }) => {
   return (
     <Dialog open={open} onClose={onClose}>
       <DialogTitle>
-        <Typography variant="h6">{title}</Typography>
+        <Typography variant="body1">{title}</Typography>
       </DialogTitle>
       <DialogContent>
         <DialogContentText sx={{ color: 'primary.main', fontWeight: 'bold' }}>
@@ -25,7 +25,6 @@ const MessageDialog = ({ open, onClose, title, message, node }) => {
 MessageDialog.propTypes = {
   open: PropTypes.bool.isRequired,
   onClose: PropTypes.func.isRequired,
-  onConfirm: PropTypes.func.isRequired,
   title: PropTypes.string.isRequired,
   message: PropTypes.string.isRequired,
   node: PropTypes.node

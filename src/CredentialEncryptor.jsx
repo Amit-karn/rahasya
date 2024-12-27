@@ -26,8 +26,10 @@ import TopHeader from "./components/TopHeader";
 import SecretItem from "./components/SecretItem";
 import AddMasterKey from "./components/AddMasterKey";
 import MessageDialog from "./components/MessageDialog";
+import DownloadFile from "./components/DownloadFile";
+import PreviewPanel from "./components/PreviewPanel";
 
-const PasswordManagerEncrypt = () => {
+const CredentialEncryptor = () => {
   // State variables
   const [isGenerateFile, setIsGenerateFile] = useState(false);
   const [file, setFile] = useState(null);
@@ -97,13 +99,18 @@ const PasswordManagerEncrypt = () => {
   };
 
   const unloadMasterKey = () => {
-    resetState();
-    setMasterKey("");
-    setStatusbar(
-      false,
-      "Master key removed and application state has been reset.",
-      true
+    const userConfirmed = window.confirm(
+      "This action will reset the application state. Do you want to proceed?"
     );
+    if (userConfirmed) {
+      resetState();
+      setMasterKey("");
+      setStatusbar(
+        false,
+        "Master key removed and application state has been reset.",
+        true
+      );
+    }
   };
 
   const showDialog = (title, message) => {
@@ -284,7 +291,7 @@ const PasswordManagerEncrypt = () => {
         justifyContent="space-between"
         alignItems="center"
         marginTop={2}
-        gap={{xs: 3, md: 2}}
+        gap={{ xs: 3, md: 2 }}
       >
         <Stack
           direction="row"
@@ -340,6 +347,11 @@ const PasswordManagerEncrypt = () => {
               </IconButton>
             </Stack>
           )}
+          {fileContentJson && !isEmptyObj(fileContentJson.secrets) && (
+            <DownloadFile
+              content={generateFileContentForPreview(fileContentJson)}
+            />
+          )}
         </Stack>
       </Stack>
 
@@ -392,9 +404,15 @@ const PasswordManagerEncrypt = () => {
             sx={{
               width: { xs: "95%", md: "45%" },
               maxHeight: { xs: "40vh", md: "100%" },
+              display: "flex", // Add this
+              flexDirection: "column", // Add this
+              overflow: "hidden", // Add this
             }}
           >
-            <Paper
+            <PreviewPanel
+              fileContent={generateFileContentForPreview(fileContentJson)}
+            />
+            {/* <Paper
               sx={{
                 backgroundColor: "#f3f4f6",
                 width: "100%",
@@ -422,7 +440,7 @@ const PasswordManagerEncrypt = () => {
               >
                 {generateFileContentForPreview(fileContentJson)}
               </Typography>
-            </Paper>
+            </Paper> */}
             {/* <Button >test</Button> */}
           </Box>
         </Box>
@@ -434,7 +452,15 @@ const PasswordManagerEncrypt = () => {
         setMasterKey={(key) => {
           resetState();
           setMasterKey(key);
-          setStatusbar(false, `${masterKey ? "Master key updated successfully": "Master key added successfully"}`, true);
+          setStatusbar(
+            false,
+            `${
+              masterKey
+                ? "Master key updated successfully"
+                : "Master key added successfully"
+            }`,
+            true
+          );
         }}
         openMasterKeyDialog={openMasterKeyDialog}
         setOpenMasterKeyDialog={setOpenMasterKeyDialog}
@@ -486,4 +512,4 @@ const PasswordManagerEncrypt = () => {
   );
 };
 
-export default PasswordManagerEncrypt;
+export default CredentialEncryptor;

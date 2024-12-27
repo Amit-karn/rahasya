@@ -31,6 +31,7 @@ const AddSecret = ({
     secretValue: "",
     aad: "", // Additional authenticated data
   });
+  const [showAad, setShowAad] = useState(false);
   const [keyError, setKeyError] = useState("");
   const [secretError, setSecretError] = useState("");
   const [aadError, setAadError] = useState("");
@@ -54,6 +55,7 @@ const AddSecret = ({
       secretValue: "",
       aad: "",
     });
+    setShowAad(false);
     setKeyError("");
     setSecretError("");
     setAadError("");
@@ -147,9 +149,18 @@ const AddSecret = ({
     setShowSecret(!showSecret);
   };
 
+  const handleClickShowAad = () => {
+    setShowAad(!showAad);
+  };
+
   const handleClickShowConfirmationSecret = () => {
     setShowConfirmationSecret(!showConfirmationSecret);
   };
+
+  const resetConfimationDialogState = () => {
+    handleClickShowConfirmationSecret();
+    setShowConfirmation(false);
+  }
 
   return (
     <div>
@@ -242,7 +253,7 @@ const AddSecret = ({
               margin="dense"
               name="aad"
               label="Additional Authenticated Data (AAD)"
-              type="text"
+              type={showAad ? "text": "password"}
               fullWidth
               value={newSecret.aad}
               onChange={handlePopupChange}
@@ -252,6 +263,21 @@ const AddSecret = ({
                 newSecret.keyName.trim() === "" ||
                 newSecret.secretValue.trim() === ""
               }
+              slotProps={{
+                input: {
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton
+                        aria-label="toggle secret visibility"
+                        onClick={handleClickShowAad}
+                        edge="end"
+                      >
+                        {showAad ? <Visibility /> : <VisibilityOff />}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                },
+              }}
             />
           )}
         </DialogContent>
@@ -310,7 +336,7 @@ const AddSecret = ({
         </DialogContent>
         <DialogActions>
           <Button
-            onClick={() => setShowConfirmation(false)}
+            onClick={resetConfimationDialogState}
             color="primary"
             variant="outlined"
           >

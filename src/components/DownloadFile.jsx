@@ -1,8 +1,9 @@
-import { Button, Link } from "@mui/material";
+import { Button } from "@mui/material";
 import { FileDownloadOutlined } from "@mui/icons-material";
 import PropTypes from 'prop-types';
 
 const DownloadFile = ({ content }) => {
+
   const generateDownloadUrl = () => {
     const blob = new Blob([content], { type: "text/plain" });
     return URL.createObjectURL(blob);
@@ -11,27 +12,31 @@ const DownloadFile = ({ content }) => {
   const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
   const fileName = `secrets-${timestamp}.txt`;
 
+  const handleDownload = () => {
+    const url = generateDownloadUrl();
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   return (
-    <Link
-      component={Button}
-      href={generateDownloadUrl()}
-      download={fileName}
-      variant="button"
+    <Button
+      variant="outlined"
       color="primary"
       startIcon={<FileDownloadOutlined />}
       size="small"
-      onClick={(e) => {
-        // Cleanup the URL object after download starts
-        setTimeout(() => URL.revokeObjectURL(e.currentTarget.href), 150);
-      }}
+      onClick={handleDownload}
       disabled={!content}
-      underline="none"
-      sx={{ textDecoration: 'none' }}
     >
       Download File
-    </Link>
+    </Button>
   );
 };
+
 DownloadFile.propTypes = {
   content: PropTypes.string.isRequired,
 };

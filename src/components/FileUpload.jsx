@@ -11,9 +11,9 @@ function FileUpload({ file, handleFileChange, buttonVariant, reset, disabled, is
     // Handle file change
     handleFileChange(event);
 
-    if (isGenerateFile) {
+    // if (isGenerateFile) {
       fileInputRef.current.value = ''; // Reset the input field
-    }
+    // }
   };
 
   return (
@@ -61,7 +61,7 @@ function FileUpload({ file, handleFileChange, buttonVariant, reset, disabled, is
               whiteSpace: "nowrap",
             }}
           >
-            {file?.name.slice(0, 20) + (file?.name.length > 20 ? "..." : "")}
+            {file?.name?.slice(0, 20) + (file?.name?.length > 20 ? "..." : "")}
           </Typography>
           <IconButton
             size="small"

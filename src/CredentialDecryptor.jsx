@@ -29,10 +29,10 @@ import AddMasterKey from "./components/AddMasterKey";
 import MessageDialog from "./components/MessageDialog";
 import PreviewPanel from "./components/PreviewPanel";
 import DownloadFile from "./components/DownloadFile";
+import DecryptSecret from "./components/DecryptSecret";
 
-const PasswordManager = () => {
+const CredentialDecryptor = () => {
   // State variables
-  const [isGenerateFile, setIsGenerateFile] = useState(false);
   const [file, setFile] = useState(null);
   const [fileContentJson, setFileContentJson] = useState({
     secrets: {},
@@ -41,7 +41,7 @@ const PasswordManager = () => {
   const [openStatusbar, setOpenStatusbar] = useState(false);
   const [isError, setIsError] = useState(false);
   const [message, setMessage] = useState("");
-  const [addNewSecret, setAddNewSecret] = useState(false);
+  const [IsDecryptingSecret, setIsDecryptingSecret] = useState(false);
   const [masterKey, setMasterKey] = useState("");
   const [openMasterKeyDialog, setOpenMasterKeyDialog] = useState(false);
 
@@ -49,23 +49,8 @@ const PasswordManager = () => {
   const [dialogTitle, setDialogTitle] = useState("");
   const [dialogMessage, setDialogMessage] = useState("");
 
-  // Effects
-  useLayoutEffect(() => {
-    if (
-      isGenerateFile &&
-      isEmptyObj(fileContentJson.secrets) &&
-      !addNewSecret
-    ) {
-      const userConfirmed = window.confirm(
-        "No secrets added. Do you want to reset the application state?"
-      );
-      if (userConfirmed) {
-        resetState();
-      } else {
-        setAddNewSecret(true);
-      }
-    }
-  }, [fileContentJson.secrets, isGenerateFile, addNewSecret]);
+  const [currentKey, setCurrentKey] = useState("");
+  const [currentEncryptedSecret, setCurrentEncryptedSecret] = useState("");
 
   useEffect(() => {
     if (!masterKey) {
@@ -78,17 +63,15 @@ const PasswordManager = () => {
 
   // Helper functions
   const resetState = () => {
-    setIsGenerateFile(false);
     setFileContentJson({ secrets: {}, integrity: {} });
     setIsError(false);
     setMessage("");
     setOpenStatusbar(false);
     setFile(null);
-    setAddNewSecret(false);
+    setIsDecryptingSecret(false);
   };
 
-  const setFileDetails = (isGenerateFile, fileContentJson, file) => {
-    setIsGenerateFile(isGenerateFile);
+  const setFileDetails = (fileContentJson, file) => {
     setFileContentJson(fileContentJson);
     setFile(file);
   };
@@ -100,13 +83,18 @@ const PasswordManager = () => {
   };
 
   const unloadMasterKey = () => {
-    resetState();
-    setMasterKey("");
-    setStatusbar(
-      false,
-      "Master key removed and application state has been reset.",
-      true
+    const userConfirmed = window.confirm(
+      "This action will reset the application state. Do you want to proceed?"
     );
+    if (userConfirmed) {
+      resetState();
+      setMasterKey("");
+      setStatusbar(
+        false,
+        "Master key removed and application state has been reset.",
+        true
+      );
+    }
   };
 
   const showDialog = (title, message) => {
@@ -133,15 +121,6 @@ const PasswordManager = () => {
       ...prevContent,
       secrets: { [key]: secret, ...prevContent.secrets },
     }));
-  };
-
-  const startNewFileCreation = () => {
-    if (!masterKey) {
-      showMasterKeyNotAddedStatus();
-      return;
-    }
-    setAddNewSecret(true);
-    setIsGenerateFile(true);
   };
 
   const generateFileContentForPreview = (fileContentJson) => {
@@ -203,7 +182,7 @@ const PasswordManager = () => {
         setStatusbar(true, result, true);
         return;
       }
-      setFileDetails(false, result, uploadedFile);
+      setFileDetails(result, uploadedFile);
       setStatusbar(false, "File loaded successfully", true);
     };
     reader.onerror = () => {
@@ -225,43 +204,18 @@ const PasswordManager = () => {
     }
   };
 
-  const removeSecret = (key) => () => {
+  const handleDecryptButton = (key, encryptedSecret) => () => {
     if (!masterKey) {
       showMasterKeyNotAddedStatus();
       return;
     }
-    if (fileContentJson && Object.keys(fileContentJson.secrets).length === 1) {
-      const userConfirmed = window.confirm(
-        "This action will remove all secrets and reset application state. Do you want to proceed?"
-      );
-      if (userConfirmed) {
-        resetState();
-      }
-    } else {
-      setFileContentJson((prevContent) => {
-        const newSecrets = { ...prevContent.secrets };
-        delete newSecrets[key];
-        return { ...prevContent, secrets: newSecrets };
-      });
-    }
+    setCurrentKey(key);
+    setCurrentEncryptedSecret(encryptedSecret);
+    setIsDecryptingSecret(true);
   };
 
   const isEmptyObj = (obj) => {
     return Object.keys(obj).length === 0;
-  };
-
-  const handleDownload = () => {
-    const date = new Date().toISOString().split("T")[0];
-    const fileName = `rahasya_encrypted_${date}.txt`;
-    const fileContent = generateFileContentForPreview(fileContentJson);
-    const blob = new Blob([fileContent], { type: "text/plain" });
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.download = fileName;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(link);
   };
 
   return (
@@ -294,7 +248,7 @@ const PasswordManager = () => {
           buttonVariant={file ? "outlined" : "contained"}
           reset={resetState}
           disabled={!masterKey}
-          isGenerateFile={isGenerateFile}
+          isGenerateFile={false}
         />
         <Stack
           direction={{ xs: "column", md: "row" }}
@@ -322,16 +276,6 @@ const PasswordManager = () => {
             </Stack>
           )}
         </Stack>
-        {fileContentJson && !isEmptyObj(fileContentJson.secrets) && (
-        //   <Button
-        //     variant="contained"
-        //     color="primary"
-        //     onClick={handleDownload}
-        //   >
-        //     Download
-        //   </Button>
-            <DownloadFile content={generateFileContentForPreview(fileContentJson)} />
-        )}
       </Stack>
 
       {/* Display Secrets Section */}
@@ -369,7 +313,10 @@ const PasswordManager = () => {
                   keyName={key}
                   icon={<LockOpenOutlined />}
                   secret={fileContentJson.secrets[key]}
-                  handleClick={removeSecret(key)}
+                  handleClick={handleDecryptButton(
+                    key,
+                    fileContentJson.secrets[key]
+                  )}
                   buttonContent={"decrypt"}
                 />
               ))}
@@ -381,6 +328,9 @@ const PasswordManager = () => {
             sx={{
               width: { xs: "95%", md: "45%" },
               maxHeight: { xs: "40vh", md: "100%" },
+              display: "flex", // Add this
+              flexDirection: "column", // Add this
+              overflow: "hidden", // Add this
             }}
           >
             <PreviewPanel
@@ -409,6 +359,15 @@ const PasswordManager = () => {
         openMasterKeyDialog={openMasterKeyDialog}
         setOpenMasterKeyDialog={setOpenMasterKeyDialog}
         setStatusBar={setStatusbar}
+      />
+
+      <DecryptSecret
+        openPopup={IsDecryptingSecret}
+        setOpenPopup={setIsDecryptingSecret}
+        algorithm={passwordManagerConfig.algorithm}
+        masterKey={masterKey}
+        keyName={currentKey}
+        encryptedSecret={currentEncryptedSecret}
       />
 
       {/* Status Bar Section */}
@@ -447,4 +406,4 @@ const PasswordManager = () => {
   );
 };
 
-export default PasswordManager;
+export default CredentialDecryptor;
