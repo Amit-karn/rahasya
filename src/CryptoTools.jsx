@@ -106,13 +106,13 @@ const CryptoTools = () => {
           <FileToImage />
         </Grid>
         <Grid item size={{xs: 12, sm: 6, md: 4}}>
+          <PasswordGenerator />
+        </Grid>
+        <Grid item size={{xs: 12, sm: 6, md: 4}}>
           <ShaHash />
         </Grid>
         <Grid item size={{xs: 12, sm: 6, md: 4}}>
           <Base64Tool />
-        </Grid>
-        <Grid item size={{xs: 12, sm: 6, md: 4}}>
-          <PasswordGenerator />
         </Grid>
       </Grid>
     </Container>
