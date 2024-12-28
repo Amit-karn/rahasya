@@ -25,7 +25,7 @@ const PasswordGenerator = () => {
         <Slider
           value={length}
           onChange={(_, value) => setLength(value)}
-          min={6}
+          min={8}
           max={32}
           marks
         />

@@ -1,5 +1,6 @@
 import React from 'react';
 import { Paper, Typography, Button, Stack } from '@mui/material';
+import { Link } from 'react-router-dom';
 
 const CredentialLocker = () => {
   return (
@@ -7,11 +8,21 @@ const CredentialLocker = () => {
       <Typography variant="h6" gutterBottom>
         Portable Encrypted Credential Locker
       </Typography>
-      <Stack spacing={2} direction={{xs: "column", lg: "row"}}>
-        <Button variant="contained" fullWidth>
+      <Stack spacing={2} direction={{ xs: "column", lg: "row" }}>
+        <Button
+          component={Link}
+          to="/cred-encrypt"
+          variant="contained"
+          fullWidth
+        >
           Credential Encrypt
         </Button>
-        <Button variant="contained" fullWidth>
+        <Button
+          component={Link}
+          to="/cred-decrypt"
+          variant="contained"
+          fullWidth
+        >
           Credential Decrypt
         </Button>
       </Stack>

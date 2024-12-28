@@ -17,7 +17,7 @@ const CryptoTools = () => {
         px: { xs: 2, sm: 4 },
         background: `
           linear-gradient(rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.95)),
-          url(/src/assets/binary.avif)
+          url(/binary.avif)
         `,
         backgroundSize: 'cover',
         backgroundPosition: 'center',

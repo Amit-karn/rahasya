@@ -3,7 +3,7 @@ import "./App.css";
 import CredentialEncryptor from "./CredentialEncryptor";
 import CredentialDecryptor from "./CredentialDecryptor";
 import CryptoTools from "./CryptoTools";
-import { BrowserRouter, Routes, Route } from "react-router";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 function App() {
   const theme = createTheme({
