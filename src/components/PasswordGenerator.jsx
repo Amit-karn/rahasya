@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Paper, Typography, Stack, Slider, Checkbox, FormControlLabel, Button, Grid, IconButton } from '@mui/material';
+import { Paper, Typography, Stack, Slider, Checkbox, FormControlLabel, Button, Grid2 as Grid, IconButton } from '@mui/material';
 import { ContentCopy } from '@mui/icons-material';
 
 const PasswordGenerator = () => {
@@ -12,9 +12,9 @@ const PasswordGenerator = () => {
   const [password, setPassword] = useState('');
 
   const generatePassword = () => {
-    const upperCaseChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    const lowerCaseChars = 'abcdefghijklmnopqrstuvwxyz';
-    const numberChars = '0123456789';
+    const upperCaseChars = 'ABCDEFGHJKMNPQRSTUVWXYZ';
+    const lowerCaseChars = 'abcdefghjkmnpqrstuvwxyz';
+    const numberChars = '23456789';
     const symbolChars = '!@#$%^&*()_+[]{}|;:,.<>?';
     const devanagariChars = 'अआइईउऊऋऌऍऎएऐऑऒओऔकखगघङचछजझञटठडढणतथदधनपफबभमयरलवशषसह';
 
@@ -25,10 +25,33 @@ const PasswordGenerator = () => {
     if (includeSymbols) charSet += symbolChars;
     if (includeDevanagari) charSet += devanagariChars;
 
+    const avoidSequential = (str) => {
+      for (let i = 0; i < str.length - 2; i++) {
+        if (
+          str.charCodeAt(i) + 1 === str.charCodeAt(i + 1) &&
+          str.charCodeAt(i + 1) + 1 === str.charCodeAt(i + 2)
+        ) {
+          return true;
+        }
+      }
+      return false;
+    };
+
     let generatedPassword = '';
-    for (let i = 0; i < length; i++) {
+    let usedChars = new Set();
+
+    while (generatedPassword.length < length) {
       const randomIndex = Math.floor(Math.random() * charSet.length);
-      generatedPassword += charSet[randomIndex];
+      const char = charSet[randomIndex];
+
+      if (
+        !usedChars.has(char) &&
+        !avoidSequential(generatedPassword + char) &&
+        (generatedPassword.length > 0 || !numberChars.includes(char) && !symbolChars.includes(char))
+      ) {
+        generatedPassword += char;
+        usedChars.add(char);
+      }
     }
 
     setPassword(generatedPassword);
@@ -53,31 +76,31 @@ const PasswordGenerator = () => {
           marks
         />
         <Grid container spacing={2}>
-          <Grid item xs={12} sm={6}>
+          <Grid size={{xs: 12, sm: 6}}>
             <FormControlLabel
               control={<Checkbox checked={includeUppercase} onChange={(e) => setIncludeUppercase(e.target.checked)} />}
               label="Include Uppercase Letters"
             />
           </Grid>
-          <Grid item xs={12} sm={6}>
+          <Grid size={{xs: 12, sm: 6}}>
             <FormControlLabel
               control={<Checkbox checked={includeLowercase} onChange={(e) => setIncludeLowercase(e.target.checked)} />}
               label="Include Lowercase Letters"
             />
           </Grid>
-          <Grid item xs={12} sm={6}>
+          <Grid size={{xs: 12, sm: 6}}>
             <FormControlLabel
               control={<Checkbox checked={includeNumbers} onChange={(e) => setIncludeNumbers(e.target.checked)} />}
               label="Include Numbers"
             />
           </Grid>
-          <Grid item xs={12} sm={6}>
+          <Grid size={{xs: 12, sm: 6}}>
             <FormControlLabel
               control={<Checkbox checked={includeSymbols} onChange={(e) => setIncludeSymbols(e.target.checked)} />}
               label="Include Symbols"
             />
           </Grid>
-          <Grid item xs={12} sm={6}>
+          <Grid size={{xs: 12, sm: 6}}>
             <FormControlLabel
               control={<Checkbox checked={includeDevanagari} onChange={(e) => setIncludeDevanagari(e.target.checked)} />}
               label="Include Devanagari Characters"

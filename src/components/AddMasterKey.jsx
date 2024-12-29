@@ -14,7 +14,7 @@ import {
 } from "@mui/material";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 import { maskMasterKey } from "../utils/DataUtils";
-import { generateEncryptionKey } from "../utils/EncryptionUtils";
+import { generateEncryptionKey } from "../utils/CryptoUtils";
 import passwordManagerConfig from "../config/PasswordManagerConfig";
 
 const AddMasterKey = ({
