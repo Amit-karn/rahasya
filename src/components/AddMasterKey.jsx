@@ -11,11 +11,20 @@ import {
   InputAdornment,
   IconButton,
   CircularProgress,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
 } from "@mui/material";
-import { Visibility, VisibilityOff } from "@mui/icons-material";
+import {
+  Visibility,
+  VisibilityOff,
+  ArrowDropDownTwoTone,
+  ArrowDropUpTwoTone
+} from "@mui/icons-material";
 import { maskMasterKey } from "../utils/DataUtils";
-import { generateEncryptionKey } from "../utils/CryptoUtils";
 import passwordManagerConfig from "../config/PasswordManagerConfig";
+import { encrypt, generateEncryptionKeyFromMasterKey } from "../utils/CredLockerUtils";
 
 const AddMasterKey = ({
   masterKey,
@@ -29,6 +38,8 @@ const AddMasterKey = ({
   const [showMasterKey, setShowMasterKey] = useState(false);
   const [showEncryptionKey, setShowEncryptionKey] = useState(false);
   const [error, setError] = useState("");
+  const [showIterationsDropdown, setShowIterationsDropdown] = useState(false);
+  const [iterations, setIterations] = useState(passwordManagerConfig.masterKeyDefaultIteraion);
 
   const resetState = () => {
     setIsGeneratingKey(false);
@@ -37,6 +48,8 @@ const AddMasterKey = ({
     setShowMasterKey(false);
     setShowEncryptionKey(false);
     setError("");
+    setShowIterationsDropdown(false);
+    setIterations(passwordManagerConfig.masterKeyDefaultIteraion);
   };
 
   const generateMasterKey = async () => {
@@ -52,7 +65,8 @@ const AddMasterKey = ({
     setIsGeneratingKey(true);
     try {
       setStatusBar(false, "", false);
-      let generatedKey = await generateEncryptionKey(tempMasterKey);
+      const generatedKey = await generateEncryptionKeyFromMasterKey(tempMasterKey, iterations);
+      await encrypt(generatedKey, "test it now....");
       setMasterKey(generatedKey);
       setOpenMasterKeyDialog(false);
       setTempMasterKey("");
@@ -67,13 +81,16 @@ const AddMasterKey = ({
     } finally {
       resetState();
     }
-  };
+  }
+    
 
   const handleMasterKeyDialogClose = (event, reason) => {
     if (reason !== "backdropClick" && reason !== "escapeKeyDown") {
       setOpenMasterKeyDialog(false);
       setTempMasterKey("");
       setError("");
+      setShowIterationsDropdown(false);
+      setIterations(passwordManagerConfig.masterKeyDefaultIteraion);
     }
   };
 
@@ -83,6 +100,14 @@ const AddMasterKey = ({
 
   const handleClickShowMasterKey = () => {
     setShowEncryptionKey(!showEncryptionKey);
+  };
+
+  const handleToggleIterationsDropdown = () => {
+    setShowIterationsDropdown(!showIterationsDropdown);
+  };
+
+  const handleIterationsChange = (event) => {
+    setIterations(parseInt(event.target.value));
   };
 
   return (
@@ -131,7 +156,8 @@ const AddMasterKey = ({
           onChange={(e) => {
             setTempMasterKey(e.target.value);
             if (
-              e.target.value.length >= passwordManagerConfig.masterKeyMinLength &&
+              e.target.value.length >=
+                passwordManagerConfig.masterKeyMinLength &&
               e.target.value.length <= passwordManagerConfig.masterKeyMaxLength
             ) {
               setError("");
@@ -159,6 +185,29 @@ const AddMasterKey = ({
             },
           }}
         />
+        {isGeneratingKey && <Typography variant="body2" color="info">
+              Key generation might take a minute. Please wait...
+        </Typography>}
+        <IconButton onClick={handleToggleIterationsDropdown}>
+          {showIterationsDropdown ? <ArrowDropUpTwoTone />: <ArrowDropDownTwoTone /> }
+        </IconButton>
+        {showIterationsDropdown && (
+          <FormControl fullWidth disabled={!!isGeneratingKey}>
+            <InputLabel id="iterations-label">Iterations</InputLabel>
+            <Select
+              labelId="iterations-label"
+              id="iterations-label-id"
+              value={iterations}
+              onChange={handleIterationsChange}
+            >
+              {passwordManagerConfig.masterKeyIteraionList.map((itr) => (
+                <MenuItem key={itr} value={itr}>
+                  {itr}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        )}
       </DialogContent>
       <DialogActions>
         <Button

@@ -10,7 +10,10 @@ const passwordManagerConfig = {
     masterKeyMinLength: 16,
     masterKeyMaxLength: 32,
     homePage: "/",
-    rahaysa: "रahasya"
+    rahaysa: "रahasya",
+    masterKeyHashIteration: 1_000_000,
+    masterKeyDefaultIteraion: 1_000_000,
+    masterKeyIteraionList: [1_000_000, 5_000_000, 10_000_000, 20_000_000, 50_000_000, 100_000_000]
 };
 
 

@@ -6,11 +6,12 @@ import { cryptoConfig } from "../config/CryptoConfig.js";
  * @param {string} password - The password to be used for key derivation.
  * @param {Uint8Array} salt - The salt to be used in the PBKDF2 function.
  * @param {number} iterations - The number of iterations to run the PBKDF2 key derivation.
+ * @param {boolean} extractable - Is the Key extractable ?.
  * @returns {Promise<{ key: CryptoKey, salt: Uint8Array, iterations: number }>} 
  *          - Returns an object containing the derived key, salt, and iterations.
  * @throws {Error} - Throws an error if key generation fails.
  */
-async function generateKeyWithPBKDF2(password, salt, iterations) {
+async function generateKeyWithPBKDF2(password, salt, iterations, extractable=false) {
     const encoder = new TextEncoder();
     try {
         const startTime = performance.now();
@@ -32,12 +33,12 @@ async function generateKeyWithPBKDF2(password, salt, iterations) {
             },
             keyMaterial,
             { name: 'AES-GCM', length: 256 },
-            false,
+            extractable,
             ['encrypt', 'decrypt']
         );
 
         const endTime = performance.now();
-        console.log(`Key with ${iterations} generated in ${endTime - startTime} ms`);
+        console.log(`Key with ${iterations} iterations generated in ${endTime - startTime} ms`);
         return { key, salt, iterations };
     } catch (error) {
         console.error("Error generating key with PBKDF2:", error);
@@ -50,8 +51,8 @@ async function generateKeyWithPBKDF2(password, salt, iterations) {
  *
  * @param {string} input - The input data to be hashed.
  * @param {number} iterations - The number of iterations to run the hashing process.
- * @returns {Promise<{ hash: ArrayBuffer, iterations: number }>} 
- *          - Returns an object containing the final hash and the number of iterations used.
+ * @returns {Promise<{ hash: Uint8Array, iterations: number }>} 
+ *          - Returns an object containing the final hash as a Uint8Array and the number of iterations used.
  */
 async function sha256HashWithIterations(input, iterations) {
     const startTime = performance.now();
@@ -66,75 +67,62 @@ async function sha256HashWithIterations(input, iterations) {
         hashBuffer = await crypto.subtle.digest('SHA-256', hashBuffer);
     }
     const endTime = performance.now();
-    console.log(`Hash with iterations ${iterations} generated in ${endTime - startTime} ms`);
-    return { hash: hashBuffer, iterations: iterations };
+    console.log(`Hash with ${iterations} iterations generated in ${endTime - startTime} ms`);
+    return { hash: new Uint8Array(hashBuffer), iterations };
 }
 
 /**
- * Hashes the input using SHA-256 and returns the result as a byte array.
+ * Generates an HMAC (Hashed Message Authentication Code) using the SHA-256 algorithm.
  *
- * @param {string} input - The input data to be hashed.
- * @returns {Promise<Uint8Array>} - A promise that resolves to the hash as a byte array.
- */
-async function hashWithSHA256AsBytes(input) {
-    const hashBuffer = await sha256HashWithIterations(input, 1);
-    return new Uint8Array(hashBuffer.hash);
-}
-
-/**
- * Hashes the input using SHA-256 and returns the result as a Base64 encoded string.
- *
- * @param {string} input - The input data to be hashed.
- * @returns {Promise<string>} - A promise that resolves to the Base64 encoded hash.
- */
-async function hashWithSHA256AsBase64(input) {
-    const hashBuffer = await hashWithSHA256AsBytes(input);
-    return arrayBufferToBase64(hashBuffer);
-}
-
-/**
- * Generates a HMAC (Hash-based Message Authentication Code) with the given key and message.
- *
- * @param {string} key - The key to be used for HMAC generation.
- * @param {string} message - The message to be authenticated with the HMAC.
- * @returns {Promise<ArrayBuffer>} - A promise that resolves to the HMAC in ArrayBuffer format.
+ * @param {Uint8Array} key - The key used for the HMAC.
+ * @param {string} message - The message to be authenticated.
+ * @returns {Promise<Uint8Array>} - The HMAC of the message as a Uint8Array.
  */
 async function generateHMAC(key, message) {
-    const encoder = new TextEncoder();
-    const keyBytes = encoder.encode(key);
-    const messageBytes = encoder.encode(message);
+    try {
+        const encoder = new TextEncoder();
+        const messageBytes = encoder.encode(message);
 
-    // Import the key to use in the HMAC generation
-    const cryptoKey = await crypto.subtle.importKey(
-        'raw', keyBytes, { name: 'HMAC', hash: { name: cryptoConfig.hash } },
-        false, ['sign']
-    );
+        // Import the key as a cryptographic key
+        const cryptoKey = await crypto.subtle.importKey(
+            'raw', key, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']
+        );
 
-    // Generate and return the HMAC
-    return await crypto.subtle.sign('HMAC', cryptoKey, messageBytes);
+        // Generate the HMAC
+        const hmac = await crypto.subtle.sign('HMAC', cryptoKey, messageBytes);
+
+        // Return the result as a Uint8Array
+        return new Uint8Array(hmac);
+    } catch (error) {
+        console.error("HMAC generation failed:", error);
+        throw new Error("HMAC generation failed.");
+    }
 }
 
 /**
- * Converts an ArrayBuffer or Uint8Array to a Base64 string.
+ * Converts a Uint8Array to a Base64 string.
  *
- * @param {ArrayBuffer | Uint8Array} buffer - The buffer to convert.
+ * @param {Uint8Array} buffer - The buffer to convert.
  * @returns {string} - The Base64 encoded string.
  */
-function arrayBufferToBase64(buffer) {
-    // Check if the buffer is a Uint8Array, if not convert it to Uint8Array
-    const uint8Array = buffer instanceof Uint8Array ? buffer : new Uint8Array(buffer);
-    const binary = String.fromCharCode(...uint8Array);
+function uint8ArrayToBase64(buffer) {
+    const binary = String.fromCharCode(...buffer);
     return btoa(binary);  // Convert to Base64 using btoa
 }
 
 /**
- * Generates a random number of iterations for cryptographic operations.
+ * Converts a Base64 string to a Uint8Array.
  *
- * @returns {number} - A random number of iterations between 1,000,000 and 10,000,000.
+ * @param {string} base64 - The Base64 encoded string.
+ * @returns {Uint8Array} - The decoded Uint8Array.
  */
-function getRandomIterations() {
-    const iterations = Math.floor(Math.random() * 10) + 1;
-    return iterations * 1000000;
+function base64ToUint8Array(base64) {
+    const binaryString = atob(base64);
+    const uint8Array = new Uint8Array(binaryString.length);
+    for (let i = 0; i < binaryString.length; i++) {
+        uint8Array[i] = binaryString.charCodeAt(i);
+    }
+    return uint8Array;
 }
 
 /**
@@ -151,34 +139,30 @@ function generateRandomValues(length) {
 
 /**
  * Encrypts data using AES-GCM algorithm with Additional Authenticated Data (AAD).
- * AES-GCM provides both confidentiality (encryption) and integrity (authentication) for the data.
- * 
+ *
  * @param {CryptoKey} key - The AES key used for encryption.
  * @param {string} data - The plaintext data to be encrypted.
  * @param {Uint8Array} iv - The initialization vector (IV) used during encryption.
  * @param {string} aad - Additional Authenticated Data (AAD) to provide integrity for both the encrypted data and AAD.
- * @returns {Promise<{ ciphertext: ArrayBuffer, iv: Uint8Array, aad: string }>} - The encrypted data, initialization vector (IV), and the AAD used in encryption.
+ * @returns {Promise<{ ciphertext: Uint8Array, iv: Uint8Array, aad: string }>} 
+ *          - The encrypted data as a Uint8Array, initialization vector (IV), and the AAD used in encryption.
  */
 async function encryptWithAesGcm(key, data, iv, aad) {
-    // Convert the data and AAD into byte arrays using TextEncoder
-    const encodedData = new TextEncoder().encode(data); // Data to encrypt
-    const encodedAAD = new TextEncoder().encode(aad);   // AAD for integrity check
+    const encodedData = new TextEncoder().encode(data);
+    const encodedAAD = new TextEncoder().encode(aad);
 
     try {
-        // Encrypt the data using AES-GCM with the generated IV and AAD
         const ciphertext = await crypto.subtle.encrypt(
             { 
                 name: 'AES-GCM', 
                 iv: iv,
-                additionalData: encodedAAD, // Additional Authenticated Data (AAD) for integrity
-                tagLength: 128 // Standard authentication tag length (128 bits)
+                additionalData: encodedAAD, 
+                tagLength: 128 
             },
-            key, // The AES key used for encryption
-            encodedData // The data to be encrypted
+            key,
+            encodedData
         );
-
-        // Return an object containing the ciphertext, IV, and AAD (for decryption later)
-        return { ciphertext, iv, aad };
+        return { ciphertext: new Uint8Array(ciphertext), iv, aad };
     } catch (error) {
         console.error("Encryption failed:", error);
         throw new Error("Encryption failed.");
@@ -187,66 +171,142 @@ async function encryptWithAesGcm(key, data, iv, aad) {
 
 /**
  * Decrypts data that was encrypted with AES-GCM, including Additional Authenticated Data (AAD).
- * Ensures the integrity of both the encrypted data and the provided AAD.
- * 
+ *
  * @param {CryptoKey} key - The AES key used for decryption.
- * @param {ArrayBuffer} ciphertext - The encrypted data to be decrypted.
+ * @param {Uint8Array} ciphertext - The encrypted data to be decrypted.
  * @param {Uint8Array} iv - The initialization vector (IV) used during encryption.
- * @param {string} aad - The AAD used during encryption, which must match.
- * @returns {Promise<string>} - The decrypted plaintext data as a string.
+ * @param {string} aad - The AAD used during encryption.
+ * @returns {Promise<{ decryptedData: string, iv: Uint8Array, aad: string }>} 
+ *          - The decrypted plaintext data as a string, along with the IV and AAD used.
  */
 async function decryptWithAesGcm(key, ciphertext, iv, aad) {
-    // Convert the AAD back into a byte array (it must be the same AAD used during encryption)
     const decodedAAD = new TextEncoder().encode(aad);
 
     try {
-        // Decrypt the ciphertext using AES-GCM with the same IV and AAD
         const decryptedData = await crypto.subtle.decrypt(
             { 
                 name: 'AES-GCM', 
                 iv: iv,
-                additionalData: decodedAAD, // Provide the same AAD for integrity check
-                tagLength: 128 // Standard authentication tag length (128 bits)
+                additionalData: decodedAAD,
+                tagLength: 128 
             },
-            key, // The AES key used for decryption
-            ciphertext // The ciphertext to decrypt
+            key,
+            ciphertext
         );
 
-        // Decode the decrypted data (Uint8Array) back into a string
-        const decodedData = new TextDecoder().decode(decryptedData);
-        return decodedData; // Return the decrypted string data
+        const decryptedString = new TextDecoder().decode(decryptedData);
+        return { decryptedData: decryptedString, iv, aad }; // Returning decrypted data along with IV and AAD
     } catch (error) {
         console.error("Decryption failed:", error);
         throw new Error("Decryption failed.");
     }
 }
 
-const password = "this is my password and i know it";
-const salt = generateRandomValues(32);
-const masterKey = await generateKeyWithPBKDF2(password,
-    salt, 1_000_0000);
-console.log(arrayBufferToBase64(masterKey.salt));
-console.log(masterKey);    
-const data = "this is a test data "+arrayBufferToBase64(generateRandomValues(10))
-const aad = "jkiojkio this is aad"
-const iv = generateRandomValues(12)
-const encrytedData = await encryptWithAesGcm(masterKey.key, data, iv, aad)
-console.log(encrytedData)
-console.log(arrayBufferToBase64(encrytedData.ciphertext))
-const decrytpedData = await decryptWithAesGcm(masterKey.key, encrytedData.ciphertext, iv, aad)
-console.log(decrytpedData)
+/**
+ * Generates a random number of iterations for cryptographic operations.
+ *
+ * @returns {number} - A random number of iterations between 1,000,000 and 10,000,000.
+ */
+function getRandomIterations() {
+    const iterations = Math.floor(Math.random() * 10) + 1;
+    return iterations * 1000000;
+}
+
+/**
+ * Imports a JWK (JSON Web Key) as a CryptoKey.
+ *
+ * @param {Object} jwk - The JWK to be imported.
+ * @returns {Promise<CryptoKey>} - The imported CryptoKey.
+ */
+async function importJwkAsCryptoKey(jwk) {
+    try {
+        const cryptoKey = await crypto.subtle.importKey(
+            'jwk',          
+            jwk,      
+            { name: 'AES-GCM' },
+            false,
+            ['encrypt', 'decrypt']
+        );
+
+        console.log('Imported CryptoKey:', cryptoKey);
+        return cryptoKey;
+    } catch (error) {
+        console.error('Error importing JWK:', error);
+        throw new Error('Failed to import JWK.');
+    }
+}
+
+/**
+ * Extracts the raw key from an AES CryptoKey (as JWK).
+ *
+ * @param {CryptoKey} cryptoKey - The CryptoKey to extract.
+ * @returns {Promise<JsonWebKey>} - The raw key material as JWK.
+ */
+async function extractKeyToJwk(cryptoKey) {
+    try {
+        const exportedKey = await crypto.subtle.exportKey('jwk', cryptoKey);
+        console.log("exported key", exportedKey)
+        return exportedKey;
+    } catch (error) {
+        console.error('Error extracting key:', error);
+        throw new Error('Failed to extract key.');
+    }
+}
+
+// Encryption-------------------
+// const password = "this is my password and i know it";
+// const salt = (await sha256HashWithIterations(password, cryptoConfig.masterKeyHashIteration)).hash; //base64ToUint8Array("9G/Pu3lMgAwEQjA/L0nBbCRG3hiCzEQZcz5ewwiEAAs="); // Use pre-generated salt
+// const iterations = 100_000_000; // PBKDF2 iterations count
+// console.log("Salt: ", uint8ArrayToBase64(salt))
+
+// // 1. Generate a master key using PBKDF2
+// const masterKey = await generateKeyWithPBKDF2(password, salt, iterations);
+// console.log("Generated Master Key:", masterKey);
+
+// // 2. Define data, AAD, and IV for encryption
+// const data = "this is a test data. encrypted test"; // Adding random values to data for variety
+// const aad = "jkiojkio this is aad";  // Additional Authenticated Data (AAD)
+// const iv = generateRandomValues(12);  // AES-GCM typically uses a 12-byte IV for better security
+
+// // 3. Encrypt the data using AES-GCM
+// const encryptedData = await encryptWithAesGcm(masterKey.key, data, iv, aad);
+// console.log("Encrypted Data (Ciphertext):", uint8ArrayToBase64(encryptedData.ciphertext));
+// console.log("IV Used for Encryption:", uint8ArrayToBase64(encryptedData.iv));
+// console.log("AAD Used for Encryption:", encryptedData.aad);
+
+
+//Decryption---------------------------
+// const password = "this is my password and i know it";
+// const salt = (await sha256HashWithIterations(password, cryptoConfig.masterKeyHashIteration)).hash; //base64ToUint8Array("9G/Pu3lMgAwEQjA/L0nBbCRG3hiCzEQZcz5ewwiEAAs="); // Use pre-generated salt
+// const iterations = 100_000_000; // PBKDF2 iterations count
+// console.log("Salt: ", uint8ArrayToBase64(salt))
+
+// // 1. Generate the master key using PBKDF2
+// const masterKey = await generateKeyWithPBKDF2(password, salt, iterations);
+// console.log("Generated Master Key:", masterKey);
+
+// // 2. Define the ciphertext, IV, and AAD used during encryption (Assuming the data was encrypted earlier)
+// const ciphertextBase64 = "E0enfTHnARgiRcOKTVOBnptMULFekm8RKUVxqCjsK2ETaPVvRrxVNpSU6hHuj2NHqDpF"; // Example base64 encrypted data
+// const iv = base64ToUint8Array("0H2dOUldtty5kUyQ");  // IV used during encryption (it must match exactly)
+// const aad = "jkiojkio this is aad";  // AAD used during encryption (it must match exactly)
+
+// // 3. Decrypt the data using AES-GCM
+// const decryptedData = await decryptWithAesGcm(masterKey.key, base64ToUint8Array(ciphertextBase64), iv, aad);
+// console.log("Decrypted Data:", decryptedData);
 
 
 // Exporting functions to be used in other modules
+
 export {
     generateKeyWithPBKDF2,
     sha256HashWithIterations,
-    hashWithSHA256AsBytes,
-    hashWithSHA256AsBase64,
     generateHMAC,
-    arrayBufferToBase64,
-    getRandomIterations,
+    uint8ArrayToBase64,
+    base64ToUint8Array,
     generateRandomValues,
     encryptWithAesGcm,
-    decryptWithAesGcm
+    decryptWithAesGcm,
+    getRandomIterations,
+    extractKeyToJwk,
+    importJwkAsCryptoKey
 };
