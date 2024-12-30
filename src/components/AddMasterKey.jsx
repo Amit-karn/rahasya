@@ -24,7 +24,7 @@ import {
 } from "@mui/icons-material";
 import { maskMasterKey } from "../utils/DataUtils";
 import passwordManagerConfig from "../config/PasswordManagerConfig";
-import { encrypt, generateEncryptionKeyFromMasterKey } from "../utils/CredLockerUtils";
+import { generateEncryptionKeyFromMasterKey } from "../utils/CredLockerUtils";
 
 const AddMasterKey = ({
   masterKey,
@@ -66,7 +66,6 @@ const AddMasterKey = ({
     try {
       setStatusBar(false, "", false);
       const generatedKey = await generateEncryptionKeyFromMasterKey(tempMasterKey, iterations);
-      await encrypt(generatedKey, "test it now....");
       setMasterKey(generatedKey);
       setOpenMasterKeyDialog(false);
       setTempMasterKey("");

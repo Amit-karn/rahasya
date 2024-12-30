@@ -1,11 +1,14 @@
 // fileUtils.js
 
+import { getJwkFromEncryptionKey, sign, verify } from "./CredLockerUtils";
+import { generateHMAC, generateHmacKeyWithPBKDF2, uint8ArrayToBase64 } from "./CryptoUtils";
+
 /**
  * Reads the file line by line, processes the content and converts it to JSON format.
  * @param {String} fileContent - The fileContent to be processed.
  * @returns {object} - The processed content as JSON, or an error message if the format is invalid.
  */
-function readFileLineByLineSync(fileContent) {
+async function readFileLineByLine(fileContent, masterKey) {
     try {
         const lines = fileContent.split("\n");  // Split content by newlines
         //remove any empty lines from end
@@ -13,7 +16,7 @@ function readFileLineByLineSync(fileContent) {
             lines.pop();
         }
         // Validate file format before processing
-        if (!isValidFileFormat(lines)) {
+        if (!await isValidFileFormat(lines, masterKey)) {
             throw new Error("Error: Invalid file format. Ensure the file contains the correct markers and structure.");
         }
 
@@ -69,7 +72,7 @@ function readFileLineByLineSync(fileContent) {
  * @param {Array} lines - Lines of text from the file.
  * @returns {boolean} - Returns true if the file format is valid, false otherwise.
  */
-function isValidFileFormat(lines) {
+async function isValidFileFormat(lines, masterKey) {
     try {
         console.log(lines.length);
         console.log(lines[lines.length - 1].trim());
@@ -86,7 +89,7 @@ function isValidFileFormat(lines) {
         if (hmacLine[0] !== "HMAC") {
             return false;
         }
-        return validateFileHmac(hmacLine[1], lines.slice(0, lines.length - 2));
+        return await validateFileHmac(hmacLine[1], lines.slice(0, lines.length - 2), masterKey);
     } catch {
         return false;
     }
@@ -130,14 +133,17 @@ function processIntegrity(lines) {
  * @param {Array} lines - Lines of text from the file excluding the HMAC line.
  * @returns {boolean} - Returns true if the HMAC is valid, false otherwise.
  */
-function validateFileHmac(hmac, lines) {
-    // Implement your HMAC validation logic here
-    // For now, we"ll just return true for the sake of example
-    // Trim each line and join in single string
-    let fileContent = lines.map(line => line.trim()).join("");
-    return true;
+async function validateFileHmac(hmac, lines, masterKey) {
+    let fileContent = lines.map(line => line.trim()).join("\n");
+    console.log("validateFileHmac", hmac);
+    return await verify(masterKey, hmac, fileContent);
+}
+
+async function generateFileHmac(fileContent, masterKey) {
+    return await sign(masterKey, fileContent);
 }
 
 export {
-    readFileLineByLineSync,
+    readFileLineByLine,
+    generateFileHmac
 };

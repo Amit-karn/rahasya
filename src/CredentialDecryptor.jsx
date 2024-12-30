@@ -19,7 +19,7 @@ import {
 } from "@mui/icons-material";
 import FileUpload from "./components/FileUpload";
 import StatusBar from "./components/StatusBar";
-import { readFileLineByLineSync } from "./utils/FileUtils";
+import { readFileLineByLine } from "./utils/FileUtils";
 import AddSecret from "./components/AddSecret";
 import passwordManagerConfig from "./config/PasswordManagerConfig";
 import { bytesToMB, maskMasterKey } from "./utils/DataUtils";
@@ -176,8 +176,8 @@ const CredentialDecryptor = () => {
 
   const processAndDisplayUploadedFile = (uploadedFile) => {
     const reader = new FileReader();
-    reader.onload = (e) => {
-      const [status, result] = readFileLineByLineSync(e.target.result);
+    reader.onload = async(e) => {
+      const [status, result] = await readFileLineByLine(e.target.result, masterKey);
       if (status === "error") {
         setStatusbar(true, result, true);
         return;

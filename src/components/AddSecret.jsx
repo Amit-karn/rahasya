@@ -17,6 +17,7 @@ import { Visibility, VisibilityOff } from "@mui/icons-material";
 import PropTypes from "prop-types";
 import { maskMasterKey, maskSecret } from "../utils/DataUtils";
 import passwordManagerConfig from "../config/PasswordManagerConfig";
+import { encrypt } from "../utils/CredLockerUtils";
 
 const AddSecret = ({
   openPopup,
@@ -45,7 +46,7 @@ const AddSecret = ({
     algorithm: "",
     masterKey: "",
     aad: "", // Additional authenticated data
-    encryptedSecret: ""
+    encryptedSecret: "",
   });
   const [loading, setLoading] = useState(false);
 
@@ -69,7 +70,7 @@ const AddSecret = ({
       algorithm: "",
       masterKey: "",
       aad: "",
-      encryptedSecret: ""
+      encryptedSecret: "",
     });
     setLoading(false);
     setOpenPopup(false);
@@ -84,14 +85,24 @@ const AddSecret = ({
         setKeyError("");
       }
     } else if (name === "secretValue") {
-      if (value.length < passwordManagerConfig.secretMinLength || value.length > passwordManagerConfig.secretMaxLength) {
-        setSecretError(`Secret: It should be between ${passwordManagerConfig.secretMinLength} and ${passwordManagerConfig.secretMaxLength} characters.`);
+      if (
+        value.length < passwordManagerConfig.secretMinLength ||
+        value.length > passwordManagerConfig.secretMaxLength
+      ) {
+        setSecretError(
+          `Secret: It should be between ${passwordManagerConfig.secretMinLength} and ${passwordManagerConfig.secretMaxLength} characters.`
+        );
       } else {
         setSecretError("");
       }
     } else if (useAAD && name === "aad") {
-      if (value.length < passwordManagerConfig.aadMinLength || value.length > passwordManagerConfig.aadMaxLength) {
-        setAadError(`AAD: The length should be between ${passwordManagerConfig.aadMinLength} and ${passwordManagerConfig.aadMaxLength} characters.`);
+      if (
+        value.length < passwordManagerConfig.aadMinLength ||
+        value.length > passwordManagerConfig.aadMaxLength
+      ) {
+        setAadError(
+          `AAD: The length should be between ${passwordManagerConfig.aadMinLength} and ${passwordManagerConfig.aadMaxLength} characters.`
+        );
       } else {
         setAadError("");
       }
@@ -99,24 +110,27 @@ const AddSecret = ({
     setNewSecret((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleEncrypt = () => {
+  const handleEncrypt = async () => {
     setLoading(true);
-    setTimeout(() => {
-      setEncryptionResult({
-        keyName: newSecret.keyName + "ENC",
-        secretValue: newSecret.secretValue + "ENC",
-        algorithm: algorithm,
-        masterKey: masterKey,
-        aad: newSecret.aad + "ENC", // Additional authenticated data
-        encryptedSecret: `ENC[${newSecret.secretValue}:hvfbhjjjjjjj561651≤6561561561561561156156166666666666]`
-      });
-      setLoading(false);
-      setShowConfirmation(true);
-    }, 5000); // Simulate a delay of 2 seconds
+    const encryptedOutput = await encrypt(
+      masterKey,
+      newSecret.secretValue,
+      newSecret.aad
+    );
+    setEncryptionResult({
+      keyName: newSecret.keyName,
+      secretValue: newSecret.secretValue,
+      algorithm: algorithm,
+      masterKey: masterKey,
+      aad: newSecret.aad,
+      encryptedSecret: encryptedOutput,
+    });
+    setLoading(false);
+    setShowConfirmation(true);
   };
 
-  const handleConfirmEncryptAndAdd = () => {
-    addToSecretsList(newSecret.keyName, newSecret.secretValue, newSecret.aad);
+  const handleConfirmEncryptAndAdd = async() => {
+    await addToSecretsList(encryptionResult.keyName, encryptionResult.encryptedSecret, encryptionResult.aad);
     resetState();
   };
 
@@ -132,9 +146,12 @@ const AddSecret = ({
 
   const isFormValid = () => {
     const isSecretValid =
-      newSecret.secretValue.length >= passwordManagerConfig.secretMinLength && newSecret.secretValue.length <= passwordManagerConfig.secretMaxLength;
+      newSecret.secretValue.length >= passwordManagerConfig.secretMinLength &&
+      newSecret.secretValue.length <= passwordManagerConfig.secretMaxLength;
     const isAADValid =
-      !useAAD || (newSecret.aad.length >= passwordManagerConfig.aadMinLength && newSecret.aad.length <= passwordManagerConfig.aadMaxLength);
+      !useAAD ||
+      (newSecret.aad.length >= passwordManagerConfig.aadMinLength &&
+        newSecret.aad.length <= passwordManagerConfig.aadMaxLength);
     return (
       newSecret.keyName.trim() !== "" &&
       isSecretValid &&
@@ -160,7 +177,7 @@ const AddSecret = ({
   const resetConfimationDialogState = () => {
     handleClickShowConfirmationSecret();
     setShowConfirmation(false);
-  }
+  };
 
   return (
     <div>
@@ -201,11 +218,12 @@ const AddSecret = ({
                       onClick={handleClickShowSecret}
                       edge="end"
                     >
-                    {showSecret ? <Visibility /> : <VisibilityOff />}
-                  </IconButton>
-                </InputAdornment>
-              ),
-            }}}
+                      {showSecret ? <Visibility /> : <VisibilityOff />}
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              },
+            }}
           />
           <TextField
             required
@@ -218,7 +236,8 @@ const AddSecret = ({
             slotProps={{
               input: {
                 readOnly: true,
-            }}}
+              },
+            }}
           />
           <TextField
             margin="dense"
@@ -230,7 +249,8 @@ const AddSecret = ({
             slotProps={{
               input: {
                 readOnly: true,
-            }}}
+              },
+            }}
           />
           <FormControlLabel
             control={
@@ -253,7 +273,7 @@ const AddSecret = ({
               margin="dense"
               name="aad"
               label="Additional Authenticated Data (AAD)"
-              type={showAad ? "text": "password"}
+              type={showAad ? "text" : "password"}
               fullWidth
               value={newSecret.aad}
               onChange={handlePopupChange}
@@ -282,7 +302,12 @@ const AddSecret = ({
           )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCancel} color="primary" variant="outlined" disabled={loading}>
+          <Button
+            onClick={handleCancel}
+            color="primary"
+            variant="outlined"
+            disabled={loading}
+          >
             Cancel
           </Button>
           <Button
@@ -299,7 +324,14 @@ const AddSecret = ({
 
       <Dialog open={showConfirmation} onClose={handleClose} maxWidth="lg">
         <DialogTitle>Confirm Secret Details</DialogTitle>
-        <DialogContent sx={{display: "flex", flexDirection: "column", gap: 1, wordBreak: "break-word"}}>
+        <DialogContent
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            gap: 1,
+            wordBreak: "break-word",
+          }}
+        >
           <Typography variant="body1">
             <strong>Key Name:</strong> {encryptionResult.keyName}
           </Typography>
@@ -317,7 +349,8 @@ const AddSecret = ({
             </IconButton>
           </Typography>
           <Typography variant="body1">
-            <strong>Encrypted Secret:</strong> {encryptionResult.encryptedSecret}
+            <strong>Encrypted Secret:</strong>{" "}
+            {encryptionResult.encryptedSecret}
           </Typography>
           <Typography
             variant="body1"
@@ -325,13 +358,15 @@ const AddSecret = ({
               wordWrap: "break-word",
             }}
           >
-            <strong>Master Key:</strong> {maskMasterKey(encryptionResult.masterKey)}
+            <strong>Master Key:</strong>{" "}
+            {maskMasterKey(encryptionResult.masterKey)}
           </Typography>
           <Typography variant="body1">
             <strong>Algorithm:</strong> {encryptionResult.algorithm}
           </Typography>
           <Typography variant="body1">
-            <strong>AAD:</strong> {useAAD ? encryptionResult.aad : "No AAD used"}
+            <strong>AAD:</strong>{" "}
+            {useAAD ? encryptionResult.aad : "No AAD used"}
           </Typography>
         </DialogContent>
         <DialogActions>

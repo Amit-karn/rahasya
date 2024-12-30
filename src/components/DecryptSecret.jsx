@@ -15,6 +15,7 @@ import { Visibility, VisibilityOff } from "@mui/icons-material";
 import PropTypes from "prop-types";
 import { maskMasterKey, maskSecret } from "../utils/DataUtils";
 import passwordManagerConfig from "../config/PasswordManagerConfig";
+import { decrypt } from "../utils/CredLockerUtils";
 
 const DecryptSecret = ({
   openPopup,
@@ -23,6 +24,7 @@ const DecryptSecret = ({
   masterKey,
   keyName,
   encryptedSecret,
+  text,
 }) => {
   const [aad, setAad] = useState("");
   const [aadError, setAadError] = useState("");
@@ -72,25 +74,26 @@ const DecryptSecret = ({
     setAad(value);
   };
 
-  const handleDecrypt = () => {
+  const handleDecrypt = async () => {
     setLoading(true);
-    setTimeout(() => {
-      setDecryptionResult({
-        keyName: keyName + "ENC",
-        secretValue: "DEC[sfhvbavbowvoinrvkmvijvkdjfnvijdfhviudifvndklfvndfvukdnfvjdkjfvndjkfvn]",
-        algorithm: algorithm,
-        masterKey: masterKey,
-        aad: aad + "ENC", // Additional authenticated data
-        encryptedSecret: encryptedSecret,
-      });
-      setLoading(false);
-      setShowConfirmation(true);
-    }, 5000); // Simulate a delay of 2 seconds
+    const decryptedOutput = await decrypt(masterKey, encryptedSecret, aad);
+    setDecryptionResult({
+      keyName: keyName,
+      secretValue: decryptedOutput,
+      algorithm,
+      masterKey,
+      aad,
+      encryptedSecret: encryptedSecret,
+    });
+    setLoading(false);
+    setShowConfirmation(true);
   };
 
   const isFormValid = () => {
     const isAADValid =
-      !isAadRequired() || (aad.length >= passwordManagerConfig.aadMinLength && aad.length <= passwordManagerConfig.aadMaxLength);
+      !isAadRequired() ||
+      (aad.length >= passwordManagerConfig.aadMinLength &&
+        aad.length <= passwordManagerConfig.aadMaxLength);
     return (
       keyName.trim() !== "" &&
       encryptedSecret.trim() !== "" &&
@@ -126,6 +129,11 @@ const DecryptSecret = ({
       <Dialog open={openPopup} onClose={handleClose}>
         <DialogTitle>Decrypt Secret</DialogTitle>
         <DialogContent>
+          {text && (
+            <Typography variant="body2" color="warning">
+              {text}
+            </Typography>
+          )}
           <TextField
             required
             autoFocus
@@ -136,7 +144,10 @@ const DecryptSecret = ({
             fullWidth
             value={keyName}
             error={!keyName}
-            helperText={!keyName && "The key is empty. This should not have happened. Please try again."}
+            helperText={
+              !keyName &&
+              "The key is empty. This should not have happened. Please try again."
+            }
             slotProps={{
               input: {
                 readOnly: true,
@@ -152,7 +163,10 @@ const DecryptSecret = ({
             fullWidth
             value={encryptedSecret}
             error={!encryptedSecret}
-            helperText={!encryptedSecret && "The encrypted secret is empty. This should not have happened. Please try again."}
+            helperText={
+              !encryptedSecret &&
+              "The encrypted secret is empty. This should not have happened. Please try again."
+            }
             slotProps={{
               input: {
                 readOnly: true,
@@ -192,7 +206,7 @@ const DecryptSecret = ({
               margin="dense"
               name="aad"
               label="Additional Authenticated Data (AAD)"
-              type={showAad ? "text": "password"}
+              type={showAad ? "text" : "password"}
               fullWidth
               value={aad}
               onChange={handleAadChange}
@@ -240,7 +254,12 @@ const DecryptSecret = ({
       <Dialog open={showConfirmation} onClose={handleClose} maxWidth="lg">
         <DialogTitle>Decrypted Secret Details</DialogTitle>
         <DialogContent
-          sx={{ display: "flex", flexDirection: "column", gap: 1, wordBreak: "break-word" }}
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            gap: 1,
+            wordBreak: "break-word",
+          }}
         >
           <Typography variant="body1">
             <strong>Key Name:</strong> {decryptionResult.keyName}
@@ -280,11 +299,7 @@ const DecryptSecret = ({
           </Typography>
         </DialogContent>
         <DialogActions>
-          <Button
-            onClick={handleCancel}
-            color="primary"
-            variant="outlined"
-          >
+          <Button onClick={handleCancel} color="primary" variant="outlined">
             Close
           </Button>
         </DialogActions>
@@ -300,6 +315,7 @@ DecryptSecret.propTypes = {
   masterKey: PropTypes.string.isRequired,
   keyName: PropTypes.string.isRequired,
   encryptedSecret: PropTypes.string.isRequired,
+  text: PropTypes.string,
 };
 
 export default DecryptSecret;

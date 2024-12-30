@@ -18,7 +18,7 @@ import {
 } from "@mui/icons-material";
 import FileUpload from "./components/FileUpload";
 import StatusBar from "./components/StatusBar";
-import { readFileLineByLineSync } from "./utils/FileUtils";
+import { generateFileHmac, readFileLineByLine } from "./utils/FileUtils";
 import AddSecret from "./components/AddSecret";
 import passwordManagerConfig from "./config/PasswordManagerConfig";
 import { bytesToMB, maskMasterKey } from "./utils/DataUtils";
@@ -128,14 +128,28 @@ const CredentialEncryptor = () => {
     );
   };
 
-  const addToFileContentJsonSecretsSection = (key, secret) => {
+  const addToFileContentJsonSecretsSection = async (key, secret) => {
     if (!masterKey) {
       showMasterKeyNotAddedStatus();
       return;
     }
+    const currentDate = new Date().toLocaleDateString("en-CA");
+    const tempFileContentJson = {
+      ...fileContentJson,
+      secrets: { [key]: secret, ...fileContentJson.secrets },
+      integrity: {...fileContentJson.integrity, "DATE": currentDate, "HMAC": "" }
+    }
+    console.log(tempFileContentJson)
+    const tempFileContentStr = generateFileContentForPreview(tempFileContentJson);
+    console.log(tempFileContentStr);
+    console.log(tempFileContentStr.slice(0, tempFileContentStr.indexOf("HMAC: ")), "---")
+    // lines.slice(0, lines.length - 2)
+    const newHmac = await generateFileHmac(tempFileContentStr.slice(0, tempFileContentStr.indexOf("HMAC: ")), masterKey);
+    
     setFileContentJson((prevContent) => ({
       ...prevContent,
       secrets: { [key]: secret, ...prevContent.secrets },
+      integrity: {"DATE": currentDate, "HMAC": newHmac}
     }));
   };
 
@@ -159,7 +173,7 @@ const CredentialEncryptor = () => {
     const secretKeys = Object.keys(fileContentJson.secrets);
     const integrityKeys = Object.keys(fileContentJson.integrity);
 
-    return `This is an auto generated File. Please don"t tamper with it.\n<<<<>>>>\n${secretKeys
+    return `This is an auto generated File. Please don't tamper with it.\n<<<<>>>>\n${secretKeys
       .map((key) => `${key}: ${fileContentJson.secrets[key]}`)
       .join("\n")}\n<<<<<>>>>>\n${integrityKeys
       .map((key) => `${key}: ${fileContentJson.integrity[key]}`)
@@ -201,8 +215,8 @@ const CredentialEncryptor = () => {
 
   const processAndDisplayUploadedFile = (uploadedFile) => {
     const reader = new FileReader();
-    reader.onload = (e) => {
-      const [status, result] = readFileLineByLineSync(e.target.result);
+    reader.onload = async (e) => {
+      const [status, result] = await readFileLineByLine(e.target.result, masterKey);
       if (status === "error") {
         setStatusbar(true, result, true);
         return;
@@ -229,7 +243,7 @@ const CredentialEncryptor = () => {
     }
   };
 
-  const removeSecret = (key) => () => {
+  const removeSecret = async(key) => {
     if (!masterKey) {
       showMasterKeyNotAddedStatus();
       return;
@@ -242,10 +256,20 @@ const CredentialEncryptor = () => {
         resetState();
       }
     } else {
-      setFileContentJson((prevContent) => {
-        const newSecrets = { ...prevContent.secrets };
-        delete newSecrets[key];
-        return { ...prevContent, secrets: newSecrets };
+      const currentDate = new Date().toLocaleDateString("en-CA");
+      const tempSecrets = { ...fileContentJson.secrets };
+      delete tempSecrets[key];
+      const tempFileContentJson = {
+        secrets: tempSecrets,
+        integrity: {...fileContentJson.integrity, "DATE": currentDate }
+      }
+      const tempFileContentStr = generateFileContentForPreview(tempFileContentJson);
+      // lines.slice(0, lines.length - 2)
+      const newHmac = await generateFileHmac(tempFileContentStr.slice(0, tempFileContentStr.indexOf("HMAC: ")), masterKey);
+      
+      setFileContentJson(() => {
+        return { secrets: tempSecrets,
+          integrity: {"DATE": currentDate, "HMAC": newHmac } };
       });
     }
   };
@@ -392,7 +416,7 @@ const CredentialEncryptor = () => {
                     <DeleteForeverOutlined sx={{ m: 0, p: 0, width: "auto" }} />
                   }
                   secret={fileContentJson.secrets[key]}
-                  handleClick={removeSecret(key)}
+                  handleClick={() => removeSecret(key)}
                   buttonContent={"remove"}
                 />
               ))}

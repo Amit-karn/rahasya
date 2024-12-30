@@ -46,6 +46,41 @@ async function generateKeyWithPBKDF2(password, salt, iterations, extractable=fal
     }
 }
 
+async function generateHmacKeyWithPBKDF2(password, salt, iterations) {
+    const encoder = new TextEncoder();
+    try {
+        const startTime = performance.now();
+        // Encode password to bytes
+        const passwordBytes = encoder.encode(password);
+
+        // Import the password as key material for PBKDF2
+        const keyMaterial = await crypto.subtle.importKey(
+            'raw', passwordBytes, { name: cryptoConfig.KeyDerivationFunction }, false, ['deriveKey']
+        );
+
+        // Derive the key using PBKDF2
+        const key = await crypto.subtle.deriveKey(
+            {
+                name: cryptoConfig.KeyDerivationFunction,
+                salt: salt,
+                iterations: iterations,
+                hash: 'SHA-256'
+            },
+            keyMaterial,
+            { name: 'HMAC', hash: "SHA-256", length: 256 },
+            false,
+            ['sign']
+        );
+
+        const endTime = performance.now();
+        console.log(`Key with ${iterations} iterations generated in ${endTime - startTime} ms`);
+        return { key, salt, iterations };
+    } catch (error) {
+        console.error("Error generating key with PBKDF2:", error);
+        throw new Error("Key generation failed.");
+    }
+}
+
 /**
  * Hashes the input data using SHA-256, repeated for a specified number of iterations.
  *
@@ -80,16 +115,12 @@ async function sha256HashWithIterations(input, iterations) {
  */
 async function generateHMAC(key, message) {
     try {
+        console.log(key, message)
         const encoder = new TextEncoder();
         const messageBytes = encoder.encode(message);
 
-        // Import the key as a cryptographic key
-        const cryptoKey = await crypto.subtle.importKey(
-            'raw', key, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']
-        );
-
         // Generate the HMAC
-        const hmac = await crypto.subtle.sign('HMAC', cryptoKey, messageBytes);
+        const hmac = await crypto.subtle.sign('HMAC', key, messageBytes);
 
         // Return the result as a Uint8Array
         return new Uint8Array(hmac);
@@ -205,11 +236,10 @@ async function decryptWithAesGcm(key, ciphertext, iv, aad) {
 /**
  * Generates a random number of iterations for cryptographic operations.
  *
- * @returns {number} - A random number of iterations between 1,000,000 and 10,000,000.
+ * @returns {number} - A random number of iterations between 1 and 10.
  */
 function getRandomIterations() {
-    const iterations = Math.floor(Math.random() * 10) + 1;
-    return iterations * 1000000;
+    return Math.floor(Math.random() * 10) + 1;
 }
 
 /**
@@ -308,5 +338,6 @@ export {
     decryptWithAesGcm,
     getRandomIterations,
     extractKeyToJwk,
-    importJwkAsCryptoKey
+    importJwkAsCryptoKey,
+    generateHmacKeyWithPBKDF2
 };

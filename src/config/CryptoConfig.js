@@ -7,4 +7,7 @@ export const cryptoConfig = {
     keyAlgorithm: 'AES-GCM',
     masterKeyHashIteration: 1_000_000,
     aesGcmIvLengthInBytes: 12,
+    isAadUsedLengthInBytes: 1,
+    currentDateLengthInBytes: 10,
+    defaultMultiplierForFinalKeyIteration: 1_000_000
 };
