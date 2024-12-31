@@ -1,58 +1,61 @@
-import React, { useState } from 'react';
-import { Paper, Typography, Stack, Slider, Checkbox, FormControlLabel, Button, Grid2 as Grid, IconButton } from '@mui/material';
-import { ContentCopy } from '@mui/icons-material';
+import React, { useState } from "react";
+import { Paper, Typography, Stack, Slider, Checkbox, FormControlLabel, Button, Grid2 as Grid, IconButton } from "@mui/material";
+import { ContentCopy } from "@mui/icons-material";
 
 const PasswordGenerator = () => {
   const [length, setLength] = useState(16);
-  const [includeUppercase, setIncludeUppercase] = useState(false);
+  const [includeUppercase, setIncludeUppercase] = useState(true);
   const [includeLowercase, setIncludeLowercase] = useState(true);
   const [includeNumbers, setIncludeNumbers] = useState(false);
   const [includeSymbols, setIncludeSymbols] = useState(false);
   const [includeDevanagari, setIncludeDevanagari] = useState(false);
-  const [password, setPassword] = useState('');
+  const [password, setPassword] = useState("");
+
+  const getRandomInt = (max) => {
+    const array = new Uint32Array(1);
+    crypto.getRandomValues(array);
+    return array[0] % max;
+  };
 
   const generatePassword = () => {
-    const upperCaseChars = 'ABCDEFGHJKMNPQRSTUVWXYZ';
-    const lowerCaseChars = 'abcdefghjkmnpqrstuvwxyz';
-    const numberChars = '23456789';
-    const symbolChars = '!@#$%^&*()_+[]{}|;:,.<>?';
-    const devanagariChars = 'अआइईउऊऋऌऍऎएऐऑऒओऔकखगघङचछजझञटठडढणतथदधनपफबभमयरलवशषसह';
+    const upperCaseChars = "ABCDEFGHJKMNPQRSTUVWXYZ";
+    const lowerCaseChars = "abcdefghjkmnpqrstuvwxyz";
+    const numberChars = "23456789";
+    const symbolChars = "!@#$%^&*()_+[]{}|;:,.<>?";
+    const devanagariChars = "अआइईउऊऋऌऍऎएऐऑऒओऔकखगघङचछजझञटठडढणतथदधनपफबभमयरलवशषसह";
 
-    let charSet = '';
-    if (includeUppercase) charSet += upperCaseChars;
-    if (includeLowercase) charSet += lowerCaseChars;
-    if (includeNumbers) charSet += numberChars;
-    if (includeSymbols) charSet += symbolChars;
-    if (includeDevanagari) charSet += devanagariChars;
+    let charSet = "";
+    let mandatoryChars = "";
 
-    const avoidSequential = (str) => {
-      for (let i = 0; i < str.length - 2; i++) {
-        if (
-          str.charCodeAt(i) + 1 === str.charCodeAt(i + 1) &&
-          str.charCodeAt(i + 1) + 1 === str.charCodeAt(i + 2)
-        ) {
-          return true;
-        }
-      }
-      return false;
-    };
-
-    let generatedPassword = '';
-    let usedChars = new Set();
-
-    while (generatedPassword.length < length) {
-      const randomIndex = Math.floor(Math.random() * charSet.length);
-      const char = charSet[randomIndex];
-
-      if (
-        !usedChars.has(char) &&
-        !avoidSequential(generatedPassword + char) &&
-        (generatedPassword.length > 0 || !numberChars.includes(char) && !symbolChars.includes(char))
-      ) {
-        generatedPassword += char;
-        usedChars.add(char);
-      }
+    if (includeUppercase) {
+      charSet += upperCaseChars;
+      mandatoryChars += upperCaseChars[getRandomInt(upperCaseChars.length)];
     }
+    if (includeLowercase) {
+      charSet += lowerCaseChars;
+      mandatoryChars += lowerCaseChars[getRandomInt(lowerCaseChars.length)];
+    }
+    if (includeNumbers) {
+      charSet += numberChars;
+      mandatoryChars += numberChars[getRandomInt(numberChars.length)];
+    }
+    if (includeSymbols) {
+      charSet += symbolChars;
+      mandatoryChars += symbolChars[getRandomInt(symbolChars.length)];
+    }
+    if (includeDevanagari) {
+      charSet += devanagariChars;
+      mandatoryChars += devanagariChars[getRandomInt(devanagariChars.length)];
+    }
+
+    let generatedPassword = mandatoryChars;
+    while (generatedPassword.length < length) {
+      const randomIndex = getRandomInt(charSet.length);
+      generatedPassword += charSet[randomIndex];
+    }
+
+    // Shuffle the generated password to avoid predictable patterns
+    generatedPassword = generatedPassword.split('').sort(() => getRandomInt(2) - 1).join('');
 
     setPassword(generatedPassword);
   };
@@ -112,7 +115,7 @@ const PasswordGenerator = () => {
         </Button>
         {password && (
           <Stack direction="row" alignItems="center" spacing={2}>
-            <Typography variant="body1" sx={{ wordBreak: 'break-all' }}>
+            <Typography variant="body1" sx={{ wordBreak: "break-all" }}>
               Generated Password: {password}
             </Typography>
             <IconButton onClick={copyToClipboard} color="primary">

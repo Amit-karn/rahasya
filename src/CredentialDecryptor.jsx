@@ -30,6 +30,7 @@ import MessageDialog from "./components/MessageDialog";
 import PreviewPanel from "./components/PreviewPanel";
 import DownloadFile from "./components/DownloadFile";
 import DecryptSecret from "./components/DecryptSecret";
+import LoadingOverlay from "./components/LoadingOverlay";
 
 const CredentialDecryptor = () => {
   // State variables
@@ -51,6 +52,8 @@ const CredentialDecryptor = () => {
 
   const [currentKey, setCurrentKey] = useState("");
   const [currentEncryptedSecret, setCurrentEncryptedSecret] = useState("");
+
+  const [backDrop, setBackDrop] = useState(false);
 
   useEffect(() => {
     if (!masterKey) {
@@ -134,7 +137,7 @@ const CredentialDecryptor = () => {
     const secretKeys = Object.keys(fileContentJson.secrets);
     const integrityKeys = Object.keys(fileContentJson.integrity);
 
-    return `This is an auto generated File. Please don't tamper with it.\n<<<<>>>>\n${secretKeys
+    return `This is an auto generated File. Please do not tamper with it.\n<<<<>>>>\n${secretKeys
       .map((key) => `${key}: ${fileContentJson.secrets[key]}`)
       .join("\n")}\n<<<<<>>>>>\n${integrityKeys
       .map((key) => `${key}: ${fileContentJson.integrity[key]}`)
@@ -168,10 +171,12 @@ const CredentialDecryptor = () => {
       return;
     }
     resetState();
+    setBackDrop(true);
     const uploadedFile = event.target.files[0];
     if (uploadedFile && validateFileTypeAndSize(uploadedFile)) {
       processAndDisplayUploadedFile(uploadedFile);
     }
+    setBackDrop(false);
   };
 
   const processAndDisplayUploadedFile = (uploadedFile) => {
@@ -402,6 +407,7 @@ const CredentialDecryptor = () => {
           </Button>
         }
       />
+      <LoadingOverlay open={backDrop || false} />
     </Container>
   );
 };

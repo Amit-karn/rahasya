@@ -212,6 +212,7 @@ const DecryptSecret = ({
               onChange={handleAadChange}
               error={!!aadError}
               helperText={aadError}
+              disabled={loading}
               slotProps={{
                 input: {
                   endAdornment: (

@@ -18,6 +18,8 @@ import PropTypes from "prop-types";
 import { maskMasterKey, maskSecret } from "../utils/DataUtils";
 import passwordManagerConfig from "../config/PasswordManagerConfig";
 import { encrypt } from "../utils/CredLockerUtils";
+import { checkPasswordStrength } from "../utils/PasswordStrengthUtils";
+import PasswordFeedback from "./PasswordFeedback";
 
 const AddSecret = ({
   openPopup,
@@ -50,6 +52,12 @@ const AddSecret = ({
   });
   const [loading, setLoading] = useState(false);
 
+  const [passwordStrength, setPasswordStrength] = useState("");
+  const [passwordWarnings, setPasswordWarnings] = useState([]);
+  const [passwordSuggestions, setPasswordSuggestions] = useState([]);
+  const [passwordCrackDetails, setPasswordCrackDetails] = useState([]);
+  const [isAddingKey, setIsAddingKey] = useState(false);
+
   const resetState = () => {
     setNewSecret({
       keyName: "",
@@ -74,6 +82,11 @@ const AddSecret = ({
     });
     setLoading(false);
     setOpenPopup(false);
+    setPasswordStrength("");
+    setPasswordWarnings([]);
+    setPasswordSuggestions([]);
+    setPasswordCrackDetails([]);
+    setIsAddingKey(false);
   };
 
   const handlePopupChange = (e) => {
@@ -94,6 +107,12 @@ const AddSecret = ({
         );
       } else {
         setSecretError("");
+        const { strength, warning, suggestions, passwordCrackDetails } =
+          checkPasswordStrength(value);
+        setPasswordStrength(strength);
+        setPasswordWarnings(warning);
+        setPasswordSuggestions(suggestions);
+        setPasswordCrackDetails(passwordCrackDetails);
       }
     } else if (useAAD && name === "aad") {
       if (
@@ -130,6 +149,7 @@ const AddSecret = ({
   };
 
   const handleConfirmEncryptAndAdd = async() => {
+    setIsAddingKey(true);
     await addToSecretsList(encryptionResult.keyName, encryptionResult.encryptedSecret, encryptionResult.aad);
     resetState();
   };
@@ -225,6 +245,14 @@ const AddSecret = ({
               },
             }}
           />
+          {secretError === "" && newSecret.secretValue != "" &&
+          <PasswordFeedback
+          passwordStrength={passwordStrength}
+          passwordWarnings={passwordWarnings}
+          passwordSuggestions={passwordSuggestions}
+          passwordCrackDetails={passwordCrackDetails}
+        />
+          }
           <TextField
             required
             margin="dense"
@@ -261,7 +289,8 @@ const AddSecret = ({
                 color="primary"
                 disabled={
                   newSecret.keyName.trim() === "" ||
-                  newSecret.secretValue.trim() === ""
+                  newSecret.secretValue.trim() === ""||
+                  loading
                 }
               />
             }
@@ -281,7 +310,8 @@ const AddSecret = ({
               helperText={aadError}
               disabled={
                 newSecret.keyName.trim() === "" ||
-                newSecret.secretValue.trim() === ""
+                newSecret.secretValue.trim() === ""||
+                loading
               }
               slotProps={{
                 input: {
@@ -306,7 +336,6 @@ const AddSecret = ({
             onClick={handleCancel}
             color="primary"
             variant="outlined"
-            disabled={loading}
           >
             Cancel
           </Button>
@@ -374,6 +403,7 @@ const AddSecret = ({
             onClick={resetConfimationDialogState}
             color="primary"
             variant="outlined"
+            disabled={isAddingKey}
           >
             Cancel
           </Button>
@@ -381,8 +411,10 @@ const AddSecret = ({
             onClick={handleConfirmEncryptAndAdd}
             color="primary"
             variant="contained"
-          >
-            Confirm & Add
+            startIcon={isAddingKey ? <CircularProgress size={24} /> : null}
+            disabled={isAddingKey}
+            >
+              {isAddingKey ? "Generating Hmac..." : "Confirm & Add"}
           </Button>
         </DialogActions>
       </Dialog>

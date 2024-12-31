@@ -16,9 +16,7 @@ async function readFileLineByLine(fileContent, masterKey) {
             lines.pop();
         }
         // Validate file format before processing
-        if (!await isValidFileFormat(lines, masterKey)) {
-            throw new Error("Error: Invalid file format. Ensure the file contains the correct markers and structure.");
-        }
+        await isValidFileFormat(lines, masterKey);
 
         // Split the content into parts based on the markers
         const secretsLines = [];
@@ -73,26 +71,18 @@ async function readFileLineByLine(fileContent, masterKey) {
  * @returns {boolean} - Returns true if the file format is valid, false otherwise.
  */
 async function isValidFileFormat(lines, masterKey) {
-    try {
-        console.log(lines.length);
-        console.log(lines[lines.length - 1].trim());
-        lines.forEach((line) => {
-            console.log(line);
-        });
-        if (lines.length == 0) {
-            return false;
-        }
-        if (lines[lines.length - 1].trim() !== ">>>><<<<") {
-            return false;
+        if (lines.length == 0 || lines[lines.length - 1].trim() !== ">>>><<<<") {
+            throw new Error("Error: Invalid file format. Ensure the file contains the correct markers and structure.");
         }
         let hmacLine = lines[lines.length - 2].trim().split(":");
         if (hmacLine[0] !== "HMAC") {
-            return false;
+            throw new Error("Error: Invalid file format. Ensure the file contains the correct markers and structure.");
         }
-        return await validateFileHmac(hmacLine[1], lines.slice(0, lines.length - 2), masterKey);
-    } catch {
-        return false;
-    }
+        const isValidHmac = await validateFileHmac(hmacLine[1], lines.slice(0, lines.length - 2), masterKey);
+        if (!isValidHmac) {
+            throw new Error("Error: File has been tampered. Please enter correct file.");
+        }
+        return isValidHmac;
 }
 
 /**

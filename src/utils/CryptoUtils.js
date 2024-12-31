@@ -20,7 +20,7 @@ async function generateKeyWithPBKDF2(password, salt, iterations, extractable=fal
 
         // Import the password as key material for PBKDF2
         const keyMaterial = await crypto.subtle.importKey(
-            'raw', passwordBytes, { name: cryptoConfig.KeyDerivationFunction }, false, ['deriveKey']
+            "raw", passwordBytes, { name: cryptoConfig.KeyDerivationFunction }, false, ["deriveKey"]
         );
 
         // Derive the key using PBKDF2
@@ -29,12 +29,12 @@ async function generateKeyWithPBKDF2(password, salt, iterations, extractable=fal
                 name: cryptoConfig.KeyDerivationFunction,
                 salt: salt,
                 iterations: iterations,
-                hash: 'SHA-256'
+                hash: "SHA-256"
             },
             keyMaterial,
-            { name: 'AES-GCM', length: 256 },
+            { name: "AES-GCM", length: 256 },
             extractable,
-            ['encrypt', 'decrypt']
+            ["encrypt", "decrypt"]
         );
 
         const endTime = performance.now();
@@ -55,7 +55,7 @@ async function generateHmacKeyWithPBKDF2(password, salt, iterations) {
 
         // Import the password as key material for PBKDF2
         const keyMaterial = await crypto.subtle.importKey(
-            'raw', passwordBytes, { name: cryptoConfig.KeyDerivationFunction }, false, ['deriveKey']
+            "raw", passwordBytes, { name: cryptoConfig.KeyDerivationFunction }, false, ["deriveKey"]
         );
 
         // Derive the key using PBKDF2
@@ -64,12 +64,12 @@ async function generateHmacKeyWithPBKDF2(password, salt, iterations) {
                 name: cryptoConfig.KeyDerivationFunction,
                 salt: salt,
                 iterations: iterations,
-                hash: 'SHA-256'
+                hash: "SHA-256"
             },
             keyMaterial,
-            { name: 'HMAC', hash: "SHA-256", length: 256 },
+            { name: "HMAC", hash: "SHA-256", length: 256 },
             false,
-            ['sign', 'verify']
+            ["sign", "verify"]
         );
 
         const endTime = performance.now();
@@ -95,11 +95,11 @@ async function sha256HashWithIterations(input, iterations) {
     const data = encoder.encode(input);
 
     // Perform the initial SHA-256 hash
-    let hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    let hashBuffer = await crypto.subtle.digest("SHA-256", data);
 
     // Repeatedly hash the output for the specified number of iterations
     for (let i = 0; i < iterations; i++) {
-        hashBuffer = await crypto.subtle.digest('SHA-256', hashBuffer);
+        hashBuffer = await crypto.subtle.digest("SHA-256", hashBuffer);
     }
     const endTime = performance.now();
     console.log(`Hash with ${iterations} iterations generated in ${endTime - startTime} ms`);
@@ -120,7 +120,7 @@ async function generateHMAC(key, message) {
         const messageBytes = encoder.encode(message);
 
         // Generate the HMAC
-        const hmac = await crypto.subtle.sign('HMAC', key, messageBytes);
+        const hmac = await crypto.subtle.sign("HMAC", key, messageBytes);
 
         // Return the result as a Uint8Array
         return new Uint8Array(hmac);
@@ -185,7 +185,7 @@ async function encryptWithAesGcm(key, data, iv, aad) {
     try {
         const ciphertext = await crypto.subtle.encrypt(
             { 
-                name: 'AES-GCM', 
+                name: "AES-GCM", 
                 iv: iv,
                 additionalData: encodedAAD, 
                 tagLength: 128 
@@ -216,7 +216,7 @@ async function decryptWithAesGcm(key, ciphertext, iv, aad) {
     try {
         const decryptedData = await crypto.subtle.decrypt(
             { 
-                name: 'AES-GCM', 
+                name: "AES-GCM", 
                 iv: iv,
                 additionalData: decodedAAD,
                 tagLength: 128 
@@ -251,18 +251,18 @@ function getRandomIterations() {
 async function importJwkAsCryptoKey(jwk) {
     try {
         const cryptoKey = await crypto.subtle.importKey(
-            'jwk',          
+            "jwk",          
             jwk,      
-            { name: 'AES-GCM' },
+            { name: "AES-GCM" },
             false,
-            ['encrypt', 'decrypt']
+            ["encrypt", "decrypt"]
         );
 
-        console.log('Imported CryptoKey:', cryptoKey);
+        console.log("Imported CryptoKey:", cryptoKey);
         return cryptoKey;
     } catch (error) {
-        console.error('Error importing JWK:', error);
-        throw new Error('Failed to import JWK.');
+        console.error("Error importing JWK:", error);
+        throw new Error("Failed to import JWK.");
     }
 }
 
@@ -274,12 +274,12 @@ async function importJwkAsCryptoKey(jwk) {
  */
 async function extractKeyToJwk(cryptoKey) {
     try {
-        const exportedKey = await crypto.subtle.exportKey('jwk', cryptoKey);
+        const exportedKey = await crypto.subtle.exportKey("jwk", cryptoKey);
         console.log("exported key", exportedKey)
         return exportedKey;
     } catch (error) {
-        console.error('Error extracting key:', error);
-        throw new Error('Failed to extract key.');
+        console.error("Error extracting key:", error);
+        throw new Error("Failed to extract key.");
     }
 }
 

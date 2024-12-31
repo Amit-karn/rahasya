@@ -1,5 +1,5 @@
-import { Paper, Typography } from '@mui/material';
-import PropTypes from 'prop-types';
+import { Paper, Typography } from "@mui/material";
+import PropTypes from "prop-types";
 
 const PreviewPanel = ({ fileContent }) => {
   return (
@@ -8,12 +8,12 @@ const PreviewPanel = ({ fileContent }) => {
         backgroundColor: "#f3f4f6",
         width: "100%",
         height: "100%", // Keep 100% height
-        display: 'flex',  // Add flex display
-        flexDirection: 'column', // Stack children vertically
+        display: "flex",  // Add flex display
+        flexDirection: "column", // Stack children vertically
         overflow: "hidden", // Change to hidden to prevent double scrollbars
-        position: 'relative', // Add positioning context
+        position: "relative", // Add positioning context
       }}
-      variant='outlined'
+      variant="outlined"
     >
       <Typography
         variant="body1"
@@ -26,7 +26,7 @@ const PreviewPanel = ({ fileContent }) => {
             fontFamily: "monospace",
             fontSize: { xs: "0.675rem", md: "0.875rem" },
             overflow: "auto", // Move overflow to Typography
-            position: 'absolute', // Position absolutely
+            position: "absolute", // Position absolutely
             top: 0,
             bottom: 0,
             left: 0,

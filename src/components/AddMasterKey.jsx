@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import {
   TextField,
@@ -15,16 +15,21 @@ import {
   InputLabel,
   Select,
   MenuItem,
+  Collapse,
 } from "@mui/material";
 import {
   Visibility,
   VisibilityOff,
   ArrowDropDownTwoTone,
-  ArrowDropUpTwoTone
+  ArrowDropUpTwoTone,
+  Warning,
+  Info,
 } from "@mui/icons-material";
 import { maskMasterKey } from "../utils/DataUtils";
 import passwordManagerConfig from "../config/PasswordManagerConfig";
 import { generateEncryptionKeyFromMasterKey } from "../utils/CredLockerUtils";
+import { checkPasswordStrength } from "../utils/PasswordStrengthUtils";
+import PasswordFeedback from "./PasswordFeedback";
 
 const AddMasterKey = ({
   masterKey,
@@ -39,7 +44,32 @@ const AddMasterKey = ({
   const [showEncryptionKey, setShowEncryptionKey] = useState(false);
   const [error, setError] = useState("");
   const [showIterationsDropdown, setShowIterationsDropdown] = useState(false);
-  const [iterations, setIterations] = useState(passwordManagerConfig.masterKeyDefaultIteraion);
+  const [iterations, setIterations] = useState(
+    passwordManagerConfig.masterKeyDefaultIteraion
+  );
+  const [passwordStrength, setPasswordStrength] = useState("");
+  const [passwordWarnings, setPasswordWarnings] = useState([]);
+  const [passwordSuggestions, setPasswordSuggestions] = useState([]);
+  const [passwordCrackDetails, setPasswordCrackDetails] = useState([]);
+  // const [showWarnings, setShowWarnings] = useState(false);
+  // const [showSuggestions, setShowSuggestions] = useState(false);
+  // const [showPasswordCrackDetails, setShowPasswordCrackDetails] = useState(false);
+
+  useEffect(() => {
+    if (tempMasterKey) {
+      const { strength, warning, suggestions, passwordCrackDetails } =
+        checkPasswordStrength(tempMasterKey);
+      setPasswordStrength(strength);
+      setPasswordWarnings(warning);
+      setPasswordSuggestions(suggestions);
+      setPasswordCrackDetails(passwordCrackDetails);
+    } else {
+      setPasswordStrength("");
+      setPasswordWarnings([]);
+      setPasswordSuggestions([]);
+      setPasswordCrackDetails([]);
+    }
+  }, [tempMasterKey]);
 
   const resetState = () => {
     setIsGeneratingKey(false);
@@ -50,6 +80,13 @@ const AddMasterKey = ({
     setError("");
     setShowIterationsDropdown(false);
     setIterations(passwordManagerConfig.masterKeyDefaultIteraion);
+    // setShowWarnings(false);
+    // setShowSuggestions(false);
+    // setShowPasswordCrackDetails(false);
+    setPasswordStrength("");
+    setPasswordWarnings([]);
+    setPasswordSuggestions([]);
+    setPasswordCrackDetails([]);
   };
 
   const generateMasterKey = async () => {
@@ -65,7 +102,10 @@ const AddMasterKey = ({
     setIsGeneratingKey(true);
     try {
       setStatusBar(false, "", false);
-      const generatedKey = await generateEncryptionKeyFromMasterKey(tempMasterKey, iterations);
+      const generatedKey = await generateEncryptionKeyFromMasterKey(
+        tempMasterKey,
+        iterations
+      );
       setMasterKey(generatedKey);
       setOpenMasterKeyDialog(false);
       setTempMasterKey("");
@@ -80,8 +120,7 @@ const AddMasterKey = ({
     } finally {
       resetState();
     }
-  }
-    
+  };
 
   const handleMasterKeyDialogClose = (event, reason) => {
     if (reason !== "backdropClick" && reason !== "escapeKeyDown") {
@@ -184,11 +223,26 @@ const AddMasterKey = ({
             },
           }}
         />
-        {isGeneratingKey && <Typography variant="body2" color="info">
-              Key generation might take a minute. Please wait...
-        </Typography>}
+        {tempMasterKey.length >= passwordManagerConfig.masterKeyMinLength &&
+          tempMasterKey.length <= passwordManagerConfig.masterKeyMaxLength && (
+            <PasswordFeedback
+              passwordStrength={passwordStrength}
+              passwordWarnings={passwordWarnings}
+              passwordSuggestions={passwordSuggestions}
+              passwordCrackDetails={passwordCrackDetails}
+            />
+          )}
+        {isGeneratingKey && (
+          <Typography variant="body2" color="info">
+            Key generation might take a minute. Please wait...
+          </Typography>
+        )}
         <IconButton onClick={handleToggleIterationsDropdown}>
-          {showIterationsDropdown ? <ArrowDropUpTwoTone />: <ArrowDropDownTwoTone /> }
+          {showIterationsDropdown ? (
+            <ArrowDropUpTwoTone />
+          ) : (
+            <ArrowDropDownTwoTone />
+          )}
         </IconButton>
         {showIterationsDropdown && (
           <FormControl fullWidth disabled={!!isGeneratingKey}>
@@ -198,6 +252,7 @@ const AddMasterKey = ({
               id="iterations-label-id"
               value={iterations}
               onChange={handleIterationsChange}
+              label="Iterations"
             >
               {passwordManagerConfig.masterKeyIteraionList.map((itr) => (
                 <MenuItem key={itr} value={itr}>

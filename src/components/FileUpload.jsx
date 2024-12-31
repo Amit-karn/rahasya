@@ -2,18 +2,19 @@ import PropTypes from "prop-types";
 import { Button, Input, Typography, Stack, IconButton } from "@mui/material";
 import { AddCircleOutline, CloseOutlined } from "@mui/icons-material";
 import passwordManagerConfig from "../config/PasswordManagerConfig";
-import { useRef } from "react";
+import { useRef, useState } from "react";
+import LoadingOverlay from "./LoadingOverlay";
 
-function FileUpload({ file, handleFileChange, buttonVariant, reset, disabled, isGenerateFile }) {
+function FileUpload({ file, handleFileChange, buttonVariant, reset, disabled, open }) {
   const fileInputRef = useRef(null);
 
   const handleFileSelection = (event) => {
     // Handle file change
     handleFileChange(event);
 
-    // if (isGenerateFile) {
-      fileInputRef.current.value = ''; // Reset the input field
-    // }
+    
+    fileInputRef.current.value = ""; // Reset the input field
+    
   };
 
   return (
@@ -87,7 +88,8 @@ FileUpload.propTypes = {
   buttonVariant: PropTypes.oneOf(["outlined", "contained", "text"]).isRequired,
   reset: PropTypes.func.isRequired,
   disabled: PropTypes.bool.isRequired,
-  isGenerateFile: PropTypes.bool.isRequired,
+  open: PropTypes.bool.isRequired,
+ // setIsOpen: PropTypes.func.isRequired,
 };
 
 export default FileUpload;

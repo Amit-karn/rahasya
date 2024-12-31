@@ -8,7 +8,7 @@ const MessageDialog = ({ open, onClose, title, message, node }) => {
         <Typography variant="body1">{title}</Typography>
       </DialogTitle>
       <DialogContent>
-        <DialogContentText sx={{ color: 'primary.main', fontWeight: 'bold' }}>
+        <DialogContentText sx={{ color: "primary.main", fontWeight: "bold" }}>
           {message}
         </DialogContentText>
       </DialogContent>

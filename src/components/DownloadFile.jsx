@@ -1,6 +1,6 @@
 import { Button } from "@mui/material";
 import { FileDownloadOutlined } from "@mui/icons-material";
-import PropTypes from 'prop-types';
+import PropTypes from "prop-types";
 
 const DownloadFile = ({ content }) => {
 
@@ -14,7 +14,7 @@ const DownloadFile = ({ content }) => {
 
   const handleDownload = () => {
     const url = generateDownloadUrl();
-    const link = document.createElement('a');
+    const link = document.createElement("a");
     link.href = url;
     link.download = fileName;
     document.body.appendChild(link);

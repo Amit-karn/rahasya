@@ -28,6 +28,7 @@ import AddMasterKey from "./components/AddMasterKey";
 import MessageDialog from "./components/MessageDialog";
 import DownloadFile from "./components/DownloadFile";
 import PreviewPanel from "./components/PreviewPanel";
+import LoadingOverlay from "./components/LoadingOverlay";
 
 const CredentialEncryptor = () => {
   // State variables
@@ -47,6 +48,8 @@ const CredentialEncryptor = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogTitle, setDialogTitle] = useState("");
   const [dialogMessage, setDialogMessage] = useState("");
+
+  const [backDrop, setBackDrop] = useState(false);
 
   // Effects
   useLayoutEffect(() => {
@@ -180,7 +183,7 @@ const CredentialEncryptor = () => {
     const secretKeys = Object.keys(fileContentJson.secrets);
     const integrityKeys = Object.keys(fileContentJson.integrity);
 
-    return `This is an auto generated File. Please don't tamper with it.\n<<<<>>>>\n${secretKeys
+    return `This is an auto generated File. Please do not tamper with it.\n<<<<>>>>\n${secretKeys
       .map((key) => `${key}: ${fileContentJson.secrets[key]}`)
       .join("\n")}\n<<<<<>>>>>\n${integrityKeys
       .map((key) => `${key}: ${fileContentJson.integrity[key]}`)
@@ -208,19 +211,21 @@ const CredentialEncryptor = () => {
     return true;
   };
 
-  const handleFileUpload = (event) => {
+  const handleFileUpload = async(event) => {
     if (!masterKey) {
       showMasterKeyNotAddedStatus();
       return;
     }
     resetState();
+    setBackDrop(true); //TODO: Not working.....
     const uploadedFile = event.target.files[0];
     if (uploadedFile && validateFileTypeAndSize(uploadedFile)) {
-      processAndDisplayUploadedFile(uploadedFile);
+      await processAndDisplayUploadedFile(uploadedFile);
     }
+    setBackDrop(false);
   };
 
-  const processAndDisplayUploadedFile = (uploadedFile) => {
+  const processAndDisplayUploadedFile = async (uploadedFile) => {
     const reader = new FileReader();
     reader.onload = async (e) => {
       const [status, result] = await readFileLineByLine(
@@ -317,7 +322,7 @@ const CredentialEncryptor = () => {
               buttonVariant={"outlined"}
               reset={resetState}
               disabled={!masterKey}
-              isGenerateFile={isGenerateFile}
+              open={backDrop}
             />
           }
         />
@@ -347,7 +352,7 @@ const CredentialEncryptor = () => {
               buttonVariant={file ? "outlined" : "contained"}
               reset={resetState}
               disabled={!masterKey}
-              isGenerateFile={isGenerateFile}
+              open={backDrop}
             />
           )}
           <Button
@@ -549,6 +554,7 @@ const CredentialEncryptor = () => {
           </Button>
         }
       />
+      {backDrop && <LoadingOverlay open={backDrop} />}
     </Container>
   );
 };

@@ -1,117 +1,124 @@
-import { Container, Typography, Box, Grid2 as Grid } from '@mui/material';
-import PasswordGenerator from './components/PasswordGenerator';
-import CredentialLocker from './components/CredentialLocker';
-import FileEncryptor from './components/FileEncryptor';
-import ShaHash from './components/ShaHash';
-import Base64Tool from './components/Base64Tool';
-import FileToImage from './components/FileToImage';
-import passwordManagerConfig from './config/PasswordManagerConfig';
+import { Container, Typography, Box, Grid2 as Grid } from "@mui/material";
+import PasswordGenerator from "./components/PasswordGenerator";
+import CredentialLocker from "./components/CredentialLocker";
+import FileEncryptor from "./components/FileEncryptor";
+import ShaHash from "./components/ShaHash";
+import Base64Tool from "./components/Base64Tool";
+import FileToImage from "./components/FileToImage";
+import passwordManagerConfig from "./config/PasswordManagerConfig";
 
 const CryptoTools = () => {
   return (
     <Container
       maxWidth="xl"
       sx={{
-        minHeight: '100vh',
+        minHeight: "100vh",
         py: 4,
         px: { xs: 2, sm: 4 },
         background: `
-          linear-gradient(rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.95)),
+          linear-gradient(rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.90)),
           url(/binary.avif)
         `,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundRepeat: 'no-repeat',
-        backgroundAttachment: 'fixed',
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundRepeat: "no-repeat",
+        backgroundAttachment: "fixed",
       }}
     >
-      <Box 
-        display="flex" 
-        alignItems="center" 
+      <Box
+        display="flex"
+        alignItems="center"
         mb={6}
-        sx={{ 
-          flexDirection: { xs: 'column', sm: 'row' },
-          textAlign: { xs: 'center', sm: 'left' },
-          position: 'sticky',
+        sx={{
+          flexDirection: { xs: "column", sm: "row" },
+          textAlign: { xs: "center", sm: "left" },
+          position: "sticky",
           top: 0,
           zIndex: 1000,
-          backgroundColor: "white"
+          backgroundColor: "white",
         }}
       >
-        <Typography 
-          variant="h3" 
-          component="div" 
-          sx={{ 
-            fontFamily: 'Noto Sans Devanagari, sans-serif',
-            fontSize: { xs: '2.5rem', sm: '3.5rem' },
-            fontWeight: 'cursive',
-            background: 'linear-gradient(45deg, #000000 30%, #444444 90%)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            letterSpacing: '0.05em',
+        <Typography
+          variant="h3"
+          component="div"
+          sx={{
+            fontFamily: "Noto Sans Devanagari, sans-serif",
+            fontSize: { xs: "2.5rem", sm: "3.5rem" },
+            fontWeight: "cursive",
+            background: "linear-gradient(45deg, #000000 30%, #444444 90%)",
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+            letterSpacing: "0.05em",
           }}
         >
           {passwordManagerConfig.rahaysa}
         </Typography>
       </Box>
 
-      <Grid 
-        container 
-        spacing={3}
+      <Grid
+        container
+        spacing={2}
         sx={{
-          '& .MuiPaper-root': {
-            background: 'white',
+          "& .MuiPaper-root": {
+            background: "white",
             borderRadius: 2,
-            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.08)',
-            transition: 'transform 0.2s, box-shadow 0.2s',
-            '&:hover': {
-              transform: 'translateY(-4px)',
-              boxShadow: '0 12px 48px rgba(0, 0, 0, 0.12)',
+            boxShadow: "0 8px 32px rgba(0, 0, 0, 0.08)",
+            transition: "transform 0.2s, box-shadow 0.2s",
+            "&:hover": {
+              transform: "translateY(-4px)",
+              boxShadow: "0 12px 48px rgba(0, 0, 0, 0.12)",
             },
           },
-          '& .MuiButton-root': {
-            background: '#000',
-            color: 'white',
-            borderRadius: '8px',
-            textTransform: 'none',
+          "& .MuiButton-root": {
+            background: "#000",
+            color: "white",
+            borderRadius: "8px",
+            textTransform: "none",
             py: 1.5,
-            '&:hover': {
-              background: '#222',
+            "&:hover": {
+              background: "#222",
             },
           },
-          '& .MuiTextField-root': {
-            '& .MuiOutlinedInput-root': {
-              borderRadius: '8px',
-              '& fieldset': {
-                borderColor: 'rgba(0, 0, 0, 0.1)',
+          "& .MuiTextField-root": {
+            "& .MuiOutlinedInput-root": {
+              borderRadius: "8px",
+              "& fieldset": {
+                borderColor: "rgba(0, 0, 0, 0.1)",
               },
-              '&:hover fieldset': {
-                borderColor: 'rgba(0, 0, 0, 0.2)',
+              "&:hover fieldset": {
+                borderColor: "rgba(0, 0, 0, 0.2)",
               },
             },
           },
-          '& .MuiTypography-h6': {
+          "& .MuiTypography-h6": {
             fontWeight: 600,
             mb: 3,
           },
         }}
       >
-        <Grid item size={{xs: 12, sm: 6, md: 4}}>
-          <CredentialLocker />
-        </Grid>
-        <Grid item size={{xs: 12, sm: 6, md: 4}}>
+        {/* First Row */}
+        <Grid size={{ xs: 12, sm: 6 }} >
           <FileEncryptor />
         </Grid>
-        <Grid item size={{xs: 12, sm: 6, md: 4}}>
-          <FileToImage />
+        <Grid size={{ xs: 12, sm: 6 }}>
+          <Grid container spacing={2} direction="column">
+            <Grid>
+              <CredentialLocker />
+            </Grid>
+            <Grid>
+              <FileToImage />
+            </Grid>
+          </Grid>
         </Grid>
-        <Grid item size={{xs: 12, sm: 6, md: 4}}>
+
+        {/* Second Row */}
+        <Grid size={{ xs: 12, sm: 4 }}>
           <PasswordGenerator />
         </Grid>
-        <Grid item size={{xs: 12, sm: 6, md: 4}}>
+        <Grid size={{ xs: 12, sm: 4 }}>
           <ShaHash />
         </Grid>
-        <Grid item size={{xs: 12, sm: 6, md: 4}}>
+        <Grid size={{ xs: 12, sm: 4 }}>
           <Base64Tool />
         </Grid>
       </Grid>

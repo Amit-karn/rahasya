@@ -235,11 +235,11 @@ function extractEmbeddedData(base64Encoded) {
  * @throws {Error} - If the encoded key format is invalid.
  */
 function getJwkFromEncryptionKey(encodedKey) {
-    const parts = encodedKey.split(':');
+    const parts = encodedKey.split(":");
     if (parts.length > 1) {
         return JSON.parse(atob(parts[1]));  // Decode the Base64 part and parse the JSON
     }
-    throw new Error('Invalid encoded key format');  // Throw an error if the format is invalid
+    throw new Error("Invalid encoded key format");  // Throw an error if the format is invalid
 }
 
 /**

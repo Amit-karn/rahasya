@@ -1,6 +1,6 @@
-import React from 'react';
-import { Paper, Typography, Button, Stack } from '@mui/material';
-import { Link } from 'react-router-dom';
+import React from "react";
+import { Paper, Typography, Button, Stack } from "@mui/material";
+import { Link } from "react-router-dom";
 
 const CredentialLocker = () => {
   return (
