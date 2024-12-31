@@ -117,7 +117,7 @@ const DecryptSecret = ({
   };
 
   const isAadRequired = () => {
-    return encryptedSecret.length > 10;
+    return encryptedSecret.length > 500;
   };
 
   const handleClickShowConfirmationSecret = () => {
@@ -235,7 +235,6 @@ const DecryptSecret = ({
             onClick={handleCancel}
             color="primary"
             variant="outlined"
-            disabled={loading}
           >
             Cancel
           </Button>

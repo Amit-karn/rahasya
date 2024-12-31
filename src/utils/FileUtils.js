@@ -1,7 +1,7 @@
 // fileUtils.js
 
 import { getJwkFromEncryptionKey, sign, verify } from "./CredLockerUtils";
-import { generateHMAC, generateHmacKeyWithPBKDF2, uint8ArrayToBase64 } from "./CryptoUtils";
+import { generateHMAC, generateHmacKeyWithPBKDF2, sha256HashWithIterations, uint8ArrayToBase64 } from "./CryptoUtils";
 
 /**
  * Reads the file line by line, processes the content and converts it to JSON format.
@@ -136,10 +136,31 @@ function processIntegrity(lines) {
 async function validateFileHmac(hmac, lines, masterKey) {
     let fileContent = lines.map(line => line.trim()).join("\n");
     console.log("validateFileHmac", hmac);
+    console.log("generated hmac", await generateFileHmac(fileContent, masterKey));
     return await verify(masterKey, hmac, fileContent);
 }
 
-async function generateFileHmac(fileContent, masterKey) {
+async function generateFileHmac(fileContent1, masterKey) {
+    console.log("-=-=-=-=-=-=-=-=-=-=-=-=-=-=-")
+    const lines = fileContent1.split("\n");  // Split content by newlines
+        //remove any empty lines from end
+    while (lines.length > 0 && lines[lines.length - 1].trim() === "") {
+        lines.pop();
+    }
+    const processedLines = [];
+    for (const line of lines) {
+        const trimmedLine = line.trim();
+        const hashResult = await sha256HashWithIterations(trimmedLine, 1);
+        console.log(trimmedLine, uint8ArrayToBase64(hashResult.hash));  // Log the hash for debugging
+        processedLines.push(trimmedLine);  // Add processed line to the array
+    }
+
+    // Reconstruct the content from the processed lines
+    const fileContent = processedLines.join("\n");
+    console.log("Generating File Hmac")
+    console.log(fileContent)
+    console.log(masterKey)
+    console.log(uint8ArrayToBase64((await sha256HashWithIterations(fileContent, 1)).hash))
     return await sign(masterKey, fileContent);
 }
 

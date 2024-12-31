@@ -156,12 +156,10 @@ async function decrypt(encodedKey, base64EncodedData, aad="") {
         iv,
         aad
     );
-
-    const decoder = new TextDecoder();
     
     console.log("Decrypted data:", decryptedResult);
 
-    return decoder.decode(decryptedResult);
+    return decryptedResult.decryptedData;
 }
 
 
@@ -253,14 +251,15 @@ function getJwkFromEncryptionKey(encodedKey) {
  */
 async function sign(secret, dataStr) {
     // Generate a random salt for key derivation
-    console.log("signing.. ", secret, dataStr)
+    const jwk = getJwkFromEncryptionKey(secret);
+    console.log("signing.. ", secret, dataStr, jwk)
     const encoder = new TextEncoder();
     const data = encoder.encode(dataStr);
     const salt = generateRandomValues(cryptoConfig.keySaltLengthInBytes); // 32 bytes salt
     
     const iterations = getRandomIterations();
     // Derive the signing key using PBKDF2 (assuming we are using the password and salt to derive a key)
-    const derivedKey = await generateHmacKeyWithPBKDF2(secret, salt, iterations*cryptoConfig.defaultMultiplierForFinalKeyIteration); // Generate key from password using PBKDF2
+    const derivedKey = await generateHmacKeyWithPBKDF2(jwk.k, salt, iterations*cryptoConfig.defaultMultiplierForFinalKeyIteration); // Generate key from password using PBKDF2
 
     // Create the HMAC signature
     const signature = await crypto.subtle.sign(
@@ -268,6 +267,7 @@ async function sign(secret, dataStr) {
         derivedKey.key,
         data
     );
+    console.log("signing  key", derivedKey.key, secret, salt, iterations*cryptoConfig.defaultMultiplierForFinalKeyIteration)
     
     // Convert the signature to a base64 string
     const signatureArray = new Uint8Array(signature);
@@ -285,6 +285,7 @@ async function sign(secret, dataStr) {
     message.set(signatureArray, cryptoConfig.keySaltLengthInBytes + 1);
     
     console.log(uint8ArrayToBase64(message))
+    console.log("hmac contents signing...", uint8ArrayToBase64(salt), uint8ArrayToBase64(iterationArray), iterationArray, iterations, uint8ArrayToBase64(signatureArray))
     // Return the message as Base64
     return uint8ArrayToBase64(message);
 }
@@ -298,7 +299,8 @@ async function sign(secret, dataStr) {
  */
 async function verify(secret, signedMessageBase64, dataStr) {
     // Decode the signed message from Base64 to a Uint8Array
-    console.log("verifying.. ", secret, signedMessageBase64, dataStr)
+    const jwk = getJwkFromEncryptionKey(secret);
+    console.log("verifying.. ", secret, signedMessageBase64, dataStr, jwk)
     const encoder = new TextEncoder();
     const data = encoder.encode(dataStr);
     const signedMessage = base64ToUint8Array(signedMessageBase64);
@@ -307,14 +309,15 @@ async function verify(secret, signedMessageBase64, dataStr) {
     const salt = signedMessage.slice(0, cryptoConfig.keySaltLengthInBytes);
     
     // Extract iterations (next 4 bytes)
-    const iterations = signedMessage.slice(cryptoConfig.keySaltLengthInBytes, cryptoConfig.keySaltLengthInBytes + 1);
+    const iterations = signedMessage[cryptoConfig.keySaltLengthInBytes];
     
     // Extract the signature (remaining bytes)
     const signature = signedMessage.slice(cryptoConfig.keySaltLengthInBytes+1);  // After salt (32 bytes) + iterations (4 bytes)
 
     // Derive the key using PBKDF2 from the secret, extracted salt, and iterations
-    const derivedKey = await generateHmacKeyWithPBKDF2(secret, salt, iterations);
-
+    const derivedKey = await generateHmacKeyWithPBKDF2(jwk.k, salt, iterations*cryptoConfig.defaultMultiplierForFinalKeyIteration);
+    console.log("verifying..", derivedKey.key, secret, salt, iterations*cryptoConfig.defaultMultiplierForFinalKeyIteration)
+    console.log("hmac contents verification...", uint8ArrayToBase64(salt), iterations, uint8ArrayToBase64(signature))
     // Recompute the HMAC using the derived key and the data
     const verified = await crypto.subtle.verify(
         { name: "HMAC", hash: { name: "SHA-256" } },

@@ -69,11 +69,11 @@ async function generateHmacKeyWithPBKDF2(password, salt, iterations) {
             keyMaterial,
             { name: 'HMAC', hash: "SHA-256", length: 256 },
             false,
-            ['sign']
+            ['sign', 'verify']
         );
 
         const endTime = performance.now();
-        console.log(`Key with ${iterations} iterations generated in ${endTime - startTime} ms`);
+        console.log(`Hmac Key with ${iterations} iterations generated in ${endTime - startTime} ms`);
         return { key, salt, iterations };
     } catch (error) {
         console.error("Error generating key with PBKDF2:", error);

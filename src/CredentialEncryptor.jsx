@@ -137,19 +137,26 @@ const CredentialEncryptor = () => {
     const tempFileContentJson = {
       ...fileContentJson,
       secrets: { [key]: secret, ...fileContentJson.secrets },
-      integrity: {...fileContentJson.integrity, "DATE": currentDate, "HMAC": "" }
-    }
-    console.log(tempFileContentJson)
-    const tempFileContentStr = generateFileContentForPreview(tempFileContentJson);
+      integrity: { ...fileContentJson.integrity, DATE: currentDate, HMAC: "" },
+    };
+    console.log(tempFileContentJson);
+    const tempFileContentStr =
+      generateFileContentForPreview(tempFileContentJson);
     console.log(tempFileContentStr);
-    console.log(tempFileContentStr.slice(0, tempFileContentStr.indexOf("HMAC: ")), "---")
+    console.log(
+      tempFileContentStr.slice(0, tempFileContentStr.indexOf("HMAC: ")),
+      "---"
+    );
     // lines.slice(0, lines.length - 2)
-    const newHmac = await generateFileHmac(tempFileContentStr.slice(0, tempFileContentStr.indexOf("HMAC: ")), masterKey);
-    
+    const newHmac = await generateFileHmac(
+      tempFileContentStr.slice(0, tempFileContentStr.indexOf("HMAC: ")),
+      masterKey
+    );
+
     setFileContentJson((prevContent) => ({
       ...prevContent,
       secrets: { [key]: secret, ...prevContent.secrets },
-      integrity: {"DATE": currentDate, "HMAC": newHmac}
+      integrity: { DATE: currentDate, HMAC: newHmac },
     }));
   };
 
@@ -216,7 +223,10 @@ const CredentialEncryptor = () => {
   const processAndDisplayUploadedFile = (uploadedFile) => {
     const reader = new FileReader();
     reader.onload = async (e) => {
-      const [status, result] = await readFileLineByLine(e.target.result, masterKey);
+      const [status, result] = await readFileLineByLine(
+        e.target.result,
+        masterKey
+      );
       if (status === "error") {
         setStatusbar(true, result, true);
         return;
@@ -243,7 +253,7 @@ const CredentialEncryptor = () => {
     }
   };
 
-  const removeSecret = async(key) => {
+  const removeSecret = async (key) => {
     if (!masterKey) {
       showMasterKeyNotAddedStatus();
       return;
@@ -261,15 +271,21 @@ const CredentialEncryptor = () => {
       delete tempSecrets[key];
       const tempFileContentJson = {
         secrets: tempSecrets,
-        integrity: {...fileContentJson.integrity, "DATE": currentDate }
-      }
-      const tempFileContentStr = generateFileContentForPreview(tempFileContentJson);
+        integrity: { ...fileContentJson.integrity, DATE: currentDate },
+      };
+      const tempFileContentStr =
+        generateFileContentForPreview(tempFileContentJson);
       // lines.slice(0, lines.length - 2)
-      const newHmac = await generateFileHmac(tempFileContentStr.slice(0, tempFileContentStr.indexOf("HMAC: ")), masterKey);
-      
+      const newHmac = await generateFileHmac(
+        tempFileContentStr.slice(0, tempFileContentStr.indexOf("HMAC: ")),
+        masterKey
+      );
+
       setFileContentJson(() => {
-        return { secrets: tempSecrets,
-          integrity: {"DATE": currentDate, "HMAC": newHmac } };
+        return {
+          secrets: tempSecrets,
+          integrity: { DATE: currentDate, HMAC: newHmac },
+        };
       });
     }
   };
@@ -287,7 +303,7 @@ const CredentialEncryptor = () => {
           sm: 3, // 24px padding on small screens
           md: 4, // 32px padding on medium and up screens
         },
-        width: "100%",
+        width: "90%",
         margin: "0 auto", // Center the container
       }}
     >
@@ -318,7 +334,7 @@ const CredentialEncryptor = () => {
         gap={{ xs: 3, md: 2 }}
       >
         <Stack
-          direction={{xs:"column", md:"row"}}
+          direction={{ xs: "column", md: "row" }}
           spacing={2}
           alignItems="flex-start"
           justifyContent="flex-start"
