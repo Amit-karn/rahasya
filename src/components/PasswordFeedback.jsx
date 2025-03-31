@@ -11,8 +11,7 @@ const PasswordFeedback = ({
 }) => {
   const [showWarnings, setShowWarnings] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const [showPasswordCrackDetails, setShowPasswordCrackDetails] =
-    useState(false);
+  const [showPasswordCrackDetails, setShowPasswordCrackDetails] = useState(false);
   const getPasswordStrengthColor = (strength) => {
     switch (strength.toLowerCase()) {
       case "weak":

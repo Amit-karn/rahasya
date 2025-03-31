@@ -4,7 +4,7 @@ import CredentialLocker from "./components/CredentialLocker";
 import FileEncryptor from "./components/FileEncryptor";
 import ShaHash from "./components/ShaHash";
 import Base64Tool from "./components/Base64Tool";
-import FileToImage from "./components/FileToImage";
+import FileToImage from "./components/FileToImage.jsx";
 import passwordManagerConfig from "./config/PasswordManagerConfig";
 
 const CryptoTools = () => {
@@ -106,15 +106,16 @@ const CryptoTools = () => {
               <CredentialLocker />
             </Grid>
             <Grid>
-              <FileToImage />
+              {/* <FileToImage /> */}
+              <PasswordGenerator />
             </Grid>
           </Grid>
         </Grid>
 
         {/* Second Row */}
-        <Grid size={{ xs: 12, sm: 4 }}>
+        {/* <Grid size={{ xs: 12, sm: 4 }}>
           <PasswordGenerator />
-        </Grid>
+        </Grid> */}
         <Grid size={{ xs: 12, sm: 4 }}>
           <ShaHash />
         </Grid>

@@ -6,8 +6,8 @@ const PreviewPanel = ({ fileContent }) => {
     <Paper
       sx={{
         backgroundColor: "#f3f4f6",
-        width: "100%",
-        height: "100%", // Keep 100% height
+        width: {xs: "100%", md: "50%"},
+        height: {xs: "50%", md: "100%"},
         display: "flex",  // Add flex display
         flexDirection: "column", // Stack children vertically
         overflow: "hidden", // Change to hidden to prevent double scrollbars

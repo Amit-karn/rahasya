@@ -1,58 +1,64 @@
-import { useLayoutEffect, useState, useEffect } from "react";
-import {
-  Container,
-  Box,
-  Paper,
-  IconButton,
-  Button,
-  Typography,
-  Stack,
-  Divider,
-} from "@mui/material";
+import { useLayoutEffect, useEffect, useState } from "react";
+import { Button, Stack, Box, Typography } from "@mui/material";
 import {
   AddCircleOutline,
   LibraryAddOutlined,
   Lock,
-  DeleteForeverOutlined,
-  Close,
 } from "@mui/icons-material";
+
+import { useAppState } from './hooks/useAppState';
+import { useFileOperations } from './hooks/useFileOperations';
+import { useHelpers } from './hooks/useHelpers';
+import { BaseLayout } from './components/BaseLayout';
+import { SecretsList } from './components/SecretsList';
 import FileUpload from "./components/FileUpload";
 import StatusBar from "./components/StatusBar";
-import { generateFileHmac, readFileLineByLine } from "./utils/FileUtils";
 import AddSecret from "./components/AddSecret";
-import passwordManagerConfig from "./config/PasswordManagerConfig";
-import { bytesToMB, maskMasterKey } from "./utils/DataUtils";
-import TopHeader from "./components/TopHeader";
-import SecretItem from "./components/SecretItem";
 import AddMasterKey from "./components/AddMasterKey";
 import MessageDialog from "./components/MessageDialog";
-import DownloadFile from "./components/DownloadFile";
 import PreviewPanel from "./components/PreviewPanel";
+import DownloadFile from "./components/DownloadFile";
 import LoadingOverlay from "./components/LoadingOverlay";
+import { generateFileHmac } from "./utils/FileUtils";
+import passwordManagerConfig from "./config/PasswordManagerConfig";
 
 const CredentialEncryptor = () => {
-  // State variables
   const [isGenerateFile, setIsGenerateFile] = useState(false);
-  const [file, setFile] = useState(null);
-  const [fileContentJson, setFileContentJson] = useState({
-    secrets: {},
-    integrity: {},
-  });
-  const [openStatusbar, setOpenStatusbar] = useState(false);
-  const [isError, setIsError] = useState(false);
-  const [message, setMessage] = useState("");
   const [addNewSecret, setAddNewSecret] = useState(false);
-  const [masterKey, setMasterKey] = useState("");
-  const [openMasterKeyDialog, setOpenMasterKeyDialog] = useState(false);
+  
+  const state = useAppState();
+  const {
+    file,
+    fileContentJson,
+    masterKey,
+    openMasterKeyDialog,
+    dialogOpen,
+    dialogTitle,
+    dialogMessage,
+    backDrop,
+    openStatusbar,
+    isError,
+    message
+  } = state;
 
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [dialogTitle, setDialogTitle] = useState("");
-  const [dialogMessage, setDialogMessage] = useState("");
+  const helpers = useHelpers(state, {
+    ...state,
+    setIsGenerateFile,
+    setAddNewSecret
+  });
+  
+  const {
+    showDialog,
+    setStatusbar,
+    resetState,
+    unloadMasterKey,
+    generateFileContentForPreview,
+    isEmptyObj
+  } = helpers;
 
-  const [backDrop, setBackDrop] = useState(false);
+  const fileOps = useFileOperations(state, helpers);
 
-  // Effects
-  useLayoutEffect(() => {
+  useEffect(() => {
     if (
       isGenerateFile &&
       isEmptyObj(fileContentJson.secrets) &&
@@ -67,7 +73,7 @@ const CredentialEncryptor = () => {
         setAddNewSecret(true);
       }
     }
-  }, [fileContentJson.secrets, isGenerateFile, addNewSecret]);
+  }, [fileContentJson.secrets, isGenerateFile, addNewSecret, isEmptyObj, resetState]);
 
   useEffect(() => {
     if (!masterKey) {
@@ -78,191 +84,26 @@ const CredentialEncryptor = () => {
     }
   }, []);
 
-  // Helper functions
-  const resetState = () => {
-    setIsGenerateFile(false);
-    setFileContentJson({ secrets: {}, integrity: {} });
-    setIsError(false);
-    setMessage("");
-    setOpenStatusbar(false);
-    setFile(null);
-    setAddNewSecret(false);
-  };
-
-  const setFileDetails = (isGenerateFile, fileContentJson, file) => {
-    setIsGenerateFile(isGenerateFile);
-    setFileContentJson(fileContentJson);
-    setFile(file);
-  };
-
-  const setStatusbar = (isError, message, openStatusbar) => {
-    setIsError(isError);
-    setMessage(message);
-    setOpenStatusbar(openStatusbar);
-  };
-
-  const unloadMasterKey = () => {
-    const userConfirmed = window.confirm(
-      "This action will reset the application state. Do you want to proceed?"
-    );
-    if (userConfirmed) {
-      resetState();
-      setMasterKey("");
-      setStatusbar(
-        false,
-        "Master key removed and application state has been reset.",
-        true
-      );
-    }
-  };
-
-  const showDialog = (title, message) => {
-    setDialogTitle(title);
-    setDialogMessage(message);
-    setDialogOpen(true);
-  };
-
-  // Function to show master key not added status
-  const showMasterKeyNotAddedStatus = () => {
-    setStatusbar(
-      true,
-      "Master key not added. Please add your master key.",
-      true
-    );
-  };
-
   const addToFileContentJsonSecretsSection = async (key, secret) => {
-    if (!masterKey) {
-      showMasterKeyNotAddedStatus();
-      return;
-    }
     const currentDate = new Date().toLocaleDateString("en-CA");
     const tempFileContentJson = {
-      ...fileContentJson,
-      secrets: { [key]: secret, ...fileContentJson.secrets },
+      secrets: {...fileContentJson.secrets, [key]: secret },
       integrity: { ...fileContentJson.integrity, DATE: currentDate, HMAC: "" },
     };
-    console.log(tempFileContentJson);
-    const tempFileContentStr =
-      generateFileContentForPreview(tempFileContentJson);
-    console.log(tempFileContentStr);
-    console.log(
-      tempFileContentStr.slice(0, tempFileContentStr.indexOf("HMAC: ")),
-      "---"
-    );
-    // lines.slice(0, lines.length - 2)
+    
+    const tempFileContentStr = generateFileContentForPreview(tempFileContentJson);
     const newHmac = await generateFileHmac(
       tempFileContentStr.slice(0, tempFileContentStr.indexOf("HMAC: ")),
       masterKey
     );
 
-    setFileContentJson((prevContent) => ({
-      ...prevContent,
-      secrets: { [key]: secret, ...prevContent.secrets },
+    state.setFileContentJson({
+      secrets:  {...fileContentJson.secrets, [key]: secret },
       integrity: { DATE: currentDate, HMAC: newHmac },
-    }));
-  };
-
-  const startNewFileCreation = () => {
-    if (!masterKey) {
-      showMasterKeyNotAddedStatus();
-      return;
-    }
-    setAddNewSecret(true);
-    setIsGenerateFile(true);
-  };
-
-  const generateFileContentForPreview = (fileContentJson) => {
-    if (
-      !fileContentJson ||
-      !fileContentJson?.secrets ||
-      !fileContentJson?.integrity
-    ) {
-      return "";
-    }
-    const secretKeys = Object.keys(fileContentJson.secrets);
-    const integrityKeys = Object.keys(fileContentJson.integrity);
-
-    return `This is an auto generated File. Please do not tamper with it.\n<<<<>>>>\n${secretKeys
-      .map((key) => `${key}: ${fileContentJson.secrets[key]}`)
-      .join("\n")}\n<<<<<>>>>>\n${integrityKeys
-      .map((key) => `${key}: ${fileContentJson.integrity[key]}`)
-      .join("\n")}\n>>>><<<<`;
-  };
-
-  const validateFileTypeAndSize = (file) => {
-    if (file.size > passwordManagerConfig.fileSize) {
-      setStatusbar(
-        true,
-        `File size exceeds ${bytesToMB(passwordManagerConfig.fileSize)} MB`,
-        true
-      );
-      return false;
-    }
-    if (!passwordManagerConfig.fileType.includes(file.type)) {
-      setStatusbar(
-        true,
-        "Invalid file type. Please upload correct file.",
-        true
-      );
-      return false;
-    }
-    setStatusbar(false, "", false);
-    return true;
-  };
-
-  const handleFileUpload = async(event) => {
-    if (!masterKey) {
-      showMasterKeyNotAddedStatus();
-      return;
-    }
-    resetState();
-    setBackDrop(true); //TODO: Not working.....
-    const uploadedFile = event.target.files[0];
-    if (uploadedFile && validateFileTypeAndSize(uploadedFile)) {
-      await processAndDisplayUploadedFile(uploadedFile);
-    }
-    setBackDrop(false);
-  };
-
-  const processAndDisplayUploadedFile = async (uploadedFile) => {
-    const reader = new FileReader();
-    reader.onload = async (e) => {
-      const [status, result] = await readFileLineByLine(
-        e.target.result,
-        masterKey
-      );
-      if (status === "error") {
-        setStatusbar(true, result, true);
-        return;
-      }
-      setFileDetails(false, result, uploadedFile);
-      setStatusbar(false, "File loaded successfully", true);
-    };
-    reader.onerror = () => {
-      setStatusbar(true, "Error reading file", true);
-    };
-    reader.readAsText(uploadedFile);
-  };
-
-  const handleFileUploadWhenNewFileGenerationInProgress = (event) => {
-    if (!masterKey) {
-      showMasterKeyNotAddedStatus();
-      return;
-    }
-    const userConfirmed = window.confirm(
-      "Loading a new file will erase all the current data. Do you want to proceed?"
-    );
-    if (userConfirmed) {
-      handleFileUpload(event);
-    }
+    });
   };
 
   const removeSecret = async (key) => {
-    if (!masterKey) {
-      showMasterKeyNotAddedStatus();
-      return;
-    }
     if (fileContentJson && Object.keys(fileContentJson.secrets).length === 1) {
       const userConfirmed = window.confirm(
         "This action will remove all secrets and reset application state. Do you want to proceed?"
@@ -274,253 +115,134 @@ const CredentialEncryptor = () => {
       const currentDate = new Date().toLocaleDateString("en-CA");
       const tempSecrets = { ...fileContentJson.secrets };
       delete tempSecrets[key];
+      
       const tempFileContentJson = {
         secrets: tempSecrets,
         integrity: { ...fileContentJson.integrity, DATE: currentDate },
       };
-      const tempFileContentStr =
-        generateFileContentForPreview(tempFileContentJson);
-      // lines.slice(0, lines.length - 2)
+      
+      const tempFileContentStr = generateFileContentForPreview(tempFileContentJson);
       const newHmac = await generateFileHmac(
         tempFileContentStr.slice(0, tempFileContentStr.indexOf("HMAC: ")),
         masterKey
       );
 
-      setFileContentJson(() => {
-        return {
-          secrets: tempSecrets,
-          integrity: { DATE: currentDate, HMAC: newHmac },
-        };
+      state.setFileContentJson({
+        secrets: tempSecrets,
+        integrity: { DATE: currentDate, HMAC: newHmac },
       });
     }
   };
 
-  const isEmptyObj = (obj) => {
-    return Object.keys(obj).length === 0;
-  };
+  const headerActions = (
+    <Stack
+      direction={{ xs: "column", md: "row" }}
+      spacing={2}
+      alignItems="flex-start"
+      justifyContent="flex-start"
+      divider={!file && <Typography>- or -</Typography>}
+    >
+      {!isGenerateFile && (
+        <FileUpload
+          file={file}
+          handleFileChange={fileOps.handleFileUpload}
+          buttonVariant={file ? "outlined" : "contained"}
+          reset={resetState}
+          disabled={!masterKey}
+          open={backDrop}
+        />
+      )}
+      <Button
+        variant="contained"
+        color="primary"
+        startIcon={file ? <AddCircleOutline /> : <LibraryAddOutlined />}
+        component="div"
+        size="small"
+        onClick={file ? () => setAddNewSecret(true) : () => {
+          if (!masterKey) {
+            setStatusbar(true, "Master key not added. Please add your master key.", true);
+            return;
+          }
+          setAddNewSecret(true);
+          setIsGenerateFile(true);
+        }}
+        disabled={!masterKey}
+      >
+        {file || isGenerateFile ? "Add Secret" : "Generate New File"}
+      </Button>
+    </Stack>
+  );
+
+  const mainActions = (
+    <>
+      <Button
+        variant={masterKey ? "outlined" : "contained"}
+        color="primary"
+        startIcon={<Lock />}
+        size="small"
+        onClick={() => state.setOpenMasterKeyDialog(true)}
+      >
+        {masterKey ? "Update Master Key" : "Add Master Key"}
+      </Button>
+      {fileContentJson && !isEmptyObj(fileContentJson.secrets) && (
+        <DownloadFile
+          content={generateFileContentForPreview(fileContentJson)}
+        />
+      )}
+    </>
+  );
 
   return (
-    <Container
-      maxWidth={false}
-      sx={{
-        padding: {
-          xs: 2, // 16px padding on extra-small screens
-          sm: 3, // 24px padding on small screens
-          md: 4, // 32px padding on medium and up screens
-        },
-        width: "90%",
-        margin: "0 auto", // Center the container
-      }}
+    <BaseLayout
+      masterKey={masterKey}
+      unloadMasterKey={unloadMasterKey}
+      headerActions={headerActions}
+      mainActions={mainActions}
     >
-      {/* Top header Starts */}
-      {isGenerateFile ? (
-        <TopHeader
-          node={
-            <FileUpload
-              file={file}
-              handleFileChange={handleFileUploadWhenNewFileGenerationInProgress}
-              buttonVariant={"outlined"}
-              reset={resetState}
-              disabled={!masterKey}
-              open={backDrop}
-            />
-          }
-        />
-      ) : (
-        <TopHeader />
-      )}
-
-      {/* Upload/Generate File Section Starts */}
-      <Stack
-        direction="row"
-        justifyContent="space-between"
-        alignItems="center"
-        marginTop={2}
-        gap={{ xs: 3, md: 2 }}
-      >
-        <Stack
-          direction={{ xs: "column", md: "row" }}
-          spacing={2}
-          alignItems="flex-start"
-          justifyContent="flex-start"
-          divider={!file && <Typography>- or -</Typography>}
-        >
-          {!isGenerateFile && (
-            <FileUpload
-              file={file}
-              handleFileChange={handleFileUpload}
-              buttonVariant={file ? "outlined" : "contained"}
-              reset={resetState}
-              disabled={!masterKey}
-              open={backDrop}
-            />
-          )}
-          <Button
-            variant="contained"
-            color="primary"
-            startIcon={file ? <AddCircleOutline /> : <LibraryAddOutlined />}
-            component="div"
-            size="small"
-            onClick={file ? () => setAddNewSecret(true) : startNewFileCreation}
-            disabled={!masterKey}
-          >
-            {file || isGenerateFile ? "Add Secret" : "Generate New File"}
-          </Button>
-        </Stack>
-        <Stack
-          direction={{ xs: "column", md: "row" }}
-          spacing={2}
-          alignItems="flex-start"
-          justifyContent="flex-start"
-        >
-          <Button
-            variant={masterKey ? "outlined" : "contained"}
-            color="primary"
-            startIcon={<Lock />}
-            size="small"
-            onClick={() => setOpenMasterKeyDialog(true)}
-          >
-            {masterKey ? "Update Master Key" : "Add Master Key"}
-          </Button>
-          {masterKey && (
-            <Stack direction="row" spacing={1} alignItems="center">
-              <Typography variant="subtitle2" color="primary">
-                Master Key: {maskMasterKey(masterKey)}
-              </Typography>
-              <IconButton size="small" onClick={unloadMasterKey}>
-                <Close />
-              </IconButton>
-            </Stack>
-          )}
-          {fileContentJson && !isEmptyObj(fileContentJson.secrets) && (
-            <DownloadFile
-              content={generateFileContentForPreview(fileContentJson)}
-            />
-          )}
-        </Stack>
-      </Stack>
-
-      {/* Display Secrets Section */}
+      {console.log("fileContentJson", fileContentJson)}
       {fileContentJson && !isEmptyObj(fileContentJson.secrets) && (
-        <Box
-          sx={{
-            display: "flex",
-            flexDirection: { xs: "column", md: "row" },
-            gap: { xs: 2, md: 1 },
-            marginTop: 1,
-            height: { xs: "80vh", md: "calc(100vh - 200px)" },
-            width: "100%",
-          }}
-        >
-          {/* Left Panel */}
-          <Box
-            sx={{
-              flex: 1,
-              overflow: "auto",
-              maxHeight: { xs: "40vh", md: "100%" },
-              height: "100%",
-              padding: { xs: 2, md: 1.5 },
-              "&::-webkit-scrollbar": {
-                display: "none",
-              },
-              msOverflowStyle: "none",
-              scrollbarWidth: "none",
-              width: { xs: "95%", md: "45%" },
-            }}
-          >
-            <Stack direction="column" spacing={1.5}>
-              {Object.keys(fileContentJson.secrets).map((key) => (
-                <SecretItem
-                  key={key}
-                  keyName={key}
-                  icon={
-                    <DeleteForeverOutlined sx={{ m: 0, p: 0, width: "auto" }} />
-                  }
-                  secret={fileContentJson.secrets[key]}
-                  handleClick={() => removeSecret(key)}
-                  buttonContent={"remove"}
-                />
-              ))}
-            </Stack>
-          </Box>
-
-          {/* Right Panel */}
-          <Box
-            sx={{
-              width: { xs: "95%", md: "45%" },
-              // maxHeight: { xs: "40vh", md: "100%" },
-              height: { xs: "40vh", md: "100%" },
-              display: "flex", // Add this
-              flexDirection: "column", // Add this
-              overflow: "hidden", // Add this
-            }}
-          >
-            <PreviewPanel
-              fileContent={generateFileContentForPreview(fileContentJson)}
-            />
-            {/* <Paper
-              sx={{
-                backgroundColor: "#f3f4f6",
-                width: "100%",
-                height: "100%",
-                overflow: "auto",
-                "&::-webkit-scrollbar": {
-                  display: "none",
-                },
-                msOverflowStyle: "none",
-                scrollbarWidth: "none",
-              }}
-              elevation={0}
-            >
-              <Typography
-                variant="body1"
-                component="pre"
-                sx={{
-                  whiteSpace: "pre-wrap",
-                  wordWrap: "break-word",
-                  margin: 0,
-                  padding: { xs: 2, md: 1.5 },
-                  fontFamily: "monospace",
-                  fontSize: { xs: "0.675rem", md: "0.875rem" },
-                }}
-              >
-                {generateFileContentForPreview(fileContentJson)}
-              </Typography>
-            </Paper> */}
-            {/* <Button >test</Button> */}
-          </Box>
+        <Box sx={{
+          display: "flex",
+          flexDirection: { xs: "column", md: "row" },
+          gap: { xs: 2, md: 1 },
+          marginTop: 1,
+          height: { xs: "80vh", md: "calc(100vh - 200px)" },
+          width: "100%",
+        }}>
+          <SecretsList
+            secrets={fileContentJson.secrets}
+            onRemoveSecret={removeSecret}
+            mode="encrypt"
+          />
+          <PreviewPanel
+            fileContent={generateFileContentForPreview(fileContentJson)}
+          />
         </Box>
       )}
 
-      {/* Add Master Key Section */}
       <AddMasterKey
         masterKey={masterKey}
         setMasterKey={(key) => {
           resetState();
-          setMasterKey(key);
+          state.setMasterKey(key);
           setStatusbar(
             false,
-            `${
-              masterKey
-                ? "Master key updated successfully"
-                : "Master key added successfully"
-            }`,
+            `${masterKey ? "Master key updated successfully" : "Master key added successfully"}`,
             true
           );
         }}
         openMasterKeyDialog={openMasterKeyDialog}
-        setOpenMasterKeyDialog={setOpenMasterKeyDialog}
+        setOpenMasterKeyDialog={state.setOpenMasterKeyDialog}
         setStatusBar={setStatusbar}
       />
 
-      {/* Status Bar Section */}
       <StatusBar
         isError={isError}
         message={message}
         openStatusbar={openStatusbar}
-        setOpenStatusbar={setOpenStatusbar}
+        setOpenStatusbar={state.setOpenStatusbar}
       />
-      {/* Add Secret Section */}
+
       <AddSecret
         openPopup={addNewSecret}
         setOpenPopup={setAddNewSecret}
@@ -529,14 +251,16 @@ const CredentialEncryptor = () => {
         addToSecretsList={addToFileContentJsonSecretsSection}
         existingSecrets={Object.keys(fileContentJson.secrets)}
       />
+
+    {/* First dialog, when page loads to add master key  */}
       <MessageDialog
         open={dialogOpen}
-        onClose={(event, reason) => {
+        onClose={(_, reason) => {
           if (reason !== "backdropClick" && reason !== "escapeKeyDown") {
-            setDialogOpen(false);
+            state.setDialogOpen(false);
           }
         }}
-        title={dialogTitle}
+        title={dialogTitle} 
         message={dialogMessage}
         node={
           <Button
@@ -545,8 +269,8 @@ const CredentialEncryptor = () => {
             startIcon={<Lock />}
             size="small"
             onClick={() => {
-              setDialogOpen(false);
-              setOpenMasterKeyDialog(true);
+              state.setDialogOpen(false);
+              state.setOpenMasterKeyDialog(true);
             }}
             disableElevation
           >
@@ -554,8 +278,9 @@ const CredentialEncryptor = () => {
           </Button>
         }
       />
-      {backDrop && <LoadingOverlay open={backDrop} />}
-    </Container>
+
+      <LoadingOverlay open={backDrop} />
+    </BaseLayout>
   );
 };
 

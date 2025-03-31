@@ -16,6 +16,7 @@ import PropTypes from "prop-types";
 import { maskMasterKey, maskSecret } from "../utils/DataUtils";
 import passwordManagerConfig from "../config/PasswordManagerConfig";
 import { decrypt } from "../utils/CredLockerUtils";
+import { base64ToUint8Array } from "../utils/CryptoUtils";
 
 const DecryptSecret = ({
   openPopup,
@@ -76,17 +77,22 @@ const DecryptSecret = ({
 
   const handleDecrypt = async () => {
     setLoading(true);
-    const decryptedOutput = await decrypt(masterKey, encryptedSecret, aad);
-    setDecryptionResult({
-      keyName: keyName,
-      secretValue: decryptedOutput,
-      algorithm,
-      masterKey,
-      aad,
-      encryptedSecret: encryptedSecret,
-    });
-    setLoading(false);
-    setShowConfirmation(true);
+    try {
+      const decryptedOutput = await decrypt(masterKey, encryptedSecret, aad);
+      setDecryptionResult({
+        keyName: keyName,
+        secretValue: decryptedOutput,
+        algorithm,
+        masterKey,
+        aad,
+        encryptedSecret: encryptedSecret,
+      });
+      setLoading(false);
+      setShowConfirmation(true);
+    } catch (error) {
+      setLoading(false);
+      setShowConfirmation(false);
+    }
   };
 
   const isFormValid = () => {
@@ -106,7 +112,7 @@ const DecryptSecret = ({
     resetState();
   };
 
-  const handleClose = (event, reason) => {
+  const handleClose = (_, reason) => {
     if (reason !== "backdropClick" && reason !== "escapeKeyDown") {
       handleCancel();
     }
@@ -117,7 +123,7 @@ const DecryptSecret = ({
   };
 
   const isAadRequired = () => {
-    return encryptedSecret.length > 500;
+    return base64ToUint8Array(encryptedSecret)[0] === 1;
   };
 
   const handleClickShowConfirmationSecret = () => {
@@ -232,11 +238,7 @@ const DecryptSecret = ({
           )}
         </DialogContent>
         <DialogActions>
-          <Button
-            onClick={handleCancel}
-            color="primary"
-            variant="outlined"
-          >
+          <Button onClick={handleCancel} color="primary" variant="outlined">
             Cancel
           </Button>
           <Button

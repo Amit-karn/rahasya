@@ -148,7 +148,7 @@ const AddSecret = ({
     setShowConfirmation(true);
   };
 
-  const handleConfirmEncryptAndAdd = async() => {
+  const handleConfirmEncryptAndAdd = async () => {
     setIsAddingKey(true);
     await addToSecretsList(encryptionResult.keyName, encryptionResult.encryptedSecret, encryptionResult.aad);
     resetState();
@@ -246,12 +246,12 @@ const AddSecret = ({
             }}
           />
           {secretError === "" && newSecret.secretValue != "" &&
-          <PasswordFeedback
-          passwordStrength={passwordStrength}
-          passwordWarnings={passwordWarnings}
-          passwordSuggestions={passwordSuggestions}
-          passwordCrackDetails={passwordCrackDetails}
-        />
+            <PasswordFeedback
+              passwordStrength={passwordStrength}
+              passwordWarnings={passwordWarnings}
+              passwordSuggestions={passwordSuggestions}
+              passwordCrackDetails={passwordCrackDetails}
+            />
           }
           <TextField
             required
@@ -289,7 +289,7 @@ const AddSecret = ({
                 color="primary"
                 disabled={
                   newSecret.keyName.trim() === "" ||
-                  newSecret.secretValue.trim() === ""||
+                  newSecret.secretValue.trim() === "" ||
                   loading
                 }
               />
@@ -310,7 +310,7 @@ const AddSecret = ({
               helperText={aadError}
               disabled={
                 newSecret.keyName.trim() === "" ||
-                newSecret.secretValue.trim() === ""||
+                newSecret.secretValue.trim() === "" ||
                 loading
               }
               slotProps={{
@@ -413,8 +413,8 @@ const AddSecret = ({
             variant="contained"
             startIcon={isAddingKey ? <CircularProgress size={24} /> : null}
             disabled={isAddingKey}
-            >
-              {isAddingKey ? "Generating Hmac..." : "Confirm & Add"}
+          >
+            {isAddingKey ? "Generating Hmac..." : "Confirm & Add"}
           </Button>
         </DialogActions>
       </Dialog>
