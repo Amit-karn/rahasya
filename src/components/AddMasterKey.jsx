@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useReducer, useEffect } from "react";
 import PropTypes from "prop-types";
 import {
   TextField,
@@ -15,21 +15,63 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  Collapse,
 } from "@mui/material";
 import {
   Visibility,
   VisibilityOff,
   ArrowDropDownTwoTone,
   ArrowDropUpTwoTone,
-  Warning,
-  Info,
 } from "@mui/icons-material";
 import { maskMasterKey } from "../utils/DataUtils";
 import passwordManagerConfig from "../config/PasswordManagerConfig";
 import { generateEncryptionKeyFromMasterKey } from "../utils/CredLockerUtils";
 import { checkPasswordStrength } from "../utils/PasswordStrengthUtils";
 import PasswordFeedback from "./PasswordFeedback";
+
+const initialState = {
+  masterKeyInput: "", // Input for the master key
+  isKeyBeingGenerated: false, // Indicates if the key is being generated
+  isMasterKeyVisible: false, // Toggles visibility of the master key input
+  isEncryptionKeyVisible: false, // Toggles visibility of the encryption key
+  inputError: "", // Error message for invalid input
+  isIterationsDropdownVisible: false, // Toggles visibility of the iterations dropdown
+  iterationsCount: passwordManagerConfig.masterKeyDefaultIteraion, // Default iteration count
+  passwordStrength: "", // Strength of the entered password
+  passwordWarnings: [], // Warnings for the entered password
+  passwordSuggestions: [], // Suggestions for improving the password
+  passwordCrackDetails: [], // Details about how long it would take to crack the password
+};
+
+const masterKeyReducer = (state, action) => {
+  switch (action.type) {
+    case "SET_MASTER_KEY_INPUT":
+      return { ...state, masterKeyInput: action.payload };
+    case "SET_IS_KEY_BEING_GENERATED":
+      return { ...state, isKeyBeingGenerated: action.payload };
+    case "TOGGLE_MASTER_KEY_VISIBILITY":
+      return { ...state, isMasterKeyVisible: !state.isMasterKeyVisible };
+    case "TOGGLE_ENCRYPTION_KEY_VISIBILITY":
+      return { ...state, isEncryptionKeyVisible: !state.isEncryptionKeyVisible };
+    case "SET_INPUT_ERROR":
+      return { ...state, inputError: action.payload };
+    case "TOGGLE_ITERATIONS_DROPDOWN":
+      return { ...state, isIterationsDropdownVisible: !state.isIterationsDropdownVisible };
+    case "SET_ITERATIONS_COUNT":
+      return { ...state, iterationsCount: action.payload };
+    case "SET_PASSWORD_STRENGTH":
+      return { ...state, passwordStrength: action.payload };
+    case "SET_PASSWORD_WARNINGS":
+      return { ...state, passwordWarnings: action.payload };
+    case "SET_PASSWORD_SUGGESTIONS":
+      return { ...state, passwordSuggestions: action.payload };
+    case "SET_PASSWORD_CRACK_DETAILS":
+      return { ...state, passwordCrackDetails: action.payload };
+    case "RESET_STATE":
+      return initialState;
+    default:
+      return state;
+  }
+};
 
 const AddMasterKey = ({
   masterKey,
@@ -38,84 +80,72 @@ const AddMasterKey = ({
   setOpenMasterKeyDialog,
   setStatusBar,
 }) => {
-  const [tempMasterKey, setTempMasterKey] = useState("");
-  const [isGeneratingKey, setIsGeneratingKey] = useState(false);
-  const [showMasterKey, setShowMasterKey] = useState(false);
-  const [showEncryptionKey, setShowEncryptionKey] = useState(false);
-  const [error, setError] = useState("");
-  const [showIterationsDropdown, setShowIterationsDropdown] = useState(false);
-  const [iterations, setIterations] = useState(
-    passwordManagerConfig.masterKeyDefaultIteraion
-  );
-  const [passwordStrength, setPasswordStrength] = useState("");
-  const [passwordWarnings, setPasswordWarnings] = useState([]);
-  const [passwordSuggestions, setPasswordSuggestions] = useState([]);
-  const [passwordCrackDetails, setPasswordCrackDetails] = useState([]);
-  // const [showWarnings, setShowWarnings] = useState(false);
-  // const [showSuggestions, setShowSuggestions] = useState(false);
-  // const [showPasswordCrackDetails, setShowPasswordCrackDetails] = useState(false);
+  const [state, dispatch] = useReducer(masterKeyReducer, initialState);
+
+  const {
+    masterKeyInput,
+    isKeyBeingGenerated,
+    isMasterKeyVisible,
+    isEncryptionKeyVisible,
+    inputError,
+    isIterationsDropdownVisible,
+    iterationsCount,
+    passwordStrength,
+    passwordWarnings,
+    passwordSuggestions,
+    passwordCrackDetails,
+  } = state;
 
   useEffect(() => {
-    if (tempMasterKey) {
+    if (masterKeyInput) {
       const { strength, warning, suggestions, passwordCrackDetails } =
-        checkPasswordStrength(tempMasterKey);
-      setPasswordStrength(strength);
-      setPasswordWarnings(warning);
-      setPasswordSuggestions(suggestions);
-      setPasswordCrackDetails(passwordCrackDetails);
+        checkPasswordStrength(masterKeyInput);
+      dispatch({ type: "SET_PASSWORD_STRENGTH", payload: strength });
+      dispatch({ type: "SET_PASSWORD_WARNINGS", payload: warning });
+      dispatch({ type: "SET_PASSWORD_SUGGESTIONS", payload: suggestions });
+      dispatch({
+        type: "SET_PASSWORD_CRACK_DETAILS",
+        payload: passwordCrackDetails,
+      });
     } else {
-      setPasswordStrength("");
-      setPasswordWarnings([]);
-      setPasswordSuggestions([]);
-      setPasswordCrackDetails([]);
+      dispatch({ type: "SET_PASSWORD_STRENGTH", payload: "" });
+      dispatch({ type: "SET_PASSWORD_WARNINGS", payload: [] });
+      dispatch({ type: "SET_PASSWORD_SUGGESTIONS", payload: [] });
+      dispatch({ type: "SET_PASSWORD_CRACK_DETAILS", payload: [] });
     }
-  }, [tempMasterKey]);
+  }, [masterKeyInput]);
 
   const resetState = () => {
-    setIsGeneratingKey(false);
+    dispatch({ type: "RESET_STATE" });
     setOpenMasterKeyDialog(false);
-    setTempMasterKey("");
-    setShowMasterKey(false);
-    setShowEncryptionKey(false);
-    setError("");
-    setShowIterationsDropdown(false);
-    setIterations(passwordManagerConfig.masterKeyDefaultIteraion);
-    // setShowWarnings(false);
-    // setShowSuggestions(false);
-    // setShowPasswordCrackDetails(false);
-    setPasswordStrength("");
-    setPasswordWarnings([]);
-    setPasswordSuggestions([]);
-    setPasswordCrackDetails([]);
   };
 
   const generateMasterKey = async () => {
     if (
-      tempMasterKey.length < passwordManagerConfig.masterKeyMinLength ||
-      tempMasterKey.length > passwordManagerConfig.masterKeyMaxLength
+      masterKeyInput.length < passwordManagerConfig.masterKeyMinLength ||
+      masterKeyInput.length > passwordManagerConfig.masterKeyMaxLength
     ) {
-      setError(
-        `Master key length must be between ${passwordManagerConfig.masterKeyMinLength} and ${passwordManagerConfig.masterKeyMaxLength} characters.`
-      );
+      dispatch({
+        type: "SET_INPUT_ERROR",
+        payload: `Master key length must be between ${passwordManagerConfig.masterKeyMinLength} and ${passwordManagerConfig.masterKeyMaxLength} characters.`,
+      });
       return;
     }
-    setIsGeneratingKey(true);
+    dispatch({ type: "SET_IS_KEY_BEING_GENERATED", payload: true });
     try {
-      setStatusBar(false, "", false);
       const generatedKey = await generateEncryptionKeyFromMasterKey(
-        tempMasterKey,
-        iterations
+        masterKeyInput,
+        iterationsCount
       );
       setMasterKey(generatedKey);
       setOpenMasterKeyDialog(false);
-      setTempMasterKey("");
+      dispatch({ type: "SET_MASTER_KEY_INPUT", payload: "" });
     } catch {
-      setTempMasterKey("");
+      dispatch({ type: "SET_MASTER_KEY_INPUT", payload: "" });
       setMasterKey("");
       setStatusBar(
         true,
-        "Error in <b>key generation</b>. Please refresh and try again.",
-        true
+        "Error in <b>key generation</b>. Please refresh and try again."
       );
     } finally {
       resetState();
@@ -124,28 +154,8 @@ const AddMasterKey = ({
 
   const handleMasterKeyDialogClose = (event, reason) => {
     if (reason !== "backdropClick" && reason !== "escapeKeyDown") {
-      setOpenMasterKeyDialog(false);
-      setTempMasterKey("");
-      setError("");
-      setShowIterationsDropdown(false);
-      setIterations(passwordManagerConfig.masterKeyDefaultIteraion);
+      resetState();
     }
-  };
-
-  const handleClickShowSecret = () => {
-    setShowMasterKey(!showMasterKey);
-  };
-
-  const handleClickShowMasterKey = () => {
-    setShowEncryptionKey(!showEncryptionKey);
-  };
-
-  const handleToggleIterationsDropdown = () => {
-    setShowIterationsDropdown(!showIterationsDropdown);
-  };
-
-  const handleIterationsChange = (event) => {
-    setIterations(parseInt(event.target.value));
   };
 
   return (
@@ -171,13 +181,15 @@ const AddMasterKey = ({
               }}
             >
               <strong>Master Key: </strong>
-              {showEncryptionKey ? masterKey : maskMasterKey(masterKey)}
+              {isEncryptionKeyVisible ? masterKey : maskMasterKey(masterKey)}
               <IconButton
                 aria-label="toggle confirmation secret visibility"
-                onClick={handleClickShowMasterKey}
+                onClick={() =>
+                  dispatch({ type: "TOGGLE_ENCRYPTION_KEY_VISIBILITY" })
+                }
                 edge="end"
               >
-                {showEncryptionKey ? <Visibility /> : <VisibilityOff />}
+                {isEncryptionKeyVisible ? <Visibility /> : <VisibilityOff />}
               </IconButton>
             </Typography>
           </>
@@ -187,44 +199,47 @@ const AddMasterKey = ({
           autoFocus
           margin="dense"
           label={masterKey ? "Enter New Master Key" : "Enter Master Key"}
-          type={showMasterKey ? "text" : "password"}
+          type={isMasterKeyVisible ? "text" : "password"}
           fullWidth
           variant="outlined"
-          value={tempMasterKey}
+          value={masterKeyInput}
           onChange={(e) => {
-            setTempMasterKey(e.target.value);
+            dispatch({ type: "SET_MASTER_KEY_INPUT", payload: e.target.value });
             if (
               e.target.value.length >=
                 passwordManagerConfig.masterKeyMinLength &&
               e.target.value.length <= passwordManagerConfig.masterKeyMaxLength
             ) {
-              setError("");
+              dispatch({ type: "SET_INPUT_ERROR", payload: "" });
             } else {
-              setError(
-                `Master key length must be between ${passwordManagerConfig.masterKeyMinLength} and ${passwordManagerConfig.masterKeyMaxLength} characters.`
-              );
+              dispatch({
+                type: "SET_INPUT_ERROR",
+                payload: `Master key length must be between ${passwordManagerConfig.masterKeyMinLength} and ${passwordManagerConfig.masterKeyMaxLength} characters.`,
+              });
             }
           }}
-          error={!!error}
-          helperText={error}
+          error={!!inputError}
+          helperText={inputError}
           slotProps={{
             input: {
               endAdornment: (
                 <InputAdornment position="end">
                   <IconButton
                     aria-label="toggle secret visibility"
-                    onClick={handleClickShowSecret}
+                    onClick={() =>
+                      dispatch({ type: "TOGGLE_MASTER_KEY_VISIBILITY" })
+                    }
                     edge="end"
                   >
-                    {showMasterKey ? <Visibility /> : <VisibilityOff />}
+                    {isMasterKeyVisible ? <Visibility /> : <VisibilityOff />}
                   </IconButton>
                 </InputAdornment>
               ),
             },
           }}
         />
-        {tempMasterKey.length >= passwordManagerConfig.masterKeyMinLength &&
-          tempMasterKey.length <= passwordManagerConfig.masterKeyMaxLength && (
+        {masterKeyInput.length >= passwordManagerConfig.masterKeyMinLength &&
+          masterKeyInput.length <= passwordManagerConfig.masterKeyMaxLength && (
             <PasswordFeedback
               passwordStrength={passwordStrength}
               passwordWarnings={passwordWarnings}
@@ -232,26 +247,32 @@ const AddMasterKey = ({
               passwordCrackDetails={passwordCrackDetails}
             />
           )}
-        {isGeneratingKey && (
+        {isKeyBeingGenerated && (
           <Typography variant="body2" color="info">
             Key generation might take a minute. Please wait...
           </Typography>
         )}
-        <IconButton onClick={handleToggleIterationsDropdown}>
-          {showIterationsDropdown ? (
+        <IconButton
+          onClick={() =>
+            dispatch({ type: "TOGGLE_ITERATIONS_DROPDOWN" })
+          }
+        >
+          {isIterationsDropdownVisible ? (
             <ArrowDropUpTwoTone />
           ) : (
             <ArrowDropDownTwoTone />
           )}
         </IconButton>
-        {showIterationsDropdown && (
-          <FormControl fullWidth disabled={!!isGeneratingKey}>
+        {isIterationsDropdownVisible && (
+          <FormControl fullWidth disabled={!!isKeyBeingGenerated}>
             <InputLabel id="iterations-label">Iterations</InputLabel>
             <Select
               labelId="iterations-label"
               id="iterations-label-id"
-              value={iterations}
-              onChange={handleIterationsChange}
+              value={iterationsCount}
+              onChange={(e) =>
+                dispatch({ type: "SET_ITERATIONS_COUNT", payload: e.target.value })
+              }
               label="Iterations"
             >
               {passwordManagerConfig.masterKeyIteraionList.map((itr) => (
@@ -266,17 +287,17 @@ const AddMasterKey = ({
       <DialogActions>
         <Button
           onClick={handleMasterKeyDialogClose}
-          disabled={!!isGeneratingKey}
+          disabled={!!isKeyBeingGenerated}
         >
           Cancel
         </Button>
         <Button
           onClick={generateMasterKey}
-          disabled={!!(!tempMasterKey || isGeneratingKey || error)}
+          disabled={!!(!masterKeyInput || isKeyBeingGenerated || inputError)}
           variant="contained"
-          startIcon={isGeneratingKey ? <CircularProgress size={24} /> : null}
+          startIcon={isKeyBeingGenerated ? <CircularProgress size={24} /> : null}
         >
-          {isGeneratingKey ? "Generating..." : "Confirm"}
+          {isKeyBeingGenerated ? "Generating..." : "Confirm"}
         </Button>
       </DialogActions>
     </Dialog>

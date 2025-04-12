@@ -2,19 +2,28 @@ import PropTypes from "prop-types";
 import { Button, Input, Typography, Stack, IconButton } from "@mui/material";
 import { AddCircleOutline, CloseOutlined } from "@mui/icons-material";
 import passwordManagerConfig from "../config/PasswordManagerConfig";
-import { useRef, useState } from "react";
-import LoadingOverlay from "./LoadingOverlay";
+import { useRef } from "react";
 
-function FileUpload({ file, handleFileChange, buttonVariant, reset, disabled, open }) {
+function FileUpload({ file, handleFileChange, buttonVariant, reset, disabled, isGeneratingFile }) {
   const fileInputRef = useRef(null);
 
-  const handleFileSelection = (event) => {
-    // Handle file change
-    handleFileChange(event);
+  // Ask for confirmation before opening file picker
+  const handleInputClick = (event) => {
+    if (isGeneratingFile) {
+      const userConfirmed = window.confirm(
+        "Uploading a new file will reset the application state. Do you want to proceed ?"
+      );
+      if (!userConfirmed) {
+        event.preventDefault();
+      }
+    }
+  };
 
-    
+  const handleFileSelection = (event) => {
+    // File has been selected (after confirmation)
+    reset();
+    handleFileChange(event);
     fileInputRef.current.value = ""; // Reset the input field
-    
   };
 
   return (
@@ -23,6 +32,7 @@ function FileUpload({ file, handleFileChange, buttonVariant, reset, disabled, op
         type="file"
         inputProps={{ accept: passwordManagerConfig.acceptFileExtension }}
         style={{ display: "none" }}
+        onClick={handleInputClick}
         onChange={handleFileSelection}
         id="file-upload-input"
         disabled={disabled}
@@ -32,7 +42,7 @@ function FileUpload({ file, handleFileChange, buttonVariant, reset, disabled, op
       {/* Button to trigger file upload */}
       <label htmlFor="file-upload-input">
         <Button
-          variant={buttonVariant || "contained"}
+          variant={isGeneratingFile ? "outlined": (buttonVariant || "contained")}
           color="primary"
           startIcon={<AddCircleOutline />}
           component="span"
@@ -45,7 +55,7 @@ function FileUpload({ file, handleFileChange, buttonVariant, reset, disabled, op
       </label>
 
       {/* Display the file name and close button */}
-      {file && (
+      {/* {file && (
         <Stack
           direction="row"
           spacing={1}
@@ -77,7 +87,7 @@ function FileUpload({ file, handleFileChange, buttonVariant, reset, disabled, op
             <CloseOutlined sx={{ fontSize: "0.875rem" }} />
           </IconButton>
         </Stack>
-      )}
+      )} */}
     </div>
   );
 }
@@ -85,11 +95,10 @@ function FileUpload({ file, handleFileChange, buttonVariant, reset, disabled, op
 FileUpload.propTypes = {
   file: PropTypes.object,
   handleFileChange: PropTypes.func.isRequired,
-  buttonVariant: PropTypes.oneOf(["outlined", "contained", "text"]).isRequired,
+  buttonVariant: PropTypes.oneOf(["outlined", "contained", "text"]),
   reset: PropTypes.func.isRequired,
   disabled: PropTypes.bool.isRequired,
-  open: PropTypes.bool.isRequired,
- // setIsOpen: PropTypes.func.isRequired,
+  isGeneratingFile: PropTypes.bool,
 };
 
 export default FileUpload;

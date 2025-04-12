@@ -137,7 +137,7 @@ const CredentialDecryptor = () => {
     const secretKeys = Object.keys(fileContentJson.secrets);
     const integrityKeys = Object.keys(fileContentJson.integrity);
 
-    return `This is an auto generated File. Please do not tamper with it.\n<<<<>>>>\n${secretKeys
+    return `${passwordManagerConfig.encryptedFileHeader}\n<<<<>>>>\n${secretKeys
       .map((key) => `${key}: ${fileContentJson.secrets[key]}`)
       .join("\n")}\n<<<<<>>>>>\n${integrityKeys
       .map((key) => `${key}: ${fileContentJson.integrity[key]}`)

@@ -32,9 +32,7 @@ function checkPasswordStrength(password) {
         passwordCrackDetails: []    // Suggestions for improvement
     };
 
-    // alert(password);
     const zxcvbnResult = zxcvbn(password);
-    console.log(zxcvbnResult);
     // Check the score to determine password strength
     const score = zxcvbnResult.score;
     const minGuess = getMinGuesses(zxcvbnResult.sequence);
@@ -80,9 +78,6 @@ function checkPasswordStrength(password) {
 
     return result;
 }
-
-// const passwordStrength = checkPasswordStrength("b3j3awqwVNTRRLqmLLQmdGBdYz4KSCjBd1rFFpZTsr8");
-// console.log(passwordStrength);
 
 export {
     checkPasswordStrength

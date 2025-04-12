@@ -10,7 +10,7 @@ import passwordManagerConfig from "./config/PasswordManagerConfig";
 const CryptoTools = () => {
   return (
     <Container
-      maxWidth="xl"
+      maxWidth="lg"
       sx={{
         minHeight: "100vh",
         py: 4,

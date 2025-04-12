@@ -1,16 +1,17 @@
 import { Button } from "@mui/material";
 import { FileDownloadOutlined } from "@mui/icons-material";
 import PropTypes from "prop-types";
+import passwordManagerConfig from "../config/PasswordManagerConfig";
 
 const DownloadFile = ({ content }) => {
 
   const generateDownloadUrl = () => {
-    const blob = new Blob([content], { type: "text/plain" });
+    const blob = new Blob([content], { type: passwordManagerConfig.fileType[0] });
     return URL.createObjectURL(blob);
   };
 
   const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
-  const fileName = `secrets-${timestamp}.txt`;
+  const fileName = `secrets-${timestamp}${passwordManagerConfig.acceptFileExtension}`;
 
   const handleDownload = () => {
     const url = generateDownloadUrl();

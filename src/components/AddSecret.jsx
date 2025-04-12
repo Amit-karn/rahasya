@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useReducer } from "react";
 import {
   Button,
   Dialog,
@@ -21,6 +21,77 @@ import { encrypt } from "../utils/CredLockerUtils";
 import { checkPasswordStrength } from "../utils/PasswordStrengthUtils";
 import PasswordFeedback from "./PasswordFeedback";
 
+const initialState = {
+  secretDetails: {
+    keyName: "",
+    secretValue: "",
+    additionalData: "", // Additional authenticated data (AAD)
+  },
+  isAADVisible: false,
+  keyNameError: "",
+  secretValueError: "",
+  additionalDataError: "",
+  isAADEnabled: false,
+  isConfirmationDialogVisible: false,
+  isSecretVisible: false,
+  isConfirmationSecretVisible: false,
+  encryptionResult: {
+    keyName: "",
+    secretValue: "",
+    algorithm: "",
+    masterKey: "",
+    additionalData: "",
+    encryptedSecret: "",
+  },
+  isEncrypting: false,
+  passwordStrength: "",
+  passwordWarnings: [],
+  passwordSuggestions: [],
+  passwordCrackDetails: [],
+  isAddingSecret: false,
+};
+
+function addSecretReducer(state, action) {
+  switch (action.type) {
+    case "SET_SECRET_DETAILS":
+      return { ...state, secretDetails: { ...state.secretDetails, ...action.payload } };
+    case "SET_KEY_NAME_ERROR":
+      return { ...state, keyNameError: action.payload };
+    case "SET_SECRET_VALUE_ERROR":
+      return { ...state, secretValueError: action.payload };
+    case "SET_ADDITIONAL_DATA_ERROR":
+      return { ...state, additionalDataError: action.payload };
+    case "TOGGLE_AAD_ENABLED":
+      return { ...state, isAADEnabled: !state.isAADEnabled };
+    case "TOGGLE_AAD_VISIBILITY":
+      return { ...state, isAADVisible: !state.isAADVisible };
+    case "TOGGLE_SECRET_VISIBILITY":
+      return { ...state, isSecretVisible: !state.isSecretVisible };
+    case "TOGGLE_CONFIRMATION_SECRET_VISIBILITY":
+      return { ...state, isConfirmationSecretVisible: !state.isConfirmationSecretVisible };
+    case "SET_ENCRYPTION_RESULT":
+      return { ...state, encryptionResult: action.payload };
+    case "SET_IS_ENCRYPTING":
+      return { ...state, isEncrypting: action.payload };
+    case "SET_PASSWORD_FEEDBACK":
+      return {
+        ...state,
+        passwordStrength: action.payload.strength,
+        passwordWarnings: action.payload.warnings,
+        passwordSuggestions: action.payload.suggestions,
+        passwordCrackDetails: action.payload.crackDetails,
+      };
+    case "TOGGLE_CONFIRMATION_DIALOG":
+      return { ...state, isConfirmationDialogVisible: !state.isConfirmationDialogVisible };
+    case "SET_IS_ADDING_SECRET":
+      return { ...state, isAddingSecret: action.payload };
+    case "RESET_STATE":
+      return initialState;
+    default:
+      return state;
+  }
+}
+
 const AddSecret = ({
   openPopup,
   setOpenPopup,
@@ -28,137 +99,114 @@ const AddSecret = ({
   masterKey,
   addToSecretsList,
   existingSecrets,
+  resetParentState
 }) => {
-  const [newSecret, setNewSecret] = useState({
-    keyName: "",
-    secretValue: "",
-    aad: "", // Additional authenticated data
-  });
-  const [showAad, setShowAad] = useState(false);
-  const [keyError, setKeyError] = useState("");
-  const [secretError, setSecretError] = useState("");
-  const [aadError, setAadError] = useState("");
-  const [useAAD, setUseAAD] = useState(false);
-  const [showConfirmation, setShowConfirmation] = useState(false);
-  const [showSecret, setShowSecret] = useState(false);
-  const [showConfirmationSecret, setShowConfirmationSecret] = useState(false);
-  const [encryptionResult, setEncryptionResult] = useState({
-    keyName: "",
-    secretValue: "",
-    algorithm: "",
-    masterKey: "",
-    aad: "", // Additional authenticated data
-    encryptedSecret: "",
-  });
-  const [loading, setLoading] = useState(false);
+  const [state, dispatch] = useReducer(addSecretReducer, initialState);
 
-  const [passwordStrength, setPasswordStrength] = useState("");
-  const [passwordWarnings, setPasswordWarnings] = useState([]);
-  const [passwordSuggestions, setPasswordSuggestions] = useState([]);
-  const [passwordCrackDetails, setPasswordCrackDetails] = useState([]);
-  const [isAddingKey, setIsAddingKey] = useState(false);
+  const {
+    secretDetails,
+    isAADVisible,
+    keyNameError,
+    secretValueError,
+    additionalDataError,
+    isAADEnabled,
+    isConfirmationDialogVisible,
+    isSecretVisible,
+    isConfirmationSecretVisible,
+    encryptionResult,
+    isEncrypting,
+    passwordStrength,
+    passwordWarnings,
+    passwordSuggestions,
+    passwordCrackDetails,
+    isAddingSecret,
+  } = state;
 
   const resetState = () => {
-    setNewSecret({
-      keyName: "",
-      secretValue: "",
-      aad: "",
-    });
-    setShowAad(false);
-    setKeyError("");
-    setSecretError("");
-    setAadError("");
-    setUseAAD(false);
-    setShowConfirmation(false);
-    setShowSecret(false);
-    setShowConfirmationSecret(false);
-    setEncryptionResult({
-      keyName: "",
-      secretValue: "",
-      algorithm: "",
-      masterKey: "",
-      aad: "",
-      encryptedSecret: "",
-    });
-    setLoading(false);
+    dispatch({ type: "RESET_STATE" });
     setOpenPopup(false);
-    setPasswordStrength("");
-    setPasswordWarnings([]);
-    setPasswordSuggestions([]);
-    setPasswordCrackDetails([]);
-    setIsAddingKey(false);
   };
 
-  const handlePopupChange = (e) => {
+  const handleInputChange = (e) => {
     const { name, value } = e.target;
     if (name === "keyName") {
       if (existingSecrets.includes(value)) {
-        setKeyError("Key: A secret with this key name already exists.");
+        dispatch({ type: "SET_KEY_NAME_ERROR", payload: "Key: A secret with this key name already exists." });
       } else {
-        setKeyError("");
+        dispatch({ type: "SET_KEY_NAME_ERROR", payload: "" });
       }
     } else if (name === "secretValue") {
       if (
         value.length < passwordManagerConfig.secretMinLength ||
         value.length > passwordManagerConfig.secretMaxLength
       ) {
-        setSecretError(
-          `Secret: It should be between ${passwordManagerConfig.secretMinLength} and ${passwordManagerConfig.secretMaxLength} characters.`
-        );
+        dispatch({
+          type: "SET_SECRET_VALUE_ERROR",
+          payload: `Secret: It should be between ${passwordManagerConfig.secretMinLength} and ${passwordManagerConfig.secretMaxLength} characters.`,
+        });
       } else {
-        setSecretError("");
+        dispatch({ type: "SET_SECRET_VALUE_ERROR", payload: "" });
         const { strength, warning, suggestions, passwordCrackDetails } =
           checkPasswordStrength(value);
-        setPasswordStrength(strength);
-        setPasswordWarnings(warning);
-        setPasswordSuggestions(suggestions);
-        setPasswordCrackDetails(passwordCrackDetails);
+        dispatch({
+          type: "SET_PASSWORD_FEEDBACK",
+          payload: { strength, warnings: warning, suggestions, crackDetails: passwordCrackDetails },
+        });
       }
-    } else if (useAAD && name === "aad") {
+    } else if (isAADEnabled && name === "additionalData") {
       if (
         value.length < passwordManagerConfig.aadMinLength ||
         value.length > passwordManagerConfig.aadMaxLength
       ) {
-        setAadError(
-          `AAD: The length should be between ${passwordManagerConfig.aadMinLength} and ${passwordManagerConfig.aadMaxLength} characters.`
-        );
+        dispatch({
+          type: "SET_ADDITIONAL_DATA_ERROR",
+          payload: `AAD: The length should be between ${passwordManagerConfig.aadMinLength} and ${passwordManagerConfig.aadMaxLength} characters.`,
+        });
       } else {
-        setAadError("");
+        dispatch({ type: "SET_ADDITIONAL_DATA_ERROR", payload: "" });
       }
     }
-    setNewSecret((prev) => ({ ...prev, [name]: value }));
+    dispatch({ type: "SET_SECRET_DETAILS", payload: { [name]: value } });
   };
 
   const handleEncrypt = async () => {
-    setLoading(true);
+    dispatch({ type: "SET_IS_ENCRYPTING", payload: true });
     const encryptedOutput = await encrypt(
       masterKey,
-      newSecret.secretValue,
-      newSecret.aad
+      secretDetails.secretValue,
+      secretDetails.additionalData
     );
-    setEncryptionResult({
-      keyName: newSecret.keyName,
-      secretValue: newSecret.secretValue,
-      algorithm: algorithm,
-      masterKey: masterKey,
-      aad: newSecret.aad,
-      encryptedSecret: encryptedOutput,
+    dispatch({
+      type: "SET_ENCRYPTION_RESULT",
+      payload: {
+        keyName: secretDetails.keyName,
+        secretValue: secretDetails.secretValue,
+        algorithm: algorithm,
+        masterKey: masterKey,
+        additionalData: secretDetails.additionalData,
+        encryptedSecret: encryptedOutput,
+      },
     });
-    setLoading(false);
-    setShowConfirmation(true);
+    dispatch({ type: "SET_IS_ENCRYPTING", payload: false });
+    dispatch({ type: "TOGGLE_CONFIRMATION_DIALOG" });
   };
 
   const handleConfirmEncryptAndAdd = async () => {
-    setIsAddingKey(true);
-    await addToSecretsList(encryptionResult.keyName, encryptionResult.encryptedSecret, encryptionResult.aad);
+    dispatch({ type: "SET_IS_ADDING_SECRET", payload: true });
+    await addToSecretsList(
+      encryptionResult.keyName,
+      encryptionResult.encryptedSecret,
+      encryptionResult.additionalData
+    );
     resetState();
   };
 
   const handleCancel = () => {
     resetState();
+    resetParentState();
   };
 
-  const handleClose = (event, reason) => {
+  const handleClose = (_, reason) => {
     if (reason !== "backdropClick" && reason !== "escapeKeyDown") {
       handleCancel();
     }
@@ -166,93 +214,80 @@ const AddSecret = ({
 
   const isFormValid = () => {
     const isSecretValid =
-      newSecret.secretValue.length >= passwordManagerConfig.secretMinLength &&
-      newSecret.secretValue.length <= passwordManagerConfig.secretMaxLength;
+      secretDetails.secretValue.length >= passwordManagerConfig.secretMinLength &&
+      secretDetails.secretValue.length <= passwordManagerConfig.secretMaxLength;
     const isAADValid =
-      !useAAD ||
-      (newSecret.aad.length >= passwordManagerConfig.aadMinLength &&
-        newSecret.aad.length <= passwordManagerConfig.aadMaxLength);
+      !isAADEnabled ||
+      (secretDetails.additionalData.length >= passwordManagerConfig.aadMinLength &&
+        secretDetails.additionalData.length <= passwordManagerConfig.aadMaxLength);
     return (
-      newSecret.keyName.trim() !== "" &&
+      secretDetails.keyName.trim() !== "" &&
       isSecretValid &&
       isAADValid &&
-      keyError === "" &&
-      secretError === "" &&
-      aadError === ""
+      keyNameError === "" &&
+      secretValueError === "" &&
+      additionalDataError === ""
     );
   };
 
-  const handleClickShowSecret = () => {
-    setShowSecret(!showSecret);
-  };
-
-  const handleClickShowAad = () => {
-    setShowAad(!showAad);
-  };
-
-  const handleClickShowConfirmationSecret = () => {
-    setShowConfirmationSecret(!showConfirmationSecret);
-  };
-
-  const resetConfimationDialogState = () => {
-    handleClickShowConfirmationSecret();
-    setShowConfirmation(false);
-  };
-
   return (
-    <div>
+    <>
       <Dialog open={openPopup} onClose={handleClose}>
         <DialogTitle>Add New Secret</DialogTitle>
         <DialogContent>
+          {/* Key Name Input */}
           <TextField
             required
             autoFocus
             margin="dense"
             name="keyName"
-            label="Key"
+            label="Key Name"
             type="text"
             fullWidth
-            value={newSecret.keyName}
-            onChange={handlePopupChange}
-            error={keyError !== ""}
-            helperText={keyError}
+            value={secretDetails.keyName}
+            onChange={handleInputChange}
+            error={keyNameError !== ""}
+            helperText={keyNameError}
           />
+          {/* Secret Value Input */}
           <TextField
             required
             margin="dense"
             name="secretValue"
-            label="Secret"
-            type={showSecret ? "text" : "password"}
+            label="Secret Value"
+            type={isSecretVisible ? "text" : "password"}
             fullWidth
-            value={newSecret.secretValue}
-            onChange={handlePopupChange}
-            error={secretError !== ""}
-            helperText={secretError}
-            disabled={newSecret.keyName.trim() === ""}
+            value={secretDetails.secretValue}
+            onChange={handleInputChange}
+            error={secretValueError !== ""}
+            helperText={secretValueError}
+            disabled={secretDetails.keyName.trim() === ""}
             slotProps={{
               input: {
                 endAdornment: (
                   <InputAdornment position="end">
                     <IconButton
                       aria-label="toggle secret visibility"
-                      onClick={handleClickShowSecret}
+                      onClick={() => dispatch({ type: "TOGGLE_SECRET_VISIBILITY" })}
                       edge="end"
                     >
-                      {showSecret ? <Visibility /> : <VisibilityOff />}
+                      {isSecretVisible ? <Visibility /> : <VisibilityOff />}
                     </IconButton>
                   </InputAdornment>
                 ),
               },
             }}
           />
-          {secretError === "" && newSecret.secretValue != "" &&
+          {/* Password Feedback */}
+          {secretValueError === "" && secretDetails.secretValue !== "" && (
             <PasswordFeedback
               passwordStrength={passwordStrength}
               passwordWarnings={passwordWarnings}
               passwordSuggestions={passwordSuggestions}
               passwordCrackDetails={passwordCrackDetails}
             />
-          }
+          )}
+          {/* Master Key Input */}
           <TextField
             required
             margin="dense"
@@ -267,6 +302,7 @@ const AddSecret = ({
               },
             }}
           />
+          {/* Algorithm Input */}
           <TextField
             margin="dense"
             name="algorithm"
@@ -280,49 +316,51 @@ const AddSecret = ({
               },
             }}
           />
+          {/* AAD Checkbox */}
           <FormControlLabel
             control={
               <Checkbox
-                checked={useAAD}
-                onChange={(e) => setUseAAD(e.target.checked)}
-                name="useAAD"
+                checked={isAADEnabled}
+                onChange={() => dispatch({ type: "TOGGLE_AAD_ENABLED" })}
+                name="isAADEnabled"
                 color="primary"
                 disabled={
-                  newSecret.keyName.trim() === "" ||
-                  newSecret.secretValue.trim() === "" ||
-                  loading
+                  secretDetails.keyName.trim() === "" ||
+                  secretDetails.secretValue.trim() === "" ||
+                  isEncrypting
                 }
               />
             }
             label="Use Additional Authenticated Data (AAD)"
           />
-          {useAAD && (
+          {/* AAD Input */}
+          {isAADEnabled && (
             <TextField
               required
               margin="dense"
-              name="aad"
+              name="additionalData"
               label="Additional Authenticated Data (AAD)"
-              type={showAad ? "text" : "password"}
+              type={isAADVisible ? "text" : "password"}
               fullWidth
-              value={newSecret.aad}
-              onChange={handlePopupChange}
-              error={aadError !== ""}
-              helperText={aadError}
+              value={secretDetails.additionalData}
+              onChange={handleInputChange}
+              error={additionalDataError !== ""}
+              helperText={additionalDataError}
               disabled={
-                newSecret.keyName.trim() === "" ||
-                newSecret.secretValue.trim() === "" ||
-                loading
+                secretDetails.keyName.trim() === "" ||
+                secretDetails.secretValue.trim() === "" ||
+                isEncrypting
               }
               slotProps={{
                 input: {
                   endAdornment: (
                     <InputAdornment position="end">
                       <IconButton
-                        aria-label="toggle secret visibility"
-                        onClick={handleClickShowAad}
+                        aria-label="toggle AAD visibility"
+                        onClick={() => dispatch({ type: "TOGGLE_AAD_VISIBILITY" })}
                         edge="end"
                       >
-                        {showAad ? <Visibility /> : <VisibilityOff />}
+                        {isAADVisible ? <Visibility /> : <VisibilityOff />}
                       </IconButton>
                     </InputAdornment>
                   ),
@@ -332,26 +370,23 @@ const AddSecret = ({
           )}
         </DialogContent>
         <DialogActions>
-          <Button
-            onClick={handleCancel}
-            color="primary"
-            variant="outlined"
-          >
+          <Button onClick={handleCancel} color="primary" variant="outlined">
             Cancel
           </Button>
           <Button
             onClick={handleEncrypt}
             color="primary"
             variant="contained"
-            disabled={!isFormValid() || loading}
-            startIcon={loading ? <CircularProgress size={24} /> : null}
+            disabled={!isFormValid() || isEncrypting}
+            startIcon={isEncrypting ? <CircularProgress size={24} /> : null}
           >
-            {loading ? "Encrypting..." : "Encrypt"}
+            {isEncrypting ? "Encrypting..." : "Encrypt"}
           </Button>
         </DialogActions>
       </Dialog>
 
-      <Dialog open={showConfirmation} onClose={handleClose} maxWidth="lg">
+      {/* Confirmation Dialog */}
+      <Dialog open={isConfirmationDialogVisible} onClose={handleClose} maxWidth="lg">
         <DialogTitle>Confirm Secret Details</DialogTitle>
         <DialogContent
           sx={{
@@ -366,20 +401,21 @@ const AddSecret = ({
           </Typography>
           <Typography variant="body1">
             <strong>Secret: </strong>
-            {showConfirmationSecret
+            {isConfirmationSecretVisible
               ? encryptionResult.secretValue
               : maskSecret(encryptionResult.secretValue)}
             <IconButton
               aria-label="toggle confirmation secret visibility"
-              onClick={handleClickShowConfirmationSecret}
+              onClick={() =>
+                dispatch({ type: "TOGGLE_CONFIRMATION_SECRET_VISIBILITY" })
+              }
               edge="end"
             >
-              {showConfirmationSecret ? <Visibility /> : <VisibilityOff />}
+              {isConfirmationSecretVisible ? <Visibility /> : <VisibilityOff />}
             </IconButton>
           </Typography>
           <Typography variant="body1">
-            <strong>Encrypted Secret:</strong>{" "}
-            {encryptionResult.encryptedSecret}
+            <strong>Encrypted Secret:</strong> {encryptionResult.encryptedSecret}
           </Typography>
           <Typography
             variant="body1"
@@ -387,23 +423,24 @@ const AddSecret = ({
               wordWrap: "break-word",
             }}
           >
-            <strong>Master Key:</strong>{" "}
-            {maskMasterKey(encryptionResult.masterKey)}
+            <strong>Master Key:</strong> {maskMasterKey(encryptionResult.masterKey)}
           </Typography>
           <Typography variant="body1">
             <strong>Algorithm:</strong> {encryptionResult.algorithm}
           </Typography>
           <Typography variant="body1">
-            <strong>AAD:</strong>{" "}
-            {useAAD ? encryptionResult.aad : "No AAD used"}
+            <strong>AAD:</strong> {isAADEnabled ? encryptionResult.additionalData : "No AAD used"}
           </Typography>
         </DialogContent>
         <DialogActions>
           <Button
-            onClick={resetConfimationDialogState}
+            onClick={() => {
+              dispatch({ type: "TOGGLE_CONFIRMATION_DIALOG" });
+              dispatch({ type: "TOGGLE_CONFIRMATION_SECRET_VISIBILITY" });
+            }}
             color="primary"
             variant="outlined"
-            disabled={isAddingKey}
+            disabled={isAddingSecret}
           >
             Cancel
           </Button>
@@ -411,14 +448,14 @@ const AddSecret = ({
             onClick={handleConfirmEncryptAndAdd}
             color="primary"
             variant="contained"
-            startIcon={isAddingKey ? <CircularProgress size={24} /> : null}
-            disabled={isAddingKey}
+            startIcon={isAddingSecret ? <CircularProgress size={24} /> : null}
+            disabled={isAddingSecret}
           >
-            {isAddingKey ? "Generating Hmac..." : "Confirm & Add"}
+            {isAddingSecret ? "Adding..." : "Confirm & Add"}
           </Button>
         </DialogActions>
       </Dialog>
-    </div>
+    </>
   );
 };
 
@@ -429,6 +466,7 @@ AddSecret.propTypes = {
   masterKey: PropTypes.string.isRequired,
   addToSecretsList: PropTypes.func.isRequired,
   existingSecrets: PropTypes.array.isRequired,
+  resetParentState: PropTypes.func.isRequired,
 };
 
 export default AddSecret;

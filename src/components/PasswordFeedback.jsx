@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import PropTypes from "prop-types";
 import { Typography, Button, Collapse } from "@mui/material";
-import { Warning, Info, Lock } from "@mui/icons-material";
+import { Warning, Info, HardwareOutlined } from "@mui/icons-material";
 
 const PasswordFeedback = ({
   passwordStrength,
@@ -90,12 +90,12 @@ const PasswordFeedback = ({
           <Button
             variant="text"
             color="info"
-            startIcon={<Lock />}
+            startIcon={<HardwareOutlined />}
             onClick={() =>
               setShowPasswordCrackDetails(!showPasswordCrackDetails)
             }
           >
-            Show Password Crack Details
+            Show Password Strength Details
           </Button>
           <Collapse in={showPasswordCrackDetails}>
             <Typography variant="body2" color="info" component="div" mt={1}>
