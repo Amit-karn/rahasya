@@ -55,7 +55,7 @@ async function validateFileHmac(masterKey, hmac, lines) {
  * @returns {Promise<boolean>} - Returns true if the file format is valid.
  */
 async function validateFileIntegrity(masterKey, lines) {
-    if (lines.length === 0 || lines[lines.length - 1] !== ">>>><<<<") {
+    if (lines.length === 0 || lines[lines.length - 1] !== passwordManagerConfig.encryptedFileIntegrityFooter) {
         throw new Error("Invalid file format. Ensure the file contains the correct markers and structure.");
     }
 
@@ -212,7 +212,7 @@ function processIntegrity(lines) {
  * Generates the HMAC for the file content.
  * @param {string} fileContent - The file content.
  * @param {string} masterKey - The master key for signing.
- * @returns {string} - Returns the generated HMAC.
+ * @returns {Promise<string>} - Returns the generated HMAC.
  */
 async function generateFileHmac(fileContent, masterKey) {
     const lines = fileContent.split("\n").map(line => line.trim());

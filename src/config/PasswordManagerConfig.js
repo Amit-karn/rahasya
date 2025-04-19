@@ -19,7 +19,7 @@ const passwordManagerConfig = {
     encryptedFileHeader: "This is an auto generated File. Please do not tamper with it.",
     encryptedFileIntegrityHeader: "<<<<>>>>",
     encryptedFileIntegritySeparator: "<<<<<>>>>>",
-    encryptedFileIntegrityFooter: ">>><<<<"
+    encryptedFileIntegrityFooter: ">>>><<<<"
 };
 
 

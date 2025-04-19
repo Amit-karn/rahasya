@@ -1,8 +1,8 @@
-import { createTheme, ThemeProvider, Button } from "@mui/material";
+import { createTheme, ThemeProvider } from "@mui/material";
 import "./App.css";
-import CredentialEncryptor from "./CredentialEncryptor";
-import CredentialDecryptor from "./CredentialDecryptor";
-import CryptoTools from "./CryptoTools";
+import CredentialEncryptor from "./containers/CredentialEncryptor";
+import CredentialDecryptor from "./containers/CredentialDecryptor";
+import CryptoTools from "./containers/CryptoTools";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 function App() {

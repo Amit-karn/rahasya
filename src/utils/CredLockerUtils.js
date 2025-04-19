@@ -68,20 +68,19 @@ async function generateEncryptionKeyFromMasterKey(secret, iterations, masterKeyI
  * Encrypts the data using the AES-GCM algorithm with a derived final encryption key.
  *
  * The function first extracts the JWK from the encoded key, then it generates random values for the salt, iteration count,
- * and initialization vector (IV). These values are embedded into the final encrypted output along with AAD, current date,
- * ciphertext length, and the ciphertext itself.
+ * and initialization vector (IV). These values are embedded into the final encrypted output along with AAD, current date
+ * and the ciphertext itself.
  *
  * Embedding: The final Uint8Array is constructed by concatenating:
  *   - AAD flag (1 byte) indicating if AAD was used.
  *   - Current date (fixed 10 bytes for YYYY-MM-DD format).
  *   - Salt for final key generation.
  *   - IV for AES-GCM.
- *   - Ciphertext length (1 byte).
  *   - The ciphertext.
  *   - Final key iteration count (1 byte).
  *
  * @param {string} encodedKey - The encoded key to extract and use for encryption.
- * @param {Uint8Array} data - The data to be encrypted.
+ * @param {string} data - The data to be encrypted.
  * @param {string} [aad=""] - Additional Authenticated Data (optional).
  * @returns {Promise<string>} A promise that resolves to the encrypted data as a Base64 encoded string.
  */
@@ -115,7 +114,7 @@ async function encrypt(encodedKey, data, aad = "") {
     const ciphertextLength = encryptionResult.ciphertext.length;
 
     // Total size of the final embedded array
-    const totalLength = aadLength + dateLength + saltLength + ivLength + 1 + ciphertextLength + 1;
+    const totalLength = aadLength + dateLength + saltLength + ivLength + ciphertextLength + 1;
 
     // Create the Uint8Array for the embedded output
     const embeddedOutput = new Uint8Array(totalLength);
@@ -125,13 +124,9 @@ async function encrypt(encodedKey, data, aad = "") {
     const isAadUsed = aad === "" ? 0 : 1;
     isAadUsedArray.set([isAadUsed]);
 
-    // Ciphertext length (1 byte)
-    const cipherTextLengthArray = new Uint8Array(1);
-    cipherTextLengthArray.set([ciphertextLength]);
-
     // Final key iterations (1 byte)
     const finalKeyIterationsArray = new Uint8Array(1);
-    finalKeyIterationsArray.set([itr]);
+    finalKeyIterationsArray.set([itr]); // only works if itr is less than 256
 
     // Embed the data in the following order:
     // [AAD flag][Current date][Salt][IV][Ciphertext length][Ciphertext][Iteration count]
@@ -139,11 +134,11 @@ async function encrypt(encodedKey, data, aad = "") {
     embeddedOutput.set(encodedDate, aadLength); // Current date string
     embeddedOutput.set(saltForFinalKey, aadLength + dateLength); // Salt for final key
     embeddedOutput.set(iv, aadLength + dateLength + saltLength); // IV for encryption
-    embeddedOutput.set(cipherTextLengthArray, aadLength + dateLength + saltLength + ivLength); // Ciphertext length
-    embeddedOutput.set(encryptionResult.ciphertext, aadLength + dateLength + saltLength + ivLength + 1); // Ciphertext
-    embeddedOutput.set(finalKeyIterationsArray, aadLength + dateLength + saltLength + ivLength + 1 + ciphertextLength); // Iteration count
-
+    embeddedOutput.set(encryptionResult.ciphertext, aadLength + dateLength + saltLength + ivLength); // Ciphertext
+    embeddedOutput.set(finalKeyIterationsArray, aadLength + dateLength + saltLength + ivLength + ciphertextLength); // Iteration count
+    
     // Return the encrypted data in Base64
+    extractEmbeddedData(uint8ArrayToBase64(embeddedOutput));
     return uint8ArrayToBase64(embeddedOutput);
 }
 
@@ -157,15 +152,14 @@ async function encrypt(encodedKey, data, aad = "") {
  * @param {string} encodedKey - The encoded key to extract and use for decryption.
  * @param {string} base64EncodedData - The Base64-encoded encrypted data to be decrypted.
  * @param {string} [aad=""] - Additional Authenticated Data (optional).
- * @returns {Promise<Uint8Array>} A promise that resolves to the decrypted data.
+ * @returns {Promise<String>} A promise that resolves to the decrypted data.
  */
 async function decrypt(encodedKey, base64EncodedData, aad="") {
     // Extract the embedded data (AAD flag, date, salt, IV, ciphertext length, ciphertext, iteration count) from the Base64 encoded string
     const { ciphertext, iv, salt, iterations} = extractEmbeddedData(base64EncodedData);
-
     // Extract the JWK from the encoded key
     const jwk = getJwkFromEncryptionKey(encodedKey);
-
+    
     // Derive the final encryption key using PBKDF2 with the extracted salt and iterations multiplier from config
     const finalEncryptionKey = await generateEncryptionKey(jwk.k, salt, iterations * cryptoConfig.defaultMultiplierForFinalKeyIteration, false);
 
@@ -182,13 +176,12 @@ async function decrypt(encodedKey, base64EncodedData, aad="") {
 
 /**
  * Extracts embedded encryption metadata and ciphertext from a Base64 encoded string.
- *
+ * [AAD flag][Current date][Salt][IV][Ciphertext][Iteration count]
  * The embedded data array consists of:
  *   - AAD flag (1 byte): Indicates if Additional Authenticated Data was used.
  *   - Current date (10 bytes in YYYY-MM-DD format): The date when encryption was performed.
  *   - Salt for final key derivation (Uint8Array): As per the configured length.
  *   - IV for AES-GCM (Uint8Array): As per the configured length.
- *   - Ciphertext length (1 byte): The length of the ciphertext.
  *   - Ciphertext (Uint8Array): The actual encrypted data.
  *   - Final key iteration count (1 byte): The iteration count used for key derivation.
  *
@@ -213,7 +206,7 @@ function extractEmbeddedData(base64Encoded) {
 
     // Extract the current date (always 10 bytes for YYYY-MM-DD format)
     const dateStart = 1; // After the AAD flag byte
-    const dateEnd = dateStart + 10; // 10 bytes for the date
+    const dateEnd = dateStart + cryptoConfig.currentDateLengthInBytes; // 10 bytes for the date
     const encodedDate = embeddedData.slice(dateStart, dateEnd);
     const date = new TextDecoder().decode(encodedDate);
 
@@ -227,14 +220,9 @@ function extractEmbeddedData(base64Encoded) {
     const ivEnd = ivStart + cryptoConfig.aesGcmIvLengthInBytes;
     const iv = embeddedData.slice(ivStart, ivEnd);
 
-    // Extract the ciphertext length (1 byte)
-    const cipherTextLengthStart = ivEnd;
-    const cipherTextLengthEnd = cipherTextLengthStart + 1;
-    const cipherTextLength = embeddedData[cipherTextLengthStart];
-
     // Extract the ciphertext itself
-    const cipherStart = cipherTextLengthEnd;
-    const cipherEnd = cipherStart + cipherTextLength;
+    const cipherStart = ivEnd;
+    const cipherEnd = embeddedData.length - 1;
     const ciphertext = embeddedData.slice(cipherStart, cipherEnd);
 
     // Extract the final key iteration count (1 byte)

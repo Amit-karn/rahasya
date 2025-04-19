@@ -1,4 +1,4 @@
-import { useReducer, useEffect } from "react";
+import { useReducer } from "react";
 import PropTypes from "prop-types";
 import {
   TextField,
@@ -35,11 +35,7 @@ const initialState = {
   isEncryptionKeyVisible: false, // Toggles visibility of the encryption key
   inputError: "", // Error message for invalid input
   isIterationsDropdownVisible: false, // Toggles visibility of the iterations dropdown
-  iterationsCount: passwordManagerConfig.masterKeyDefaultIteraion, // Default iteration count
-  passwordStrength: "", // Strength of the entered password
-  passwordWarnings: [], // Warnings for the entered password
-  passwordSuggestions: [], // Suggestions for improving the password
-  passwordCrackDetails: [], // Details about how long it would take to crack the password
+  iterationsCount: passwordManagerConfig.masterKeyDefaultIteraion // Default iteration count
 };
 
 const masterKeyReducer = (state, action) => {
@@ -58,14 +54,6 @@ const masterKeyReducer = (state, action) => {
       return { ...state, isIterationsDropdownVisible: !state.isIterationsDropdownVisible };
     case "SET_ITERATIONS_COUNT":
       return { ...state, iterationsCount: action.payload };
-    case "SET_PASSWORD_STRENGTH":
-      return { ...state, passwordStrength: action.payload };
-    case "SET_PASSWORD_WARNINGS":
-      return { ...state, passwordWarnings: action.payload };
-    case "SET_PASSWORD_SUGGESTIONS":
-      return { ...state, passwordSuggestions: action.payload };
-    case "SET_PASSWORD_CRACK_DETAILS":
-      return { ...state, passwordCrackDetails: action.payload };
     case "RESET_STATE":
       return initialState;
     default:
@@ -89,31 +77,8 @@ const AddMasterKey = ({
     isEncryptionKeyVisible,
     inputError,
     isIterationsDropdownVisible,
-    iterationsCount,
-    passwordStrength,
-    passwordWarnings,
-    passwordSuggestions,
-    passwordCrackDetails,
+    iterationsCount
   } = state;
-
-  useEffect(() => {
-    if (masterKeyInput) {
-      const { strength, warning, suggestions, passwordCrackDetails } =
-        checkPasswordStrength(masterKeyInput);
-      dispatch({ type: "SET_PASSWORD_STRENGTH", payload: strength });
-      dispatch({ type: "SET_PASSWORD_WARNINGS", payload: warning });
-      dispatch({ type: "SET_PASSWORD_SUGGESTIONS", payload: suggestions });
-      dispatch({
-        type: "SET_PASSWORD_CRACK_DETAILS",
-        payload: passwordCrackDetails,
-      });
-    } else {
-      dispatch({ type: "SET_PASSWORD_STRENGTH", payload: "" });
-      dispatch({ type: "SET_PASSWORD_WARNINGS", payload: [] });
-      dispatch({ type: "SET_PASSWORD_SUGGESTIONS", payload: [] });
-      dispatch({ type: "SET_PASSWORD_CRACK_DETAILS", payload: [] });
-    }
-  }, [masterKeyInput]);
 
   const resetState = () => {
     dispatch({ type: "RESET_STATE" });
@@ -241,10 +206,7 @@ const AddMasterKey = ({
         {masterKeyInput.length >= passwordManagerConfig.masterKeyMinLength &&
           masterKeyInput.length <= passwordManagerConfig.masterKeyMaxLength && (
             <PasswordFeedback
-              passwordStrength={passwordStrength}
-              passwordWarnings={passwordWarnings}
-              passwordSuggestions={passwordSuggestions}
-              passwordCrackDetails={passwordCrackDetails}
+              password={masterKeyInput}
             />
           )}
         {isKeyBeingGenerated && (

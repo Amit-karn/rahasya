@@ -1,24 +1,24 @@
 import React, { useEffect, useReducer, useState } from "react";
 import { Button, Box, Stack } from "@mui/material";
 import { VpnKeyOutlined } from "@mui/icons-material";
-import { BaseLayout } from "./components/BaseLayout";
-import { SecretsList } from "./components/SecretsList";
-import FileUpload from "./components/FileUpload";
-import StatusBar from "./components/StatusBar";
-import AddMasterKey from "./components/AddMasterKey";
-import MessageDialog from "./components/MessageDialog";
-import PreviewPanel from "./components/PreviewPanel";
-import DecryptSecret from "./components/DecryptSecret";
-import LoadingOverlay from "./components/LoadingOverlay";
-import passwordManagerConfig from "./config/PasswordManagerConfig";
-import { generateFileContentForPreview, isEmptyObj } from "./utils/DataUtils";
+import { BaseLayout } from "../components/BaseLayout";
+import { SecretsList } from "../components/SecretsList";
+import FileUpload from "../components/FileUpload";
+import StatusBar from "../components/StatusBar";
+import AddMasterKey from "../components/AddMasterKey";
+import MessageDialog from "../components/MessageDialog";
+import PreviewPanel from "../components/PreviewPanel";
+import DecryptSecret from "../components/DecryptSecret";
+import LoadingOverlay from "../components/LoadingOverlay";
+import passwordManagerConfig from "../config/PasswordManagerConfig";
+import { generateFileContentForPreview, isEmptyObj } from "../utils/DataUtils";
 import {
   validateFileTypeAndSize,
   processAndDisplayUploadedFile,
   handleFileUpload,
-} from "./utils/FileUtils";
-import DownloadFile from "./components/DownloadFile";
-import UploadedFileInfo from "./components/UploadedFileInfo";
+} from "../utils/FileUtils";
+import DownloadFile from "../components/DownloadFile";
+import UploadedFileInfo from "../components/UploadedFileInfo";
 
 const initialState = {
   file: null, // The uploaded file object
@@ -136,7 +136,6 @@ const CredentialDecryptor = () => {
   };
 
   useEffect(() => {
-    if (!masterKey) {
       dispatch({
         type: "SHOW_MESSAGE_DIALOG",
         payload: {
@@ -144,8 +143,7 @@ const CredentialDecryptor = () => {
           content: "Please add your master key to proceed.",
         },
       });
-    }
-  }, [masterKey]);
+  }, []);
 
   // Handle decryption: set current key and encrypted secret (which will be passed to DecryptSecret)
   const handleDecryptButton = (key, encryptedSecret) => {

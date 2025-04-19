@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import { useRef, useState } from "react";
 import {
   Paper,
   Typography,
@@ -22,6 +22,7 @@ import {
   decrypt,
 } from "../utils/CredLockerUtils";
 import passwordManagerConfig from "../config/PasswordManagerConfig";
+import PasswordFeedback from "./PasswordFeedback";
 
 const FileEncryptor = () => {
   const [file, setFile] = useState(null);
@@ -38,10 +39,32 @@ const FileEncryptor = () => {
     setShowPassword(!showPassword);
   };
 
-  // Read file data as ArrayBuffer and convert to Uint8Array
-  const readFileAsUint8Array = async (file) => {
-    const buffer = await file.arrayBuffer();
-    return new Uint8Array(buffer);
+  const convertStringToArrayBuffer = (str) => {
+    const encoder = new TextEncoder();
+    return encoder.encode(str).buffer;
+  };
+
+  const validateSecret = (value) => {
+    if (
+      value.length < passwordManagerConfig.masterKeyMinLength ||
+      value.length > passwordManagerConfig.masterKeyMaxLength
+    ) {
+      setError(
+        `Secret key length must be between ${passwordManagerConfig.masterKeyMinLength} and ${passwordManagerConfig.masterKeyMaxLength} characters.`
+      );
+      return false;
+    }
+    setError("");
+    return true;
+  };
+
+  const handleSecretChange = (e) => {
+    const value = e.target.value;
+    setSecret(value);
+
+    if (value) {
+      validateSecret(value);
+    }
   };
 
   const encryptFile = async () => {
@@ -50,12 +73,16 @@ const FileEncryptor = () => {
       return;
     }
 
+    if (!validateSecret(secret)) {
+      return;
+    }
+
     try {
       setLoading(true);
       setError("");
 
       // Read file data as Uint8Array
-      const fileData = await readFileAsUint8Array(file);
+      const fileData = await file.text();
       // Generate an encoded encryption key from the secret.
       // You can adjust the iteration count as needed.
       const encodedKey = await generateEncryptionKeyFromMasterKey(
@@ -103,6 +130,10 @@ const FileEncryptor = () => {
       return;
     }
 
+    if (!validateSecret(secret)) {
+      return;
+    }
+
     try {
       setLoading(true);
       setError("");
@@ -110,7 +141,6 @@ const FileEncryptor = () => {
       // Read encrypted file metadata
       const text = await file.text();
       const fileMetadata = JSON.parse(text);
-      console.log(fileMetadata);
 
       // Generate an encoded key for decryption
       const encodedKey = await generateEncryptionKeyFromMasterKey(
@@ -120,9 +150,10 @@ const FileEncryptor = () => {
       );
       // Use the decrypt function from CredLockerUtils.
       const decryptedStr = await decrypt(encodedKey, fileMetadata.data, "");
-
       // Create a blob from the decrypted string
-      const blob = new Blob([decryptedStr], { type: fileMetadata.type });
+      const blob = new Blob([convertStringToArrayBuffer(decryptedStr)], {
+        type: fileMetadata.type,
+      });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
@@ -131,8 +162,8 @@ const FileEncryptor = () => {
       URL.revokeObjectURL(url);
 
       setSuccess("File decrypted and downloaded successfully!");
-    } catch {
-      setError("Decryption failed. Make sure you have the correct secret key.");
+    } catch (err) {
+      setError("Decryption failed. " + err.message);
     } finally {
       setLoading(false);
       setFile(null);
@@ -141,7 +172,7 @@ const FileEncryptor = () => {
     }
   };
 
-  const handleFileChange = (e) => {
+  const handleFileChange = async (e) => {
     const selectedFile = e.target.files[0];
     if (selectedFile) {
       setFile(selectedFile);
@@ -152,6 +183,9 @@ const FileEncryptor = () => {
 
   const removeFile = () => {
     setFile(null);
+    setError("");
+    setSecret("");
+    setSuccess("");
     fileInputRef.current.value = "";
   };
 
@@ -209,9 +243,11 @@ const FileEncryptor = () => {
           label={file ? "Enter Secret Key" : "Please select a file first"}
           type={showPassword ? "text" : "password"}
           value={secret}
-          onChange={(e) => setSecret(e.target.value)}
+          onChange={handleSecretChange}
           fullWidth
           disabled={loading || !file}
+          error={!!error && error.includes("length")}
+          helperText={error && error.includes("length") ? error : ""}
           slotProps={{
             input: {
               endAdornment: (
@@ -224,6 +260,14 @@ const FileEncryptor = () => {
             },
           }}
         />
+
+        {secret && operation !== "decrypt" && 
+          secret.length >= passwordManagerConfig.masterKeyMinLength &&
+          secret.length <= passwordManagerConfig.masterKeyMaxLength && (
+            <PasswordFeedback
+              password={secret}
+            />
+          )}
 
         {operation === "decrypt" ? (
           <Button
@@ -246,14 +290,14 @@ const FileEncryptor = () => {
         )}
       </Stack>
 
-      {error && (
+      {error && !error.includes("length") && (
         <Alert severity="error" icon={<ErrorIcon />} sx={{ mt: 2 }}>
           {error}
         </Alert>
       )}
 
       {success && (
-        <Alert severity="success" sx={{ mt: 2 }} >
+        <Alert severity="success" sx={{ mt: 2 }}>
           {success}
         </Alert>
       )}

@@ -1,11 +1,10 @@
 import { Container, Typography, Box, Grid2 as Grid } from "@mui/material";
-import PasswordGenerator from "./components/PasswordGenerator";
-import CredentialLocker from "./components/CredentialLocker";
-import FileEncryptor from "./components/FileEncryptor";
-import ShaHash from "./components/ShaHash";
-import Base64Tool from "./components/Base64Tool";
-import FileToImage from "./components/FileToImage.jsx";
-import passwordManagerConfig from "./config/PasswordManagerConfig";
+import PasswordGenerator from "../components/PasswordGenerator";
+import CredentialLocker from "../components/CredentialLocker";
+import FileEncryptor from "../components/FileEncryptor";
+import ShaHash from "../components/ShaHash";
+import Base64Tool from "../components/Base64Tool";
+import passwordManagerConfig from "../config/PasswordManagerConfig";
 
 const CryptoTools = () => {
   return (
@@ -14,7 +13,7 @@ const CryptoTools = () => {
       sx={{
         minHeight: "100vh",
         py: 4,
-        px: { xs: 2, sm: 4 },
+        px: 4,
         background: `
           linear-gradient(rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.90)),
           url(/binary.avif)
@@ -58,9 +57,11 @@ const CryptoTools = () => {
       <Grid
         container
         spacing={2}
+        width="100%"
         sx={{
           "& .MuiPaper-root": {
             background: "white",
+            border: "1.5px solid rgba(0, 0, 0, 0.1)",
             borderRadius: 2,
             boxShadow: "0 8px 32px rgba(0, 0, 0, 0.08)",
             transition: "transform 0.2s, box-shadow 0.2s",
@@ -95,32 +96,16 @@ const CryptoTools = () => {
             mb: 3,
           },
         }}
+        direction={{ sm: "column", md: "row" }}
       >
-        {/* First Row */}
-        <Grid size={{ xs: 12, sm: 6 }} >
+        <Grid container spacing={2} direction="column" width={{sm: "95%", md: "45%"}}>
+          <CredentialLocker />
+          <Base64Tool />
           <FileEncryptor />
         </Grid>
-        <Grid size={{ xs: 12, sm: 6 }}>
-          <Grid container spacing={2} direction="column">
-            <Grid>
-              <CredentialLocker />
-            </Grid>
-            <Grid>
-              {/* <FileToImage /> */}
-              <PasswordGenerator />
-            </Grid>
-          </Grid>
-        </Grid>
-
-        {/* Second Row */}
-        {/* <Grid size={{ xs: 12, sm: 4 }}>
+        <Grid container spacing={2} direction="column" width={{sm: "95%", md: "50%"}}>
           <PasswordGenerator />
-        </Grid> */}
-        <Grid size={{ xs: 12, sm: 4 }}>
           <ShaHash />
-        </Grid>
-        <Grid size={{ xs: 12, sm: 4 }}>
-          <Base64Tool />
         </Grid>
       </Grid>
     </Container>

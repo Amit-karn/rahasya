@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import { Paper, Typography, Stack, Slider, Checkbox, FormControlLabel, Button, Grid2 as Grid, IconButton } from "@mui/material";
 import { ContentCopy } from "@mui/icons-material";
 import PasswordFeedback from "./PasswordFeedback";
-import { checkPasswordStrength } from "../utils/PasswordStrengthUtils";
 
 const PasswordGenerator = () => {
   const [length, setLength] = useState(16);
@@ -12,10 +11,6 @@ const PasswordGenerator = () => {
   const [includeSymbols, setIncludeSymbols] = useState(false);
   const [includeDevanagari, setIncludeDevanagari] = useState(false);
   const [password, setPassword] = useState("");
-  const [passwordStrength, setPasswordStrength] = useState("");
-  const [passwordWarnings, setPasswordWarnings] = useState([]);
-  const [passwordSuggestions, setPasswordSuggestions] = useState([]);
-  const [passwordCrackDetails, setPasswordCrackDetails] = useState([]);
 
   const getRandomInt = (max) => {
     const array = new Uint32Array(1);
@@ -62,14 +57,7 @@ const PasswordGenerator = () => {
 
     // Shuffle the generated password to avoid predictable patterns
     generatedPassword = generatedPassword.split('').sort(() => getRandomInt(2) - 1).join('');
-    // alert(generatedPassword);
-  
-    const { strength, warning, suggestions, passwordCrackDetails } = checkPasswordStrength(generatedPassword);
     setPassword(generatedPassword);
-    setPasswordStrength(strength);
-    setPasswordWarnings(warning);
-    setPasswordSuggestions(suggestions);
-    setPasswordCrackDetails(passwordCrackDetails);
   };
 
   const copyToClipboard = () => {
@@ -135,12 +123,7 @@ const PasswordGenerator = () => {
                 <ContentCopy />
               </IconButton>
             </Stack>
-            <PasswordFeedback
-              passwordStrength={passwordStrength}
-              passwordWarnings={passwordWarnings}
-              passwordSuggestions={passwordSuggestions}
-              passwordCrackDetails={passwordCrackDetails}
-            />
+            <PasswordFeedback password={password} />
           </>
         )}
       </Stack>

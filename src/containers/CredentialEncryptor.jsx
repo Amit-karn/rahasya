@@ -1,25 +1,25 @@
 import { useEffect, useReducer } from "react";
 import { Button, Stack, Box, Typography, IconButton } from "@mui/material";
 import { CloseOutlined, KeyRounded } from "@mui/icons-material";
-import { BaseLayout } from "./components/BaseLayout";
-import { SecretsList } from "./components/SecretsList";
-import FileUpload from "./components/FileUpload";
-import StatusBar from "./components/StatusBar";
-import AddSecret from "./components/AddSecret";
-import AddMasterKey from "./components/AddMasterKey";
-import MessageDialog from "./components/MessageDialog";
-import PreviewPanel from "./components/PreviewPanel";
-import LoadingOverlay from "./components/LoadingOverlay";
-import { generateFileHmac } from "./utils/FileUtils";
-import passwordManagerConfig from "./config/PasswordManagerConfig";
-import { generateFileContentForPreview, isEmptyObj } from "./utils/DataUtils";
+import { BaseLayout } from "../components/BaseLayout";
+import { SecretsList } from "../components/SecretsList";
+import FileUpload from "../components/FileUpload";
+import StatusBar from "../components/StatusBar";
+import AddSecret from "../components/AddSecret";
+import AddMasterKey from "../components/AddMasterKey";
+import MessageDialog from "../components/MessageDialog";
+import PreviewPanel from "../components/PreviewPanel";
+import LoadingOverlay from "../components/LoadingOverlay";
+import { generateFileHmac } from "../utils/FileUtils";
+import passwordManagerConfig from "../config/PasswordManagerConfig";
+import { generateFileContentForPreview, isEmptyObj } from "../utils/DataUtils";
 import {
   validateFileTypeAndSize,
   processAndDisplayUploadedFile,
   handleFileUpload,
-} from "./utils/FileUtils";
-import DownloadFile from "./components/DownloadFile";
-import UploadedFileInfo from "./components/UploadedFileInfo";
+} from "../utils/FileUtils";
+import DownloadFile from "../components/DownloadFile";
+import UploadedFileInfo from "../components/UploadedFileInfo";
 
 const initialState = {
   uploadedFile: null, // The uploaded file object
@@ -108,6 +108,16 @@ const CredentialEncryptor = () => {
     isFileGenerationInProgress,
     isAddSecretDialogOpen,
   } = state;
+
+  useEffect(() => {
+        dispatch({
+          type: "SHOW_MESSAGE_DIALOG",
+          payload: {
+            title: "Master Key Required",
+            content: "Please add your master key to proceed.",
+          },
+        });
+    }, []);
 
   const setStatusBar = (isError, message) => {
     dispatch({
@@ -210,6 +220,7 @@ const CredentialEncryptor = () => {
 
   return (
     <BaseLayout
+      mode="encrypt"
       masterKey={encryptionKey}
       onUnloadMasterKey={() => {
         let userConfirmed = window.confirm(
@@ -227,7 +238,6 @@ const CredentialEncryptor = () => {
               reset={() => dispatch({ type: "RESET_STATE_EXCEPT_MASTER_KEY" })}
               disabled={!encryptionKey}
               isGeneratingFile={isFileGenerationInProgress}
-              mode="encrypt"
             />
             <Button
               onClick={() => {

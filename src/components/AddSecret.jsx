@@ -44,10 +44,6 @@ const initialState = {
     encryptedSecret: "",
   },
   isEncrypting: false,
-  passwordStrength: "",
-  passwordWarnings: [],
-  passwordSuggestions: [],
-  passwordCrackDetails: [],
   isAddingSecret: false,
 };
 
@@ -73,14 +69,6 @@ function addSecretReducer(state, action) {
       return { ...state, encryptionResult: action.payload };
     case "SET_IS_ENCRYPTING":
       return { ...state, isEncrypting: action.payload };
-    case "SET_PASSWORD_FEEDBACK":
-      return {
-        ...state,
-        passwordStrength: action.payload.strength,
-        passwordWarnings: action.payload.warnings,
-        passwordSuggestions: action.payload.suggestions,
-        passwordCrackDetails: action.payload.crackDetails,
-      };
     case "TOGGLE_CONFIRMATION_DIALOG":
       return { ...state, isConfirmationDialogVisible: !state.isConfirmationDialogVisible };
     case "SET_IS_ADDING_SECRET":
@@ -115,10 +103,6 @@ const AddSecret = ({
     isConfirmationSecretVisible,
     encryptionResult,
     isEncrypting,
-    passwordStrength,
-    passwordWarnings,
-    passwordSuggestions,
-    passwordCrackDetails,
     isAddingSecret,
   } = state;
 
@@ -146,12 +130,6 @@ const AddSecret = ({
         });
       } else {
         dispatch({ type: "SET_SECRET_VALUE_ERROR", payload: "" });
-        const { strength, warning, suggestions, passwordCrackDetails } =
-          checkPasswordStrength(value);
-        dispatch({
-          type: "SET_PASSWORD_FEEDBACK",
-          payload: { strength, warnings: warning, suggestions, crackDetails: passwordCrackDetails },
-        });
       }
     } else if (isAADEnabled && name === "additionalData") {
       if (
@@ -281,10 +259,7 @@ const AddSecret = ({
           {/* Password Feedback */}
           {secretValueError === "" && secretDetails.secretValue !== "" && (
             <PasswordFeedback
-              passwordStrength={passwordStrength}
-              passwordWarnings={passwordWarnings}
-              passwordSuggestions={passwordSuggestions}
-              passwordCrackDetails={passwordCrackDetails}
+              password={secretDetails.secretValue}
             />
           )}
           {/* Master Key Input */}

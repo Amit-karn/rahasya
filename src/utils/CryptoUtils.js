@@ -166,8 +166,9 @@ function generateRandomValues(length) {
  * @throws {Error} If encryption fails.
  */
 async function encryptWithAesGcm(key, data, iv, aad) {
-    const encodedData = new TextEncoder().encode(data);
-    const encodedAAD = new TextEncoder().encode(aad);
+    const encoder = new TextEncoder();
+    const encodedData = encoder.encode(data);
+    const encodedAAD = encoder.encode(aad);
 
     try {
         const ciphertext = await crypto.subtle.encrypt(

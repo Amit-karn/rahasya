@@ -14,7 +14,7 @@ const CredentialLocker = () => {
       <Typography variant="h6" gutterBottom>
         ZeroTrust, All Yours
       </Typography>
-      <Stack spacing={2} direction={{ xs: "column", lg: "row" }}>
+      <Stack spacing={2} direction="row">
         <Button
           component={Link}
           to="/cred-encrypt"
