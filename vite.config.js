@@ -4,15 +4,14 @@ import { VitePWA } from "vite-plugin-pwa"
 
 // https://vite.dev/config/
 export default defineConfig({
-  server: {
-    https: {
-      key: "C:/Users/amitk/Downloads/certs/private.key",
-      cert: "C:/Users/amitk/Downloads/certs/certificate.crt",
-    }
-  },
+  // server: {
+  //   https: {
+  //     key: "C:/Users/amitk/Downloads/certs/private.key",
+  //     cert: "C:/Users/amitk/Downloads/certs/certificate.crt",
+  //   }
+  // },
   plugins: [
     react(),
-    basicSsl(),
     VitePWA({
       registerType: "prompt",
       manifest: {

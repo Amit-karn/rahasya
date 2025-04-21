@@ -1,5 +1,5 @@
 const passwordManagerConfig = {
-    portableEncryptorName: [["Encryptor", "Decryptor"], ["LockIt", "UnlockIt"], ["EncBox", "OpenBox"], ["SealVault", "RevealVault"], ["SafeOut", "SafeIn"], ["KeyCast", "KeyRecall"], ["PeekSafe", "KeepSafe"], ["SealIt", "SeeIt"], ["EncMe", "ReadMe"], ["NoTrace", "AccessGranted"], ["DeadDrop", "EyeOnly"]],
+    portableEncryptorName: [["Encryptor", "Decryptor"], ["LockIt", "UnlockIt"], ["EncBox", "OpenBox"], ["SealVault", "RevealVault"], ["SafeIn", "SafeOut"], ["KeyCast", "KeyRecall"], ["KeepSafe", "PeekSafe"], ["SealIt", "SeeIt"], ["EncMe", "ReadMe"], ["NoTrace", "AccessGranted"], ["DeadDrop", "EyeOnly"]],
     fileSize: 1 * 1024 * 1024,
     fileType: ["text/plain"],
     acceptFileExtension: ".txt",
