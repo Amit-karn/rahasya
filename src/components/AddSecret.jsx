@@ -1,4 +1,4 @@
-import { useReducer } from "react";
+import { useEffect, useReducer } from "react";
 import {
   Button,
   Dialog,
@@ -18,7 +18,6 @@ import PropTypes from "prop-types";
 import { maskMasterKey, maskSecret } from "../utils/DataUtils";
 import passwordManagerConfig from "../config/PasswordManagerConfig";
 import { encrypt } from "../utils/CredLockerUtils";
-import { checkPasswordStrength } from "../utils/PasswordStrengthUtils";
 import PasswordFeedback from "./PasswordFeedback";
 
 const initialState = {
@@ -50,7 +49,10 @@ const initialState = {
 function addSecretReducer(state, action) {
   switch (action.type) {
     case "SET_SECRET_DETAILS":
-      return { ...state, secretDetails: { ...state.secretDetails, ...action.payload } };
+      return {
+        ...state,
+        secretDetails: { ...state.secretDetails, ...action.payload },
+      };
     case "SET_KEY_NAME_ERROR":
       return { ...state, keyNameError: action.payload };
     case "SET_SECRET_VALUE_ERROR":
@@ -64,13 +66,19 @@ function addSecretReducer(state, action) {
     case "TOGGLE_SECRET_VISIBILITY":
       return { ...state, isSecretVisible: !state.isSecretVisible };
     case "TOGGLE_CONFIRMATION_SECRET_VISIBILITY":
-      return { ...state, isConfirmationSecretVisible: !state.isConfirmationSecretVisible };
+      return {
+        ...state,
+        isConfirmationSecretVisible: !state.isConfirmationSecretVisible,
+      };
     case "SET_ENCRYPTION_RESULT":
       return { ...state, encryptionResult: action.payload };
     case "SET_IS_ENCRYPTING":
       return { ...state, isEncrypting: action.payload };
     case "TOGGLE_CONFIRMATION_DIALOG":
-      return { ...state, isConfirmationDialogVisible: !state.isConfirmationDialogVisible };
+      return {
+        ...state,
+        isConfirmationDialogVisible: !state.isConfirmationDialogVisible,
+      };
     case "SET_IS_ADDING_SECRET":
       return { ...state, isAddingSecret: action.payload };
     case "RESET_STATE":
@@ -87,7 +95,7 @@ const AddSecret = ({
   masterKey,
   addToSecretsList,
   existingSecrets,
-  resetParentState
+  resetParentState,
 }) => {
   const [state, dispatch] = useReducer(addSecretReducer, initialState);
 
@@ -106,6 +114,13 @@ const AddSecret = ({
     isAddingSecret,
   } = state;
 
+  // Add state sanitization
+  useEffect(() => {
+    return () => {
+      dispatch({ type: "RESET_STATE" });
+    };
+  }, []);
+
   const resetState = () => {
     dispatch({ type: "RESET_STATE" });
     setOpenPopup(false);
@@ -115,7 +130,10 @@ const AddSecret = ({
     const { name, value } = e.target;
     if (name === "keyName") {
       if (existingSecrets.includes(value)) {
-        dispatch({ type: "SET_KEY_NAME_ERROR", payload: "Key: A secret with this key name already exists." });
+        dispatch({
+          type: "SET_KEY_NAME_ERROR",
+          payload: "Key: A secret with this key name already exists.",
+        });
       } else {
         dispatch({ type: "SET_KEY_NAME_ERROR", payload: "" });
       }
@@ -192,12 +210,15 @@ const AddSecret = ({
 
   const isFormValid = () => {
     const isSecretValid =
-      secretDetails.secretValue.length >= passwordManagerConfig.secretMinLength &&
+      secretDetails.secretValue.length >=
+        passwordManagerConfig.secretMinLength &&
       secretDetails.secretValue.length <= passwordManagerConfig.secretMaxLength;
     const isAADValid =
       !isAADEnabled ||
-      (secretDetails.additionalData.length >= passwordManagerConfig.aadMinLength &&
-        secretDetails.additionalData.length <= passwordManagerConfig.aadMaxLength);
+      (secretDetails.additionalData.length >=
+        passwordManagerConfig.aadMinLength &&
+        secretDetails.additionalData.length <=
+          passwordManagerConfig.aadMaxLength);
     return (
       secretDetails.keyName.trim() !== "" &&
       isSecretValid &&
@@ -216,6 +237,7 @@ const AddSecret = ({
           {/* Key Name Input */}
           <TextField
             required
+            autoComplete="off"
             autoFocus
             margin="dense"
             name="keyName"
@@ -230,6 +252,7 @@ const AddSecret = ({
           {/* Secret Value Input */}
           <TextField
             required
+            autoComplete="off"
             margin="dense"
             name="secretValue"
             label="Secret Value"
@@ -246,7 +269,9 @@ const AddSecret = ({
                   <InputAdornment position="end">
                     <IconButton
                       aria-label="toggle secret visibility"
-                      onClick={() => dispatch({ type: "TOGGLE_SECRET_VISIBILITY" })}
+                      onClick={() =>
+                        dispatch({ type: "TOGGLE_SECRET_VISIBILITY" })
+                      }
                       edge="end"
                     >
                       {isSecretVisible ? <Visibility /> : <VisibilityOff />}
@@ -258,13 +283,12 @@ const AddSecret = ({
           />
           {/* Password Feedback */}
           {secretValueError === "" && secretDetails.secretValue !== "" && (
-            <PasswordFeedback
-              password={secretDetails.secretValue}
-            />
+            <PasswordFeedback password={secretDetails.secretValue} />
           )}
           {/* Master Key Input */}
           <TextField
             required
+            autoComplete="off"
             margin="dense"
             name="masterKey"
             label="Master Key"
@@ -279,6 +303,7 @@ const AddSecret = ({
           />
           {/* Algorithm Input */}
           <TextField
+            autoComplete="off"
             margin="dense"
             name="algorithm"
             label="Algorithm"
@@ -312,6 +337,7 @@ const AddSecret = ({
           {isAADEnabled && (
             <TextField
               required
+              autoComplete="off"
               margin="dense"
               name="additionalData"
               label="Additional Authenticated Data (AAD)"
@@ -332,7 +358,9 @@ const AddSecret = ({
                     <InputAdornment position="end">
                       <IconButton
                         aria-label="toggle AAD visibility"
-                        onClick={() => dispatch({ type: "TOGGLE_AAD_VISIBILITY" })}
+                        onClick={() =>
+                          dispatch({ type: "TOGGLE_AAD_VISIBILITY" })
+                        }
                         edge="end"
                       >
                         {isAADVisible ? <Visibility /> : <VisibilityOff />}
@@ -361,7 +389,11 @@ const AddSecret = ({
       </Dialog>
 
       {/* Confirmation Dialog */}
-      <Dialog open={isConfirmationDialogVisible} onClose={handleClose} maxWidth="lg">
+      <Dialog
+        open={isConfirmationDialogVisible}
+        onClose={handleClose}
+        maxWidth="lg"
+      >
         <DialogTitle>Confirm Secret Details</DialogTitle>
         <DialogContent
           sx={{
@@ -374,7 +406,7 @@ const AddSecret = ({
           <Typography variant="body1">
             <strong>Key Name:</strong> {encryptionResult.keyName}
           </Typography>
-          <Typography variant="body1">
+          <Typography variant="body1" sx={{ userSelect: "none" }}>
             <strong>Secret: </strong>
             {isConfirmationSecretVisible
               ? encryptionResult.secretValue
@@ -390,7 +422,8 @@ const AddSecret = ({
             </IconButton>
           </Typography>
           <Typography variant="body1">
-            <strong>Encrypted Secret:</strong> {encryptionResult.encryptedSecret}
+            <strong>Encrypted Secret:</strong>{" "}
+            {encryptionResult.encryptedSecret}
           </Typography>
           <Typography
             variant="body1"
@@ -398,13 +431,15 @@ const AddSecret = ({
               wordWrap: "break-word",
             }}
           >
-            <strong>Master Key:</strong> {maskMasterKey(encryptionResult.masterKey)}
+            <strong>Master Key:</strong>{" "}
+            {maskMasterKey(encryptionResult.masterKey)}
           </Typography>
           <Typography variant="body1">
             <strong>Algorithm:</strong> {encryptionResult.algorithm}
           </Typography>
           <Typography variant="body1">
-            <strong>AAD:</strong> {isAADEnabled ? encryptionResult.additionalData : "No AAD used"}
+            <strong>AAD:</strong>{" "}
+            {isAADEnabled ? encryptionResult.additionalData : "No AAD used"}
           </Typography>
         </DialogContent>
         <DialogActions>

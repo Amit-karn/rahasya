@@ -28,7 +28,7 @@ export const BaseLayout = ({
       }}
     >
       {/* Top Header */}
-      <TopHeader />
+      <TopHeader mode={mode}/>
 
       {/* Header Actions and Main Actions */}
       <Stack

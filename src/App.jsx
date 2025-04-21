@@ -1,5 +1,4 @@
 import { createTheme, ThemeProvider } from "@mui/material";
-import "./App.css";
 import CredentialEncryptor from "./containers/CredentialEncryptor";
 import CredentialDecryptor from "./containers/CredentialDecryptor";
 import CryptoTools from "./containers/CryptoTools";

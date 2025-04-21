@@ -8,7 +8,7 @@ const FeedbackSection = ({ title, items, icon: Icon, color, isOpen, onToggle }) 
   <Box sx={{ 
     borderColor: `${color}.light`,
     borderRadius: 1,
-    overflow: 'hidden'
+    overflow: "hidden"
   }}>
     <Button
       fullWidth
@@ -16,32 +16,32 @@ const FeedbackSection = ({ title, items, icon: Icon, color, isOpen, onToggle }) 
       color={color}
       onClick={onToggle}
       sx={{
-        display: 'flex',
-        justifyContent: 'space-between',
+        display: "flex",
+        justifyContent: "space-between",
         px: 2,
         py: 1,
         backgroundColor: `${color}.lighter`
       }}
     >
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
         <Icon />
         <Typography>{title}</Typography>
       </Box>
       {isOpen ? <KeyboardArrowUp /> : <KeyboardArrowDown />}
     </Button>
     <Collapse in={isOpen}>
-      <Box sx={{ p: 2, bgcolor: 'background.paper' }}>
+      <Box sx={{ p: 2, bgcolor: "background.paper" }}>
         {items.map((item, index) => (
           <Typography
             key={index}
             component="div"
             sx={{
-              display: 'flex',
-              alignItems: 'center',
+              display: "flex",
+              alignItems: "center",
               gap: 1,
               color: `${color}.main`,
-              fontSize: '0.875rem',
-              '&:not(:last-child)': { mb: 1 }
+              fontSize: "0.875rem",
+              "&:not(:last-child)": { mb: 1 }
             }}
           >
             <Icon fontSize="small" />
@@ -87,26 +87,26 @@ const PasswordFeedback = ({ password }) => {
 
   const feedbackSections = [
     {
-      id: 'warnings',
-      title: 'Password Warnings',
+      id: "warnings",
+      title: "Password Warnings",
       icon: Warning,
-      color: 'warning',
+      color: "warning",
       items: warning,
       isOpen: openSections.warnings
     },
     {
-      id: 'suggestions',
-      title: 'Improvement Suggestions',
+      id: "suggestions",
+      title: "Improvement Suggestions",
       icon: Info,
-      color: 'info',
+      color: "info",
       items: suggestions,
       isOpen: openSections.suggestions
     },
     {
-      id: 'analysis',
-      title: 'Password Analysis Details',
+      id: "analysis",
+      title: "Password Analysis Details",
       icon: HardwareOutlined,
-      color: 'primary',
+      color: "primary",
       items: passwordCrackDetails,
       isOpen: openSections.analysis
     }
@@ -122,10 +122,11 @@ const PasswordFeedback = ({ password }) => {
           sx={{
             mb: 2,
             fontWeight: 500,
-            '& .MuiChip-icon': {
-              color: 'inherit'
+            "& .MuiChip-icon": {
+              color: "inherit"
             }
           }}
+          size="small"
         />
       )}
 

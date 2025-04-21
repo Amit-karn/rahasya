@@ -85,13 +85,14 @@ const FileEncryptor = () => {
       const fileData = await file.text();
       // Generate an encoded encryption key from the secret.
       // You can adjust the iteration count as needed.
-      const encodedKey = await generateEncryptionKeyFromMasterKey(
+      let encodedKey = await generateEncryptionKeyFromMasterKey(
         secret,
         passwordManagerConfig.fileEncryptionIterations,
         passwordManagerConfig.fileEncryptionIterations
       );
       // Use the encrypt function from CredLockerUtils.
       const encryptedBase64 = await encrypt(encodedKey, fileData, "");
+      encodedKey = null; // Clear the key from memory
 
       // Prepare file metadata
       const fileMetadata = {
@@ -143,13 +144,15 @@ const FileEncryptor = () => {
       const fileMetadata = JSON.parse(text);
 
       // Generate an encoded key for decryption
-      const encodedKey = await generateEncryptionKeyFromMasterKey(
+      let encodedKey = await generateEncryptionKeyFromMasterKey(
         secret,
         passwordManagerConfig.fileEncryptionIterations,
         passwordManagerConfig.fileEncryptionIterations
       );
       // Use the decrypt function from CredLockerUtils.
       const decryptedStr = await decrypt(encodedKey, fileMetadata.data, "");
+      encodedKey = null; // Clear the key from memory
+      
       // Create a blob from the decrypted string
       const blob = new Blob([convertStringToArrayBuffer(decryptedStr)], {
         type: fileMetadata.type,

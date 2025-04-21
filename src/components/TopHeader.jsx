@@ -1,10 +1,14 @@
-import React from "react";
+import React, { useState } from "react";
 import PropTypes from "prop-types";
 import { Box, Stack, Button } from "@mui/material";
-import { Home, Help } from "@mui/icons-material";
+import { Home, Help, HelpOutline } from "@mui/icons-material";
 import { Link } from "react-router-dom";
+import HowEncryptorWorksDialog from "./HowEncryptorWorksDialog";
+import HowDecryptorWorksDialog from "./HowDecryptorWorksDialog";
 
-const TopHeader = ({ node }) => {
+const TopHeader = ({ mode }) => {
+  const [showHelp, setShowHelp] = useState(false);
+
   return (
     <Box>
       <Stack
@@ -14,27 +18,25 @@ const TopHeader = ({ node }) => {
         marginTop={1}
         marginBottom={1}
       >
-        <Stack direction="row" spacing={2}>
-          <Button
-            component={Link}
-            to="/"
-            variant="contained"
-            color="primary"
-            startIcon={<Home />}
-          >
-          </Button>
-          {node}
-        </Stack>
-        <Button variant="text" color="primary" startIcon={<Help />}>
+        <Button
+          component={Link}
+          to="/"
+          variant="contained"
+          color="primary"
+          startIcon={<Home />}
+        ></Button>
+        <Button onClick={() => setShowHelp(true)} startIcon={<HelpOutline />}>
           How it works?
         </Button>
+        { mode === "encrypt" ? <HowEncryptorWorksDialog open={showHelp} onClose={() => setShowHelp(false)} />
+          : <HowDecryptorWorksDialog open={showHelp} onClose={() => setShowHelp(false)} />}
       </Stack>
     </Box>
   );
 };
 
 TopHeader.propTypes = {
-  node: PropTypes.node,
+  mode: PropTypes.oneOf(["encrypt", "decrypt"]).isRequired, // Mode of the layout (encrypt or decrypt)
 };
 
 export default TopHeader;

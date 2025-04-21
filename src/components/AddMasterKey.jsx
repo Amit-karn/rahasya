@@ -1,4 +1,4 @@
-import { useReducer } from "react";
+import { useEffect, useReducer } from "react";
 import PropTypes from "prop-types";
 import {
   TextField,
@@ -25,7 +25,6 @@ import {
 import { maskMasterKey } from "../utils/DataUtils";
 import passwordManagerConfig from "../config/PasswordManagerConfig";
 import { generateEncryptionKeyFromMasterKey } from "../utils/CredLockerUtils";
-import { checkPasswordStrength } from "../utils/PasswordStrengthUtils";
 import PasswordFeedback from "./PasswordFeedback";
 
 const initialState = {
@@ -35,7 +34,7 @@ const initialState = {
   isEncryptionKeyVisible: false, // Toggles visibility of the encryption key
   inputError: "", // Error message for invalid input
   isIterationsDropdownVisible: false, // Toggles visibility of the iterations dropdown
-  iterationsCount: passwordManagerConfig.masterKeyDefaultIteraion // Default iteration count
+  iterationsCount: passwordManagerConfig.masterKeyDefaultIteraion, // Default iteration count
 };
 
 const masterKeyReducer = (state, action) => {
@@ -47,11 +46,17 @@ const masterKeyReducer = (state, action) => {
     case "TOGGLE_MASTER_KEY_VISIBILITY":
       return { ...state, isMasterKeyVisible: !state.isMasterKeyVisible };
     case "TOGGLE_ENCRYPTION_KEY_VISIBILITY":
-      return { ...state, isEncryptionKeyVisible: !state.isEncryptionKeyVisible };
+      return {
+        ...state,
+        isEncryptionKeyVisible: !state.isEncryptionKeyVisible,
+      };
     case "SET_INPUT_ERROR":
       return { ...state, inputError: action.payload };
     case "TOGGLE_ITERATIONS_DROPDOWN":
-      return { ...state, isIterationsDropdownVisible: !state.isIterationsDropdownVisible };
+      return {
+        ...state,
+        isIterationsDropdownVisible: !state.isIterationsDropdownVisible,
+      };
     case "SET_ITERATIONS_COUNT":
       return { ...state, iterationsCount: action.payload };
     case "RESET_STATE":
@@ -77,8 +82,15 @@ const AddMasterKey = ({
     isEncryptionKeyVisible,
     inputError,
     isIterationsDropdownVisible,
-    iterationsCount
+    iterationsCount,
   } = state;
+
+  // Add state sanitization
+  useEffect(() => {
+    return () => {
+      dispatch({ type: "RESET_STATE" });
+    };
+  }, []);
 
   const resetState = () => {
     dispatch({ type: "RESET_STATE" });
@@ -162,6 +174,7 @@ const AddMasterKey = ({
         <TextField
           required
           autoFocus
+          autoComplete="off"
           margin="dense"
           label={masterKey ? "Enter New Master Key" : "Enter Master Key"}
           type={isMasterKeyVisible ? "text" : "password"}
@@ -205,19 +218,15 @@ const AddMasterKey = ({
         />
         {masterKeyInput.length >= passwordManagerConfig.masterKeyMinLength &&
           masterKeyInput.length <= passwordManagerConfig.masterKeyMaxLength && (
-            <PasswordFeedback
-              password={masterKeyInput}
-            />
+            <PasswordFeedback password={masterKeyInput} />
           )}
         {isKeyBeingGenerated && (
           <Typography variant="body2" color="info">
-            Key generation might take a minute. Please wait...
+            Key generation might take a minute or two. Please wait...
           </Typography>
         )}
         <IconButton
-          onClick={() =>
-            dispatch({ type: "TOGGLE_ITERATIONS_DROPDOWN" })
-          }
+          onClick={() => dispatch({ type: "TOGGLE_ITERATIONS_DROPDOWN" })}
         >
           {isIterationsDropdownVisible ? (
             <ArrowDropUpTwoTone />
@@ -233,7 +242,10 @@ const AddMasterKey = ({
               id="iterations-label-id"
               value={iterationsCount}
               onChange={(e) =>
-                dispatch({ type: "SET_ITERATIONS_COUNT", payload: e.target.value })
+                dispatch({
+                  type: "SET_ITERATIONS_COUNT",
+                  payload: e.target.value,
+                })
               }
               label="Iterations"
             >
@@ -257,7 +269,9 @@ const AddMasterKey = ({
           onClick={generateMasterKey}
           disabled={!!(!masterKeyInput || isKeyBeingGenerated || inputError)}
           variant="contained"
-          startIcon={isKeyBeingGenerated ? <CircularProgress size={24} /> : null}
+          startIcon={
+            isKeyBeingGenerated ? <CircularProgress size={24} /> : null
+          }
         >
           {isKeyBeingGenerated ? "Generating..." : "Confirm"}
         </Button>

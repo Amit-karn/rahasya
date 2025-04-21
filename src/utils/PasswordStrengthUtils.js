@@ -2,9 +2,9 @@ import zxcvbn from "zxcvbn";
 import { cryptoConfig } from "../config/CryptoConfig";
 
 function getMinGuesses(data) {
-    // Filter out items without a valid 'guesses' property and track guesses and their associated patterns
+    // Filter out items without a valid "guesses" property and track guesses and their associated patterns
     const validGuesses = data
-        .filter(item => item.guesses !== undefined)  // Only include items with 'guesses'
+        .filter(item => item.guesses !== undefined)  // Only include items with "guesses"
         .map(item => ({ pattern: item.pattern, guesses: item.guesses }));  // Create an object with pattern and guesses
 
     // If there are no valid guesses, return a default message
@@ -26,7 +26,7 @@ function getMinGuesses(data) {
 
 function checkPasswordStrength(password) {
     const result = {
-        strength: 'Weak',  // Default to weak
+        strength: "Weak",  // Default to weak
         warning: [],       // Any warnings
         suggestions: [],
         passwordCrackDetails: []    // Suggestions for improvement
@@ -54,16 +54,16 @@ function checkPasswordStrength(password) {
     // Logic for evaluating strength based on crack times and score
     if (score === 4) {
         // If all crack times are "centuries", password is strong
-        if (crackTimeOnlineThrottling === 'centuries' && crackTimeOnlineNoThrottling === 'centuries' &&
-            crackTimeOfflineSlowHashing === 'centuries' && crackTimeOfflineFastHashing === 'centuries' &&
+        if (crackTimeOnlineThrottling === "centuries" && crackTimeOnlineNoThrottling === "centuries" &&
+            crackTimeOfflineSlowHashing === "centuries" && crackTimeOfflineFastHashing === "centuries" &&
             zxcvbnResult.feedback.warning.length === 0 && minGuess.guesses >= cryptoConfig.passwordGuessThreshold) {
-            result.strength = 'Strong'; // Fully strong if all are centuries
+            result.strength = "Strong"; // Fully strong if all are centuries
         } else {
-            result.strength = 'Medium';
+            result.strength = "Medium";
         }
     } else {
-        // If the score is less than 4, it's considered weak
-        result.strength = 'Weak';
+        // If the score is less than 4, it"s considered weak
+        result.strength = "Weak";
     }
 
     // Add feedback suggestions if available

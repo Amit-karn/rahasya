@@ -5,8 +5,18 @@ import FileEncryptor from "../components/FileEncryptor";
 import ShaHash from "../components/ShaHash";
 import Base64Tool from "../components/Base64Tool";
 import passwordManagerConfig from "../config/PasswordManagerConfig";
+import { useEffect } from "react";
+import { validateSecurityRequirements } from "../utils/SecurityUtils";
 
 const CryptoTools = () => {
+  useEffect(() => {
+    const { isValid, errorOutput } = validateSecurityRequirements();
+
+    if (!isValid) {
+      alert(errorOutput);
+    }
+  }, []);
+
   return (
     <Container
       maxWidth="lg"
@@ -98,12 +108,22 @@ const CryptoTools = () => {
         }}
         direction={{ sm: "column", md: "row" }}
       >
-        <Grid container spacing={2} direction="column" width={{sm: "95%", md: "45%"}}>
+        <Grid
+          container
+          spacing={2}
+          direction="column"
+          width={{ sm: "95%", md: "45%" }}
+        >
           <CredentialLocker />
           <Base64Tool />
           <FileEncryptor />
         </Grid>
-        <Grid container spacing={2} direction="column" width={{sm: "95%", md: "50%"}}>
+        <Grid
+          container
+          spacing={2}
+          direction="column"
+          width={{ sm: "95%", md: "50%" }}
+        >
           <PasswordGenerator />
           <ShaHash />
         </Grid>

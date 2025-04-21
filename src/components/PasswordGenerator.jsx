@@ -13,10 +13,15 @@ const PasswordGenerator = () => {
   const [password, setPassword] = useState("");
 
   const getRandomInt = (max) => {
-    const array = new Uint32Array(1);
-    crypto.getRandomValues(array);
-    return array[0] % max;
-  };
+    const mask = Math.pow(2, Math.ceil(Math.log2(max))) - 1;
+    let result;
+    do {
+        const array = new Uint32Array(1);
+        crypto.getRandomValues(array);
+        result = array[0] & mask;
+    } while (result >= max);
+    return result;
+};
 
   const generatePassword = () => {
     const upperCaseChars = "ABCDEFGHJKMNPQRSTUVWXYZ";
@@ -56,7 +61,7 @@ const PasswordGenerator = () => {
     }
 
     // Shuffle the generated password to avoid predictable patterns
-    generatedPassword = generatedPassword.split('').sort(() => getRandomInt(2) - 1).join('');
+    generatedPassword = generatedPassword.split("").sort(() => getRandomInt(2) - 1).join("");
     setPassword(generatedPassword);
   };
 

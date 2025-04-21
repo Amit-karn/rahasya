@@ -1,12 +1,33 @@
 {
   "name": "rahasya",
+  "version": "1.0.0",
+  "description": "Zero Trust Password Manager that works completely offline",
   "private": true,
-  "version": "0.0.0",
   "type": "module",
+  "author": {
+    "name": "Amit Karn",
+    "url": "https://github.com/Amit-karn"
+  },
+  "homepage": "https://github.com/Amit-karn/rahasya",
+  "keywords": [
+    "password-manager",
+    "encryption",
+    "security",
+    "aes-gcm",
+    "zero-trust",
+    "offline",
+    "pwa",
+    "react"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "lint": "eslint .",
+    "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -29,6 +50,19 @@
     "eslint-plugin-react-hooks": "^5.0.0",
     "eslint-plugin-react-refresh": "^0.4.16",
     "globals": "^15.14.0",
-    "vite": "^6.0.5"
+    "vite": "^6.0.5",
+    "vite-plugin-pwa": "^1.0.0"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
   }
 }

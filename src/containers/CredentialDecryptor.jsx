@@ -17,8 +17,8 @@ import {
   processAndDisplayUploadedFile,
   handleFileUpload,
 } from "../utils/FileUtils";
-import DownloadFile from "../components/DownloadFile";
 import UploadedFileInfo from "../components/UploadedFileInfo";
+import { validateSecurityRequirements } from "../utils/SecurityUtils";
 
 const initialState = {
   file: null, // The uploaded file object
@@ -136,13 +136,22 @@ const CredentialDecryptor = () => {
   };
 
   useEffect(() => {
-      dispatch({
-        type: "SHOW_MESSAGE_DIALOG",
-        payload: {
-          title: "Master Key Required",
-          content: "Please add your master key to proceed.",
-        },
-      });
+    const { isValid, errorOutput } = validateSecurityRequirements();
+
+    if (!isValid) {
+      alert(errorOutput);
+      return;
+    }
+    dispatch({
+      type: "SHOW_MESSAGE_DIALOG",
+      payload: {
+        title: "Master Key Required",
+        content: "Please add your master key to proceed.",
+      },
+    });
+    return () => {
+      dispatch({ type: "RESET_STATE" });
+    };
   }, []);
 
   // Handle decryption: set current key and encrypted secret (which will be passed to DecryptSecret)
@@ -156,56 +165,47 @@ const CredentialDecryptor = () => {
     setIsDecryptingSecret(true);
   };
 
-  // For adding decrypted secret to UI if needed. (For decryption mode you might simply show the decrypted secret.)
-  const addToFileDataSecretsSection = async (key, secret) => {
-    dispatch({ type: "SET_LOADING", payload: true });
-    const currentDate = new Date().toLocaleDateString("en-CA");
-    const tempFileData = {
-      secrets: { ...fileData.secrets, [key]: secret },
-      integrity: { ...fileData.integrity, DATE: currentDate, HMAC: "" },
-    };
+  // // For adding decrypted secret to UI if needed. (For decryption mode you might simply show the decrypted secret.)
+  // const addToFileDataSecretsSection = async (key, secret) => {
+  //   dispatch({ type: "SET_LOADING", payload: true });
+  //   const currentDate = new Date().toLocaleDateString("en-CA");
+  //   const tempFileData = {
+  //     secrets: { ...fileData.secrets, [key]: secret },
+  //     integrity: { ...fileData.integrity, DATE: currentDate, HMAC: "" },
+  //   };
 
-    try {
-      const tempFileContentStr = generateFileContentForPreview(tempFileData);
-      const newHmac = await generateFileHmac(
-        tempFileContentStr.slice(0, tempFileContentStr.indexOf("HMAC: ")),
-        masterKey
-      );
-      dispatch({
-        type: "SET_FILE_DATA",
-        payload: {
-          secrets: { ...fileData.secrets, [key]: secret },
-          integrity: { DATE: currentDate, HMAC: newHmac },
-        },
-      });
-    } catch {
-      setStatusBar(true, "Error adding secret");
-    } finally {
-      dispatch({ type: "SET_LOADING", payload: false });
-    }
-  };
+  //   try {
+  //     const tempFileContentStr = generateFileContentForPreview(tempFileData);
+  //     const newHmac = await generateFileHmac(
+  //       tempFileContentStr.slice(0, tempFileContentStr.indexOf("HMAC: ")),
+  //       masterKey
+  //     );
+  //     dispatch({
+  //       type: "SET_FILE_DATA",
+  //       payload: {
+  //         secrets: { ...fileData.secrets, [key]: secret },
+  //         integrity: { DATE: currentDate, HMAC: newHmac },
+  //       },
+  //     });
+  //   } catch {
+  //     setStatusBar(true, "Error adding secret");
+  //   } finally {
+  //     dispatch({ type: "SET_LOADING", payload: false });
+  //   }
+  // };
 
   const headerActions = (
     <Stack direction="column" spacing={2} alignItems="flex-start">
       {/* <Stack direction={{ xs: "column", md: "row" }} spacing={2}> */}
-        <FileUpload
-          file={file}
-          handleFileChange={handleFileUploadWrapper}
-          buttonVariant={file ? "outlined" : "contained"}
-          reset={() => dispatch({ type: "RESET_STATE_EXCEPT_MASTER_KEY" })}
-          disabled={!masterKey}
-          isGeneratingFile={false} // For decryption, file-generation is not be needed
-          mode="decrypt"
-        />
-        {/* <Button
-          onClick={() => dispatch({ type: "RESET_STATE_EXCEPT_MASTER_KEY" })}
-          disabled={!masterKey}
-          variant={file ? "contained" : "outlined"}
-          size="small"
-        >
-          {file ? "Reload file" : "Load File"}
-        </Button> */}
-      {/* </Stack> */}
+      <FileUpload
+        file={file}
+        handleFileChange={handleFileUploadWrapper}
+        buttonVariant={file ? "outlined" : "contained"}
+        reset={() => dispatch({ type: "RESET_STATE_EXCEPT_MASTER_KEY" })}
+        disabled={!masterKey}
+        isGeneratingFile={false} // For decryption, file-generation is not be needed
+        mode="decrypt"
+      />
       {file && (
         <UploadedFileInfo
           file={file}

@@ -1,4 +1,4 @@
-import { cryptoConfig } from "../config/CryptoConfig.js";
+import { cryptoConfig } from "../config/CryptoConfig";
 
 /**
  * Derives an AES-GCM cryptographic key from a password using the PBKDF2 algorithm.
@@ -11,12 +11,13 @@ import { cryptoConfig } from "../config/CryptoConfig.js";
  *          An object containing the derived CryptoKey, the salt used, and the number of iterations.
  * @throws {Error} If key derivation fails.
  */
-async function generateKeyWithPBKDF2(password, salt, iterations, extractable=false) {
+async function generateKeyWithPBKDF2(password, salt, iterations, extractable = false) {
     const encoder = new TextEncoder();
+    let passwordBytes;
     try {
         const startTime = performance.now();
         // Encode password to bytes.
-        const passwordBytes = encoder.encode(password);
+        passwordBytes = encoder.encode(password);
 
         // Import the password as key material.
         const keyMaterial = await crypto.subtle.importKey(
@@ -38,11 +39,16 @@ async function generateKeyWithPBKDF2(password, salt, iterations, extractable=fal
         );
 
         const endTime = performance.now();
-        console.log(`Key with ${iterations} iterations generated in ${endTime - startTime} ms`);
+        if (import.meta.env.MODE === "development") 
+            console.log(`Key with ${iterations} iterations generated in ${endTime - startTime} ms`);
         return { key, salt, iterations };
     } catch (error) {
-        console.error("Error generating key with PBKDF2:", error);
+        if (import.meta.env.MODE === "development") 
+            console.error("Error generating key with PBKDF2:", error);
         throw new Error("Key generation failed.");
+    } finally {
+        passwordBytes.fill(0); // Clear password bytes from memory for security.
+        passwordBytes = null; // Allow garbage collection.
     }
 }
 
@@ -58,10 +64,11 @@ async function generateKeyWithPBKDF2(password, salt, iterations, extractable=fal
  */
 async function generateHmacKeyWithPBKDF2(password, salt, iterations) {
     const encoder = new TextEncoder();
+    let passwordBytes;
     try {
         const startTime = performance.now();
         // Encode password to bytes.
-        const passwordBytes = encoder.encode(password);
+        passwordBytes = encoder.encode(password);
 
         // Import password as key material.
         const keyMaterial = await crypto.subtle.importKey(
@@ -83,11 +90,16 @@ async function generateHmacKeyWithPBKDF2(password, salt, iterations) {
         );
 
         const endTime = performance.now();
-        console.log(`Hmac Key with ${iterations} iterations generated in ${endTime - startTime} ms`);
+        if (import.meta.env.MODE === "development") 
+            console.log(`Hmac Key with ${iterations} iterations generated in ${endTime - startTime} ms`);
         return { key, salt, iterations };
     } catch (error) {
-        console.error("Error generating key with PBKDF2:", error);
+        if (import.meta.env.MODE === "development") 
+            console.error("Error generating key with PBKDF2:", error);
         throw new Error("Key generation failed.");
+    } finally {
+        passwordBytes.fill(0); // Clear password bytes from memory for security.
+        passwordBytes = null; // Allow garbage collection.
     }
 }
 
@@ -102,18 +114,29 @@ async function generateHmacKeyWithPBKDF2(password, salt, iterations) {
 async function sha256HashWithIterations(input, iterations) {
     const startTime = performance.now();
     const encoder = new TextEncoder();
-    const data = encoder.encode(input);
+    let data;
+    try {
+        data = encoder.encode(input);
 
-    // Compute initial SHA-256 digest.
-    let hashBuffer = await crypto.subtle.digest("SHA-256", data);
+        // Compute initial SHA-256 digest.
+        let hashBuffer = await crypto.subtle.digest("SHA-256", data);
 
-    // Iteratively hash the output.
-    for (let i = 0; i < iterations; i++) {
-        hashBuffer = await crypto.subtle.digest("SHA-256", hashBuffer);
+        // Iteratively hash the output.
+        for (let i = 0; i < iterations; i++) {
+            hashBuffer = await crypto.subtle.digest("SHA-256", hashBuffer);
+        }
+        const endTime = performance.now();
+        if (import.meta.env.MODE === "development") 
+            console.log(`Hash with ${iterations} iterations generated in ${endTime - startTime} ms`);
+        return { hash: new Uint8Array(hashBuffer), iterations };
+    } catch (error) {
+        if (import.meta.env.MODE === "development") 
+            console.error("Error generating hash with iterations:", error);
+        throw new Error("Hash generation failed.");
+    } finally {
+        data.fill(0); // Clear data from memory for security.
+        data = null; // Allow garbage collection.
     }
-    const endTime = performance.now();
-    console.log(`Hash with ${iterations} iterations generated in ${endTime - startTime} ms`);
-    return { hash: new Uint8Array(hashBuffer), iterations };
 }
 
 /**
@@ -167,24 +190,30 @@ function generateRandomValues(length) {
  */
 async function encryptWithAesGcm(key, data, iv, aad) {
     const encoder = new TextEncoder();
-    const encodedData = encoder.encode(data);
-    const encodedAAD = encoder.encode(aad);
+    let encodedData = encoder.encode(data);
+    let encodedAAD = encoder.encode(aad);
 
     try {
         const ciphertext = await crypto.subtle.encrypt(
-            { 
-                name: "AES-GCM", 
+            {
+                name: "AES-GCM",
                 iv: iv,
-                additionalData: encodedAAD, 
-                tagLength: 128 
+                additionalData: encodedAAD,
+                tagLength: 128
             },
             key,
             encodedData
         );
         return { ciphertext: new Uint8Array(ciphertext), iv, aad };
     } catch (error) {
-        console.error("Encryption failed:", error);
+        if (import.meta.env.MODE === "development") 
+            console.error("Encryption failed:", error);
         throw new Error("Encryption failed.");
+    } finally {
+        encodedData.fill(0); // Clear encoded data from memory for security.
+        encodedAAD.fill(0); // Clear additional authenticated data from memory for security.
+        encodedData = null; // Allow garbage collection.
+        encodedAAD = null; // Allow garbage collection.
     }
 }
 
@@ -200,15 +229,15 @@ async function encryptWithAesGcm(key, data, iv, aad) {
  * @throws {Error} If decryption fails.
  */
 async function decryptWithAesGcm(key, ciphertext, iv, aad) {
-    const decodedAAD = new TextEncoder().encode(aad);
+    let decodedAAD = new TextEncoder().encode(aad);
 
     try {
         const decryptedData = await crypto.subtle.decrypt(
-            { 
-                name: "AES-GCM", 
+            {
+                name: "AES-GCM",
                 iv: iv,
                 additionalData: decodedAAD,
-                tagLength: 128 
+                tagLength: 128
             },
             key,
             ciphertext
@@ -217,8 +246,12 @@ async function decryptWithAesGcm(key, ciphertext, iv, aad) {
         const decryptedString = new TextDecoder().decode(decryptedData);
         return { decryptedData: decryptedString, iv, aad };
     } catch (error) {
-        console.error("Decryption failed:", error);
+        if (import.meta.env.MODE === "development") 
+            console.error("Decryption failed:", error);
         throw new Error("Decryption failed.");
+    } finally {
+        decodedAAD.fill(0); // Clear additional authenticated data from memory for security.
+        decodedAAD = null; // Allow garbage collection.
     }
 }
 
@@ -241,14 +274,15 @@ function getRandomIterations() {
 async function importJwkAsCryptoKey(jwk) {
     try {
         return await crypto.subtle.importKey(
-            "jwk",          
-            jwk,      
+            "jwk",
+            jwk,
             { name: "AES-GCM" },
             false,
             ["encrypt", "decrypt"]
         );
     } catch (error) {
-        console.error("Error importing JWK:", error);
+        if (import.meta.env.MODE === "development") 
+            console.error("Error importing JWK:", error);
         throw new Error("Failed to import JWK.");
     }
 }
@@ -264,8 +298,99 @@ async function extractKeyToJwk(cryptoKey) {
     try {
         return await crypto.subtle.exportKey("jwk", cryptoKey);
     } catch (error) {
-        console.error("Error extracting key:", error);
+        if (import.meta.env.MODE === "development") 
+            console.error("Error extracting key:", error);
         throw new Error("Failed to extract key.");
+    }
+}
+
+
+/**
+  * Generates a wrapping key for key wrapping operations.
+  *
+  * @param {boolean} extractable - Indicates whether the key can be extracted.
+  * @returns {Promise<CryptoKey>} The generated wrapping key.
+  * @throws {Error} If key generation fails.
+  */
+async function generateWrappingKey(extractable = false) {
+    return await crypto.subtle.generateKey(
+        { name: "AES-KW", length: 256 },
+        extractable,
+        ["wrapKey", "unwrapKey"]
+    );
+}
+
+/**
+ * Wraps a key using a wrapping key.
+ *
+ * @param {CryptoKey} wrappingKey - The key used for wrapping.
+ * @param {CryptoKey} keyToWrap - The key to be wrapped.
+ * @returns {Promise<ArrayBuffer>} The wrapped key as an ArrayBuffer.
+ * @throws {Error} If the wrapping operation fails.
+ */
+async function wrapKey(wrappingKey, keyToWrap) {
+    try {
+        return await crypto.subtle.wrapKey(
+            "jwk",
+            keyToWrap,
+            wrappingKey,
+            { name: "AES-KW" }
+        );
+    } catch (error) {
+        if (import.meta.env.MODE === "development") 
+            console.error("Error wrapping key:", error);
+        throw new Error("Failed to wrap key.");
+    }
+}
+
+/**
+* Imports a wrapping key from a JSON Web Key (JWK) format.
+*
+* @param {Object} wrappingKey - The JWK representing the wrapping key.
+* @param {boolean} extractable - Indicates whether the key can be extracted.
+* @returns {Promise<CryptoKey>} The imported wrapping key.
+* @throws {Error} If the import fails.
+*/
+async function importWrappingKey(wrappingKey, extractable = false) {
+    try {
+        return await crypto.subtle.importKey(
+            "jwk",
+            wrappingKey,
+            { name: "AES-KW" },
+            extractable,
+            ["wrapKey", "unwrapKey"]
+        );
+    } catch (error) {
+        if (import.meta.env.MODE === "development") 
+            console.error("Error importing wrapping key:", error);
+        throw new Error("Failed to import wrapping key.");
+    }
+}
+
+/**
+    * Unwraps a wrapped key using a wrapping key.
+    *
+    * @param {CryptoKey} wrappingKey - The key used for unwrapping.
+    * @param {ArrayBuffer} wrappedKey - The wrapped key to be unwrapped.
+    * @param {boolean} extractable - Indicates whether the unwrapped key can be extracted.
+    * @returns {Promise<CryptoKey>} The unwrapped key as a CryptoKey.
+    * @throws {Error} If the unwrapping operation fails.
+    */
+async function unwrapKey(wrappingKey, wrappedKey, extractable=false) {
+    try {
+        return await crypto.subtle.unwrapKey(
+            "jwk",
+            wrappedKey,
+            wrappingKey,
+            { name: "AES-KW" },
+            { name: "AES-GCM", length: 256 },
+            extractable,
+            ["encrypt", "decrypt"]
+        );
+    } catch (error) {
+        if (import.meta.env.MODE === "development") 
+            console.error("Error unwrapping key:", error);
+        throw new Error("Failed to unwrap key.");
     }
 }
 
@@ -280,5 +405,9 @@ export {
     getRandomIterations,
     extractKeyToJwk,
     importJwkAsCryptoKey,
-    generateHmacKeyWithPBKDF2
+    generateHmacKeyWithPBKDF2,
+    generateWrappingKey,
+    wrapKey,
+    importWrappingKey,
+    unwrapKey,
 };

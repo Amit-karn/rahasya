@@ -1,16 +1,16 @@
-import { cryptoConfig } from "../config/CryptoConfig"; // Import the cryptographic configurations
-import passwordManagerConfig from "../config/PasswordManagerConfig"; // Import password manager specific configurations
-import { 
+import { cryptoConfig } from "../config/CryptoConfig";
+import passwordManagerConfig from "../config/PasswordManagerConfig";
+import {
     base64ToUint8Array,
     decryptWithAesGcm,
-    encryptWithAesGcm, 
-    extractKeyToJwk, 
-    generateHmacKeyWithPBKDF2, 
-    generateKeyWithPBKDF2, 
-    generateRandomValues, 
-    getRandomIterations, 
-    sha256HashWithIterations, 
-    uint8ArrayToBase64 
+    encryptWithAesGcm,
+    extractKeyToJwk,
+    generateHmacKeyWithPBKDF2,
+    generateKeyWithPBKDF2,
+    generateRandomValues,
+    getRandomIterations,
+    sha256HashWithIterations,
+    uint8ArrayToBase64
 } from "./CryptoUtils";
 
 /**
@@ -20,7 +20,8 @@ import {
  * @param {Uint8Array} salt - The salt used in the PBKDF2 function to ensure key uniqueness.
  * @param {number} iterations - The number of iterations to use in PBKDF2.
  * @param {boolean} extractable - Whether the generated key can be exported (default is false).
- * @returns {Promise<Object>} A promise that resolves to an object containing the derived key and salt.
+ * @returns {Promise<{ key: CryptoKey, salt: Uint8Array, iterations: number }>} 
+ *          An object containing the derived CryptoKey, the salt used, and the number of iterations.
  */
 async function generateEncryptionKey(secret, salt, iterations, extractable = false) {
     const generatedKey = await generateKeyWithPBKDF2(
@@ -50,18 +51,54 @@ async function generateEncryptionKey(secret, salt, iterations, extractable = fal
  * @returns {Promise<string>} A promise that resolves to the encoded JWK string, prefixed with the algorithm and key length.
  */
 async function generateEncryptionKeyFromMasterKey(secret, iterations, masterKeyIteration = passwordManagerConfig.masterKeyHashIteration) {
-    // Hash the master key using iterative SHA-256 to derive a unique salt
-    const salt = (await sha256HashWithIterations(
-        secret.trim(),
-        masterKeyIteration
-    )).hash;
+    let salt, generatedKey, exportedKey;
+    try {
+        // Hash the master key using iterative SHA-256 to derive a unique salt
+        salt = (await sha256HashWithIterations(
+            secret.trim(),
+            masterKeyIteration
+        )).hash;
 
-    // Generate the encryption key using PBKDF2 with the derived salt and provided iterations, allowing extraction
-    const generatedKey = await generateEncryptionKey(secret, salt, iterations, true);
-    
-    // Export the generated key to JWK format and encode it as a Base64 string
-    const exportedKey = await extractKeyToJwk(generatedKey.key);
-    return `${generatedKey.key.algorithm.name}-${generatedKey.key.algorithm.length}:${btoa(JSON.stringify(exportedKey))}`;
+        // Generate the encryption key using PBKDF2 with the derived salt and provided iterations, allowing extraction
+        generatedKey = await generateEncryptionKey(secret, salt, iterations, true);
+
+        // Export the generated key to JWK format and encode it as a Base64 string
+        exportedKey = await extractKeyToJwk(generatedKey.key);
+        return `${generatedKey.key.algorithm.name}-${generatedKey.key.algorithm.length}:${btoa(JSON.stringify(exportedKey))}`;
+    } finally {
+        if (salt) {
+            salt.fill(''); // Clear sensitive data
+        }
+        if (generatedKey) {
+            generatedKey = null; // Clear the key reference to free up memory
+        }
+    }
+}
+
+/**
+ * Extracts the JWK from an encoded key string.
+ *
+ * The encoded key string follows the format "alg:base64Jwk". The function extracts the Base64
+ * portion, decodes it, and parses the result into a JWK object.
+ *
+ * @param {string} encodedKey - The encoded key string containing the JWK in Base64 format.
+ * @returns {JsonWebKey} The decoded JWK object.
+ * @throws {Error} If the encoded key format is invalid.
+ */
+function getJwkFromEncryptionKey(encodedKey) {
+    let parts;
+    try {
+        parts = encodedKey.split(":");
+        if (parts.length > 1) {
+            const jwk = JSON.parse(atob(parts[1]));
+            return jwk;
+        }
+        throw new Error("Invalid key format");
+    } finally {
+        if (parts) {
+            parts.fill(''); // Clear sensitive data
+        }
+    }
 }
 
 /**
@@ -86,7 +123,7 @@ async function generateEncryptionKeyFromMasterKey(secret, iterations, masterKeyI
  */
 async function encrypt(encodedKey, data, aad = "") {
     // Extract the JWK from the encoded key
-    const jwk = getJwkFromEncryptionKey(encodedKey);
+    let jwk = getJwkFromEncryptionKey(encodedKey);
 
     // Generate a random salt and iteration count for final encryption key
     const saltForFinalKey = generateRandomValues(cryptoConfig.keySaltLengthInBytes);
@@ -94,6 +131,7 @@ async function encrypt(encodedKey, data, aad = "") {
 
     // Generate the final encryption key using PBKDF2 with the salt and iteration count multiplier from config
     const finalEncryptionKey = await generateEncryptionKey(jwk.k, saltForFinalKey, itr * cryptoConfig.defaultMultiplierForFinalKeyIteration, false);
+    jwk = null;  // Clear the JWK reference to free up memory
 
     // Generate a random initialization vector (IV) for AES-GCM encryption
     const iv = generateRandomValues(cryptoConfig.aesGcmIvLengthInBytes);
@@ -136,9 +174,8 @@ async function encrypt(encodedKey, data, aad = "") {
     embeddedOutput.set(iv, aadLength + dateLength + saltLength); // IV for encryption
     embeddedOutput.set(encryptionResult.ciphertext, aadLength + dateLength + saltLength + ivLength); // Ciphertext
     embeddedOutput.set(finalKeyIterationsArray, aadLength + dateLength + saltLength + ivLength + ciphertextLength); // Iteration count
-    
+
     // Return the encrypted data in Base64
-    extractEmbeddedData(uint8ArrayToBase64(embeddedOutput));
     return uint8ArrayToBase64(embeddedOutput);
 }
 
@@ -154,14 +191,15 @@ async function encrypt(encodedKey, data, aad = "") {
  * @param {string} [aad=""] - Additional Authenticated Data (optional).
  * @returns {Promise<String>} A promise that resolves to the decrypted data.
  */
-async function decrypt(encodedKey, base64EncodedData, aad="") {
+async function decrypt(encodedKey, base64EncodedData, aad = "") {
     // Extract the embedded data (AAD flag, date, salt, IV, ciphertext length, ciphertext, iteration count) from the Base64 encoded string
-    const { ciphertext, iv, salt, iterations} = extractEmbeddedData(base64EncodedData);
+    const { ciphertext, iv, salt, iterations } = extractEmbeddedData(base64EncodedData);
     // Extract the JWK from the encoded key
-    const jwk = getJwkFromEncryptionKey(encodedKey);
-    
+    let jwk = getJwkFromEncryptionKey(encodedKey);
+
     // Derive the final encryption key using PBKDF2 with the extracted salt and iterations multiplier from config
     const finalEncryptionKey = await generateEncryptionKey(jwk.k, salt, iterations * cryptoConfig.defaultMultiplierForFinalKeyIteration, false);
+    jwk = null;  // Clear the JWK reference to free up memory
 
     // Perform AES-GCM decryption with the final encryption key, IV, and AAD
     const decryptedResult = await decryptWithAesGcm(
@@ -241,25 +279,6 @@ function extractEmbeddedData(base64Encoded) {
 }
 
 /**
- * Extracts the JWK from an encoded key string.
- *
- * The encoded key string follows the format "alg:base64Jwk". The function extracts the Base64
- * portion, decodes it, and parses the result into a JWK object.
- *
- * @param {string} encodedKey - The encoded key string containing the JWK in Base64 format.
- * @returns {Object} The decoded JWK object.
- * @throws {Error} If the encoded key format is invalid.
- */
-function getJwkFromEncryptionKey(encodedKey) {
-    // encoded key format is "alg:base64Jwk"
-    const parts = encodedKey.split(":");
-    if (parts.length > 1) {
-        return JSON.parse(atob(parts[1]));  // Decode the Base64 part and parse the JSON
-    }
-    throw new Error("Invalid encoded key format");  // Throw an error if the format is invalid
-}
-
-/**
  * Signs the data using HMAC with a key derived from PBKDF2 and returns the signed message.
  *
  * The function derives a signing key using PBKDF2 with a random salt and iteration count.
@@ -281,7 +300,7 @@ async function sign(secret, dataStr) {
     const encoder = new TextEncoder();
     const data = encoder.encode(dataStr);
     const salt = generateRandomValues(cryptoConfig.keySaltLengthInBytes); // 32 bytes salt
-    
+
     const iterations = getRandomIterations();
     // Derive the signing key using PBKDF2
     const derivedKey = await generateHmacKeyWithPBKDF2(jwk.k, salt, iterations * cryptoConfig.defaultMultiplierForFinalKeyIteration);
@@ -299,12 +318,12 @@ async function sign(secret, dataStr) {
     const message = new Uint8Array(totalLength);
     const iterationArray = new Uint8Array(1);
     iterationArray.set([iterations]);
-    
+
     // Copy salt, iteration count, and the signature into the message
     message.set(salt, 0); // Salt at the start
     message.set(iterationArray, cryptoConfig.keySaltLengthInBytes);
     message.set(signatureArray, cryptoConfig.keySaltLengthInBytes + 1);
-   
+
     // Return the message as Base64
     return uint8ArrayToBase64(message);
 }
@@ -327,19 +346,19 @@ async function verify(secret, signedMessageBase64, dataStr) {
     const encoder = new TextEncoder();
     const data = encoder.encode(dataStr);
     const signedMessage = base64ToUint8Array(signedMessageBase64);
-    
+
     // Extract salt (first N bytes as per config)
     const salt = signedMessage.slice(0, cryptoConfig.keySaltLengthInBytes);
-    
+
     // Extract iteration count (next 1 byte)
     const iterations = signedMessage[cryptoConfig.keySaltLengthInBytes];
-    
+
     // Extract the signature (remaining bytes)
     const signature = signedMessage.slice(cryptoConfig.keySaltLengthInBytes + 1);
 
     // Derive the key using PBKDF2 from the secret, extracted salt, and iterations multiplier from config
     const derivedKey = await generateHmacKeyWithPBKDF2(jwk.k, salt, iterations * cryptoConfig.defaultMultiplierForFinalKeyIteration);
-    
+
     // Recompute the HMAC using the derived key and the provided data
     return await crypto.subtle.verify(
         { name: "HMAC", hash: { name: "SHA-256" } },
@@ -349,7 +368,7 @@ async function verify(secret, signedMessageBase64, dataStr) {
     );
 }
 
-export { 
+export {
     generateEncryptionKeyFromMasterKey,
     encrypt,
     decrypt,

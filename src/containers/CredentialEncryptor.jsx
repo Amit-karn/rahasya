@@ -1,6 +1,6 @@
 import { useEffect, useReducer } from "react";
-import { Button, Stack, Box, Typography, IconButton } from "@mui/material";
-import { CloseOutlined, KeyRounded } from "@mui/icons-material";
+import { Button, Stack, Box } from "@mui/material";
+import { KeyRounded } from "@mui/icons-material";
 import { BaseLayout } from "../components/BaseLayout";
 import { SecretsList } from "../components/SecretsList";
 import FileUpload from "../components/FileUpload";
@@ -18,8 +18,8 @@ import {
   processAndDisplayUploadedFile,
   handleFileUpload,
 } from "../utils/FileUtils";
-import DownloadFile from "../components/DownloadFile";
 import UploadedFileInfo from "../components/UploadedFileInfo";
+import { validateSecurityRequirements } from "../utils/SecurityUtils";
 
 const initialState = {
   uploadedFile: null, // The uploaded file object
@@ -110,14 +110,23 @@ const CredentialEncryptor = () => {
   } = state;
 
   useEffect(() => {
-        dispatch({
-          type: "SHOW_MESSAGE_DIALOG",
-          payload: {
-            title: "Master Key Required",
-            content: "Please add your master key to proceed.",
-          },
-        });
-    }, []);
+    const { isValid, errorOutput } = validateSecurityRequirements();
+
+    if (!isValid) {
+      alert(errorOutput);
+      return;
+    }
+    dispatch({
+      type: "SHOW_MESSAGE_DIALOG",
+      payload: {
+        title: "Master Key Required",
+        content: "Please add your master key to proceed.",
+      },
+    });
+    return () => {
+      dispatch({ type: "RESET_STATE" });
+    };
+  }, []);
 
   const setStatusBar = (isError, message) => {
     dispatch({
@@ -356,7 +365,7 @@ const CredentialEncryptor = () => {
           addToSecretsList={addToFileDataSecretsSection}
           existingSecrets={Object.keys(fileData.secrets)}
           resetParentState={() => {
-            if (isEmptyObj(fileData.secrets)) 
+            if (isEmptyObj(fileData.secrets))
               dispatch({ type: "RESET_STATE_EXCEPT_MASTER_KEY" });
           }}
         />
