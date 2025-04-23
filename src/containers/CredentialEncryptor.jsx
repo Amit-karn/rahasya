@@ -16,7 +16,7 @@ import { generateFileContentForPreview, isEmptyObj } from "../utils/DataUtils";
 import {
   validateFileTypeAndSize,
   processAndDisplayUploadedFile,
-  handleFileUpload,
+  handleFileUpload
 } from "../utils/FileUtils";
 import UploadedFileInfo from "../components/UploadedFileInfo";
 import { validateSecurityRequirements } from "../utils/SecurityUtils";
@@ -25,7 +25,7 @@ const initialState = {
   uploadedFile: null, // The uploaded file object
   fileData: {
     secrets: {}, // Stores secrets
-    integrity: {}, // Stores integrity data
+    integrity: {} // Stores integrity data
   },
   encryptionKey: null, // The master key for encryption/decryption
   isMasterKeyDialogOpen: false, // Controls the visibility of the "Add/Update Master Key" dialog
@@ -37,53 +37,53 @@ const initialState = {
   statusBarError: false, // Indicates if the status bar is showing an error
   statusBarMessage: "", // Message content for the status bar
   isFileGenerationInProgress: false, // Tracks if the user is generating a new file
-  isAddSecretDialogOpen: false, // Tracks if the "Add Secret" dialog is open
+  isAddSecretDialogOpen: false // Tracks if the "Add Secret" dialog is open
 };
 
 function credentialEncryptorReducer(state, action) {
   switch (action.type) {
-    case "SET_UPLOADED_FILE":
-      return { ...state, uploadedFile: action.payload };
-    case "SET_FILE_DATA":
-      return { ...state, fileData: action.payload };
-    case "SET_ENCRYPTION_KEY":
-      return { ...state, encryptionKey: action.payload };
-    case "TOGGLE_MASTER_KEY_DIALOG":
-      return { ...state, isMasterKeyDialogOpen: action.payload };
-    case "SHOW_MESSAGE_DIALOG":
-      return {
-        ...state,
-        isMessageDialogOpen: true,
-        messageDialogTitle: action.payload.title,
-        messageDialogContent: action.payload.content,
-      };
-    case "HIDE_MESSAGE_DIALOG":
-      return { ...state, isMessageDialogOpen: false };
-    case "SET_LOADING":
-      return { ...state, isLoading: action.payload };
-    case "SHOW_STATUS_BAR":
-      return {
-        ...state,
-        isStatusBarVisible: true,
-        statusBarError: action.payload.isError,
-        statusBarMessage: action.payload.message,
-      };
-    case "HIDE_STATUS_BAR":
-      return { ...state, isStatusBarVisible: false };
-    case "SET_FILE_GENERATION_PROGRESS":
-      return { ...state, isFileGenerationInProgress: action.payload };
-    case "TOGGLE_ADD_SECRET_DIALOG":
-      return { ...state, isAddSecretDialogOpen: action.payload };
-    case "RESET_STATE":
-      return initialState; // Resets the state to the initial state
+  case "SET_UPLOADED_FILE":
+    return { ...state, uploadedFile: action.payload };
+  case "SET_FILE_DATA":
+    return { ...state, fileData: action.payload };
+  case "SET_ENCRYPTION_KEY":
+    return { ...state, encryptionKey: action.payload };
+  case "TOGGLE_MASTER_KEY_DIALOG":
+    return { ...state, isMasterKeyDialogOpen: action.payload };
+  case "SHOW_MESSAGE_DIALOG":
+    return {
+      ...state,
+      isMessageDialogOpen: true,
+      messageDialogTitle: action.payload.title,
+      messageDialogContent: action.payload.content
+    };
+  case "HIDE_MESSAGE_DIALOG":
+    return { ...state, isMessageDialogOpen: false };
+  case "SET_LOADING":
+    return { ...state, isLoading: action.payload };
+  case "SHOW_STATUS_BAR":
+    return {
+      ...state,
+      isStatusBarVisible: true,
+      statusBarError: action.payload.isError,
+      statusBarMessage: action.payload.message
+    };
+  case "HIDE_STATUS_BAR":
+    return { ...state, isStatusBarVisible: false };
+  case "SET_FILE_GENERATION_PROGRESS":
+    return { ...state, isFileGenerationInProgress: action.payload };
+  case "TOGGLE_ADD_SECRET_DIALOG":
+    return { ...state, isAddSecretDialogOpen: action.payload };
+  case "RESET_STATE":
+    return initialState; // Resets the state to the initial state
     // Action: Reset all state properties except the master key.
-    case "RESET_STATE_EXCEPT_MASTER_KEY":
-      return {
-        ...initialState,
-        encryptionKey: state.encryptionKey,
-      };
-    default:
-      return state;
+  case "RESET_STATE_EXCEPT_MASTER_KEY":
+    return {
+      ...initialState,
+      encryptionKey: state.encryptionKey
+    };
+  default:
+    return state;
   }
 }
 
@@ -106,7 +106,7 @@ const CredentialEncryptor = () => {
     statusBarError,
     statusBarMessage,
     isFileGenerationInProgress,
-    isAddSecretDialogOpen,
+    isAddSecretDialogOpen
   } = state;
 
   useEffect(() => {
@@ -120,8 +120,8 @@ const CredentialEncryptor = () => {
       type: "SHOW_MESSAGE_DIALOG",
       payload: {
         title: "Master Key Required",
-        content: "Please add your master key to proceed.",
-      },
+        content: "Please add your master key to proceed."
+      }
     });
     return () => {
       dispatch({ type: "RESET_STATE" });
@@ -131,7 +131,7 @@ const CredentialEncryptor = () => {
   const setStatusBar = (isError, message) => {
     dispatch({
       type: "SHOW_STATUS_BAR",
-      payload: { isError, message },
+      payload: { isError, message }
     });
   };
 
@@ -139,14 +139,14 @@ const CredentialEncryptor = () => {
     dispatch({ type: "SET_LOADING", payload: isVisible });
   };
 
-  const handleFileUploadWrapper = async (event) => {
+  const handleFileUploadWrapper = async(event) => {
     await handleFileUpload(
       event,
       encryptionKey,
       setStatusBar,
       setBackDrop,
       (file) => validateFileTypeAndSize(file, setStatusBar),
-      async (file) =>
+      async(file) =>
         await processAndDisplayUploadedFile(
           file,
           (content) => dispatch({ type: "SET_FILE_DATA", payload: content }),
@@ -157,12 +157,12 @@ const CredentialEncryptor = () => {
     );
   };
 
-  const addToFileDataSecretsSection = async (key, secret) => {
+  const addToFileDataSecretsSection = async(key, secret) => {
     dispatch({ type: "SET_LOADING", payload: true });
     const currentDate = new Date().toLocaleDateString("en-CA");
     const tempFileData = {
       secrets: { ...fileData.secrets, [key]: secret },
-      integrity: { ...fileData.integrity, DATE: currentDate, HMAC: "" },
+      integrity: { ...fileData.integrity, DATE: currentDate, HMAC: "" }
     };
 
     try {
@@ -176,8 +176,8 @@ const CredentialEncryptor = () => {
         type: "SET_FILE_DATA",
         payload: {
           secrets: { ...fileData.secrets, [key]: secret },
-          integrity: { DATE: currentDate, HMAC: newHmac },
-        },
+          integrity: { DATE: currentDate, HMAC: newHmac }
+        }
       });
     } catch {
       setStatusBar(true, "Error adding secret");
@@ -186,7 +186,7 @@ const CredentialEncryptor = () => {
     }
   };
 
-  const removeSecret = async (key) => {
+  const removeSecret = async(key) => {
     if (fileData && Object.keys(fileData.secrets).length === 1) {
       const userConfirmed = window.confirm(
         "This action will remove all secrets. Do you want to proceed ?"
@@ -202,7 +202,7 @@ const CredentialEncryptor = () => {
 
       const tempFileData = {
         secrets: tempSecrets,
-        integrity: { ...fileData.integrity, DATE: currentDate },
+        integrity: { ...fileData.integrity, DATE: currentDate }
       };
 
       try {
@@ -216,8 +216,8 @@ const CredentialEncryptor = () => {
           type: "SET_FILE_DATA",
           payload: {
             secrets: tempSecrets,
-            integrity: { DATE: currentDate, HMAC: newHmac },
-          },
+            integrity: { DATE: currentDate, HMAC: newHmac }
+          }
         });
       } catch {
         setStatusBar(true, "Error removing secret");
@@ -232,7 +232,7 @@ const CredentialEncryptor = () => {
       mode="encrypt"
       masterKey={encryptionKey}
       onUnloadMasterKey={() => {
-        let userConfirmed = window.confirm(
+        const userConfirmed = window.confirm(
           "This action will reset the application state. Do you want to proceed ?"
         );
         return userConfirmed ? dispatch({ type: "RESET_STATE" }) : "";
@@ -253,7 +253,7 @@ const CredentialEncryptor = () => {
                 dispatch({ type: "TOGGLE_ADD_SECRET_DIALOG", payload: true });
                 dispatch({
                   type: "SET_FILE_GENERATION_PROGRESS",
-                  payload: true,
+                  payload: true
                 });
               }}
               disabled={!encryptionKey}
@@ -303,7 +303,7 @@ const CredentialEncryptor = () => {
             gap: { xs: 2, md: 1 },
             marginTop: 1,
             height: { xs: "80vh", md: "calc(100vh - 200px)" },
-            width: "100%",
+            width: "100%"
           }}
         >
           <SecretsList
@@ -326,8 +326,8 @@ const CredentialEncryptor = () => {
               isError: false,
               message: encryptionKey
                 ? "Master key updated successfully"
-                : "Master key added successfully",
-            },
+                : "Master key added successfully"
+            }
           });
         }}
         openMasterKeyDialog={isMasterKeyDialogOpen}
@@ -339,8 +339,8 @@ const CredentialEncryptor = () => {
             type: "SHOW_STATUS_BAR",
             payload: {
               isError,
-              message,
-            },
+              message
+            }
           });
         }}
       />
@@ -365,8 +365,9 @@ const CredentialEncryptor = () => {
           addToSecretsList={addToFileDataSecretsSection}
           existingSecrets={Object.keys(fileData.secrets)}
           resetParentState={() => {
-            if (isEmptyObj(fileData.secrets))
+            if (isEmptyObj(fileData.secrets)) {
               dispatch({ type: "RESET_STATE_EXCEPT_MASTER_KEY" });
+            }
           }}
         />
       )}

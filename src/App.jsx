@@ -8,12 +8,12 @@ function App() {
   const theme = createTheme({
     palette: {
       primary: {
-        main: "#000000", // black color
+        main: "#000000" // black color
       },
       secondary: {
-        main: "#ffffff", // white color
-      },
-    },
+        main: "#ffffff" // white color
+      }
+    }
   });
   //Portable Encrypted Credential Locker
 

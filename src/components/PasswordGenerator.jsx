@@ -1,5 +1,15 @@
 import React, { useState } from "react";
-import { Paper, Typography, Stack, Slider, Checkbox, FormControlLabel, Button, Grid2 as Grid, IconButton } from "@mui/material";
+import {
+  Paper,
+  Typography,
+  Stack,
+  Slider,
+  Checkbox,
+  FormControlLabel,
+  Button,
+  Grid2 as Grid,
+  IconButton
+} from "@mui/material";
 import { ContentCopy } from "@mui/icons-material";
 import PasswordFeedback from "./PasswordFeedback";
 
@@ -16,12 +26,12 @@ const PasswordGenerator = () => {
     const mask = Math.pow(2, Math.ceil(Math.log2(max))) - 1;
     let result;
     do {
-        const array = new Uint32Array(1);
-        crypto.getRandomValues(array);
-        result = array[0] & mask;
+      const array = new Uint32Array(1);
+      crypto.getRandomValues(array);
+      result = array[0] & mask;
     } while (result >= max);
     return result;
-};
+  };
 
   const generatePassword = () => {
     const upperCaseChars = "ABCDEFGHJKMNPQRSTUVWXYZ";
@@ -61,7 +71,10 @@ const PasswordGenerator = () => {
     }
 
     // Shuffle the generated password to avoid predictable patterns
-    generatedPassword = generatedPassword.split("").sort(() => getRandomInt(2) - 1).join("");
+    generatedPassword = generatedPassword
+      .split("")
+      .sort(() => getRandomInt(2) - 1)
+      .join("");
     setPassword(generatedPassword);
   };
 
@@ -86,31 +99,56 @@ const PasswordGenerator = () => {
         <Grid container spacing={2}>
           <Grid size={{ xs: 12, sm: 6 }}>
             <FormControlLabel
-              control={<Checkbox checked={includeUppercase} onChange={(e) => setIncludeUppercase(e.target.checked)} />}
+              control={
+                <Checkbox
+                  checked={includeUppercase}
+                  onChange={(e) => setIncludeUppercase(e.target.checked)}
+                />
+              }
               label="Include Uppercase Letters"
             />
           </Grid>
           <Grid size={{ xs: 12, sm: 6 }}>
             <FormControlLabel
-              control={<Checkbox checked={includeLowercase} onChange={(e) => setIncludeLowercase(e.target.checked)} />}
+              control={
+                <Checkbox
+                  checked={includeLowercase}
+                  onChange={(e) => setIncludeLowercase(e.target.checked)}
+                />
+              }
               label="Include Lowercase Letters"
             />
           </Grid>
           <Grid size={{ xs: 12, sm: 6 }}>
             <FormControlLabel
-              control={<Checkbox checked={includeNumbers} onChange={(e) => setIncludeNumbers(e.target.checked)} />}
+              control={
+                <Checkbox
+                  checked={includeNumbers}
+                  onChange={(e) => setIncludeNumbers(e.target.checked)}
+                />
+              }
               label="Include Numbers"
             />
           </Grid>
           <Grid size={{ xs: 12, sm: 6 }}>
             <FormControlLabel
-              control={<Checkbox checked={includeSymbols} onChange={(e) => setIncludeSymbols(e.target.checked)} />}
+              control={
+                <Checkbox
+                  checked={includeSymbols}
+                  onChange={(e) => setIncludeSymbols(e.target.checked)}
+                />
+              }
               label="Include Symbols"
             />
           </Grid>
           <Grid size={{ xs: 12, sm: 6 }}>
             <FormControlLabel
-              control={<Checkbox checked={includeDevanagari} onChange={(e) => setIncludeDevanagari(e.target.checked)} />}
+              control={
+                <Checkbox
+                  checked={includeDevanagari}
+                  onChange={(e) => setIncludeDevanagari(e.target.checked)}
+                />
+              }
               label="Include Devanagari Characters"
             />
           </Grid>

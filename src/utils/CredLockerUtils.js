@@ -1,16 +1,16 @@
 import { cryptoConfig } from "../config/CryptoConfig";
 import passwordManagerConfig from "../config/PasswordManagerConfig";
 import {
-    base64ToUint8Array,
-    decryptWithAesGcm,
-    encryptWithAesGcm,
-    extractKeyToJwk,
-    generateHmacKeyWithPBKDF2,
-    generateKeyWithPBKDF2,
-    generateRandomValues,
-    getRandomIterations,
-    sha256HashWithIterations,
-    uint8ArrayToBase64
+  base64ToUint8Array,
+  decryptWithAesGcm,
+  encryptWithAesGcm,
+  extractKeyToJwk,
+  generateHmacKeyWithPBKDF2,
+  generateKeyWithPBKDF2,
+  generateRandomValues,
+  getRandomIterations,
+  sha256HashWithIterations,
+  uint8ArrayToBase64
 } from "./CryptoUtils";
 
 /**
@@ -20,17 +20,22 @@ import {
  * @param {Uint8Array} salt - The salt used in the PBKDF2 function to ensure key uniqueness.
  * @param {number} iterations - The number of iterations to use in PBKDF2.
  * @param {boolean} extractable - Whether the generated key can be exported (default is false).
- * @returns {Promise<{ key: CryptoKey, salt: Uint8Array, iterations: number }>} 
+ * @returns {Promise<{ key: CryptoKey, salt: Uint8Array, iterations: number }>}
  *          An object containing the derived CryptoKey, the salt used, and the number of iterations.
  */
-async function generateEncryptionKey(secret, salt, iterations, extractable = false) {
-    const generatedKey = await generateKeyWithPBKDF2(
-        secret.trim(),    // Trim the secret to remove unnecessary spaces
-        salt,             // The salt used to generate the key
-        iterations,       // The number of iterations for PBKDF2
-        extractable       // Whether the key can be exported
-    );
-    return generatedKey;  // Return the generated key
+async function generateEncryptionKey(
+  secret,
+  salt,
+  iterations,
+  extractable = false
+) {
+  const generatedKey = await generateKeyWithPBKDF2(
+    secret.trim(), // Trim the secret to remove unnecessary spaces
+    salt, // The salt used to generate the key
+    iterations, // The number of iterations for PBKDF2
+    extractable // Whether the key can be exported
+  );
+  return generatedKey; // Return the generated key
 }
 
 /**
@@ -50,29 +55,31 @@ async function generateEncryptionKey(secret, salt, iterations, extractable = fal
  *        SHA-256 hashing to derive the salt.
  * @returns {Promise<string>} A promise that resolves to the encoded JWK string, prefixed with the algorithm and key length.
  */
-async function generateEncryptionKeyFromMasterKey(secret, iterations, masterKeyIteration = passwordManagerConfig.masterKeyHashIteration) {
-    let salt, generatedKey, exportedKey;
-    try {
-        // Hash the master key using iterative SHA-256 to derive a unique salt
-        salt = (await sha256HashWithIterations(
-            secret.trim(),
-            masterKeyIteration
-        )).hash;
+async function generateEncryptionKeyFromMasterKey(
+  secret,
+  iterations,
+  masterKeyIteration = passwordManagerConfig.masterKeyHashIteration
+) {
+  let salt, generatedKey, exportedKey;
+  try {
+    // Hash the master key using iterative SHA-256 to derive a unique salt
+    salt = (await sha256HashWithIterations(secret.trim(), masterKeyIteration))
+      .hash;
 
-        // Generate the encryption key using PBKDF2 with the derived salt and provided iterations, allowing extraction
-        generatedKey = await generateEncryptionKey(secret, salt, iterations, true);
+    // Generate the encryption key using PBKDF2 with the derived salt and provided iterations, allowing extraction
+    generatedKey = await generateEncryptionKey(secret, salt, iterations, true);
 
-        // Export the generated key to JWK format and encode it as a Base64 string
-        exportedKey = await extractKeyToJwk(generatedKey.key);
-        return `${generatedKey.key.algorithm.name}-${generatedKey.key.algorithm.length}:${btoa(JSON.stringify(exportedKey))}`;
-    } finally {
-        if (salt) {
-            salt.fill(''); // Clear sensitive data
-        }
-        if (generatedKey) {
-            generatedKey = null; // Clear the key reference to free up memory
-        }
+    // Export the generated key to JWK format and encode it as a Base64 string
+    exportedKey = await extractKeyToJwk(generatedKey.key);
+    return `${generatedKey.key.algorithm.name}-${generatedKey.key.algorithm.length}:${btoa(JSON.stringify(exportedKey))}`;
+  } finally {
+    if (salt) {
+      salt.fill(""); // Clear sensitive data
     }
+    if (generatedKey) {
+      generatedKey = null; // Clear the key reference to free up memory
+    }
+  }
 }
 
 /**
@@ -86,19 +93,19 @@ async function generateEncryptionKeyFromMasterKey(secret, iterations, masterKeyI
  * @throws {Error} If the encoded key format is invalid.
  */
 function getJwkFromEncryptionKey(encodedKey) {
-    let parts;
-    try {
-        parts = encodedKey.split(":");
-        if (parts.length > 1) {
-            const jwk = JSON.parse(atob(parts[1]));
-            return jwk;
-        }
-        throw new Error("Invalid key format");
-    } finally {
-        if (parts) {
-            parts.fill(''); // Clear sensitive data
-        }
+  let parts;
+  try {
+    parts = encodedKey.split(":");
+    if (parts.length > 1) {
+      const jwk = JSON.parse(atob(parts[1]));
+      return jwk;
     }
+    throw new Error("Invalid key format");
+  } finally {
+    if (parts) {
+      parts.fill(""); // Clear sensitive data
+    }
+  }
 }
 
 /**
@@ -122,61 +129,82 @@ function getJwkFromEncryptionKey(encodedKey) {
  * @returns {Promise<string>} A promise that resolves to the encrypted data as a Base64 encoded string.
  */
 async function encrypt(encodedKey, data, aad = "") {
-    // Extract the JWK from the encoded key
-    let jwk = getJwkFromEncryptionKey(encodedKey);
+  // Extract the JWK from the encoded key
+  let jwk = getJwkFromEncryptionKey(encodedKey);
 
-    // Generate a random salt and iteration count for final encryption key
-    const saltForFinalKey = generateRandomValues(cryptoConfig.keySaltLengthInBytes);
-    const itr = getRandomIterations();
+  // Generate a random salt and iteration count for final encryption key
+  const saltForFinalKey = generateRandomValues(
+    cryptoConfig.keySaltLengthInBytes
+  );
+  const itr = getRandomIterations();
 
-    // Generate the final encryption key using PBKDF2 with the salt and iteration count multiplier from config
-    const finalEncryptionKey = await generateEncryptionKey(jwk.k, saltForFinalKey, itr * cryptoConfig.defaultMultiplierForFinalKeyIteration, false);
-    jwk = null;  // Clear the JWK reference to free up memory
+  // Generate the final encryption key using PBKDF2 with the salt and iteration count multiplier from config
+  const finalEncryptionKey = await generateEncryptionKey(
+    jwk.k,
+    saltForFinalKey,
+    itr * cryptoConfig.defaultMultiplierForFinalKeyIteration,
+    false
+  );
+  jwk = null; // Clear the JWK reference to free up memory
 
-    // Generate a random initialization vector (IV) for AES-GCM encryption
-    const iv = generateRandomValues(cryptoConfig.aesGcmIvLengthInBytes);
-    if (aad.trim() === "") aad = "";  // If no AAD is provided, set it to an empty string
+  // Generate a random initialization vector (IV) for AES-GCM encryption
+  const iv = generateRandomValues(cryptoConfig.aesGcmIvLengthInBytes);
+  if (aad.trim() === "") {
+    aad = "";
+  } // If no AAD is provided, set it to an empty string
 
-    // Perform AES-GCM encryption with the final encryption key, IV, and AAD
-    const encryptionResult = await encryptWithAesGcm(finalEncryptionKey.key, data, iv, aad);
+  // Perform AES-GCM encryption with the final encryption key, IV, and AAD
+  const encryptionResult = await encryptWithAesGcm(
+    finalEncryptionKey.key,
+    data,
+    iv,
+    aad
+  );
 
-    const currentDate = new Date().toLocaleDateString("en-CA");
-    const encoder = new TextEncoder(); // Create a new TextEncoder instance
-    const encodedDate = encoder.encode(currentDate);
+  const currentDate = new Date().toLocaleDateString("en-CA");
+  const encoder = new TextEncoder(); // Create a new TextEncoder instance
+  const encodedDate = encoder.encode(currentDate);
 
-    // Sizes of different parts
-    const aadLength = cryptoConfig.isAadUsedLengthInBytes;
-    const dateLength = cryptoConfig.currentDateLengthInBytes;
-    const saltLength = cryptoConfig.keySaltLengthInBytes;
-    const ivLength = cryptoConfig.aesGcmIvLengthInBytes;
-    const ciphertextLength = encryptionResult.ciphertext.length;
+  // Sizes of different parts
+  const aadLength = cryptoConfig.isAadUsedLengthInBytes;
+  const dateLength = cryptoConfig.currentDateLengthInBytes;
+  const saltLength = cryptoConfig.keySaltLengthInBytes;
+  const ivLength = cryptoConfig.aesGcmIvLengthInBytes;
+  const ciphertextLength = encryptionResult.ciphertext.length;
 
-    // Total size of the final embedded array
-    const totalLength = aadLength + dateLength + saltLength + ivLength + ciphertextLength + 1;
+  // Total size of the final embedded array
+  const totalLength =
+    aadLength + dateLength + saltLength + ivLength + ciphertextLength + 1;
 
-    // Create the Uint8Array for the embedded output
-    const embeddedOutput = new Uint8Array(totalLength);
+  // Create the Uint8Array for the embedded output
+  const embeddedOutput = new Uint8Array(totalLength);
 
-    // AAD flag (1 byte)
-    const isAadUsedArray = new Uint8Array(1);
-    const isAadUsed = aad === "" ? 0 : 1;
-    isAadUsedArray.set([isAadUsed]);
+  // AAD flag (1 byte)
+  const isAadUsedArray = new Uint8Array(1);
+  const isAadUsed = aad === "" ? 0 : 1;
+  isAadUsedArray.set([isAadUsed]);
 
-    // Final key iterations (1 byte)
-    const finalKeyIterationsArray = new Uint8Array(1);
-    finalKeyIterationsArray.set([itr]); // only works if itr is less than 256
+  // Final key iterations (1 byte)
+  const finalKeyIterationsArray = new Uint8Array(1);
+  finalKeyIterationsArray.set([itr]); // only works if itr is less than 256
 
-    // Embed the data in the following order:
-    // [AAD flag][Current date][Salt][IV][Ciphertext length][Ciphertext][Iteration count]
-    embeddedOutput.set(isAadUsedArray, 0); // AAD usage flag
-    embeddedOutput.set(encodedDate, aadLength); // Current date string
-    embeddedOutput.set(saltForFinalKey, aadLength + dateLength); // Salt for final key
-    embeddedOutput.set(iv, aadLength + dateLength + saltLength); // IV for encryption
-    embeddedOutput.set(encryptionResult.ciphertext, aadLength + dateLength + saltLength + ivLength); // Ciphertext
-    embeddedOutput.set(finalKeyIterationsArray, aadLength + dateLength + saltLength + ivLength + ciphertextLength); // Iteration count
+  // Embed the data in the following order:
+  // [AAD flag][Current date][Salt][IV][Ciphertext length][Ciphertext][Iteration count]
+  embeddedOutput.set(isAadUsedArray, 0); // AAD usage flag
+  embeddedOutput.set(encodedDate, aadLength); // Current date string
+  embeddedOutput.set(saltForFinalKey, aadLength + dateLength); // Salt for final key
+  embeddedOutput.set(iv, aadLength + dateLength + saltLength); // IV for encryption
+  embeddedOutput.set(
+    encryptionResult.ciphertext,
+    aadLength + dateLength + saltLength + ivLength
+  ); // Ciphertext
+  embeddedOutput.set(
+    finalKeyIterationsArray,
+    aadLength + dateLength + saltLength + ivLength + ciphertextLength
+  ); // Iteration count
 
-    // Return the encrypted data in Base64
-    return uint8ArrayToBase64(embeddedOutput);
+  // Return the encrypted data in Base64
+  return uint8ArrayToBase64(embeddedOutput);
 }
 
 /**
@@ -192,24 +220,30 @@ async function encrypt(encodedKey, data, aad = "") {
  * @returns {Promise<String>} A promise that resolves to the decrypted data.
  */
 async function decrypt(encodedKey, base64EncodedData, aad = "") {
-    // Extract the embedded data (AAD flag, date, salt, IV, ciphertext length, ciphertext, iteration count) from the Base64 encoded string
-    const { ciphertext, iv, salt, iterations } = extractEmbeddedData(base64EncodedData);
-    // Extract the JWK from the encoded key
-    let jwk = getJwkFromEncryptionKey(encodedKey);
+  // Extract the embedded data (AAD flag, date, salt, IV, ciphertext length, ciphertext, iteration count) from the Base64 encoded string
+  const { ciphertext, iv, salt, iterations } =
+    extractEmbeddedData(base64EncodedData);
+  // Extract the JWK from the encoded key
+  let jwk = getJwkFromEncryptionKey(encodedKey);
 
-    // Derive the final encryption key using PBKDF2 with the extracted salt and iterations multiplier from config
-    const finalEncryptionKey = await generateEncryptionKey(jwk.k, salt, iterations * cryptoConfig.defaultMultiplierForFinalKeyIteration, false);
-    jwk = null;  // Clear the JWK reference to free up memory
+  // Derive the final encryption key using PBKDF2 with the extracted salt and iterations multiplier from config
+  const finalEncryptionKey = await generateEncryptionKey(
+    jwk.k,
+    salt,
+    iterations * cryptoConfig.defaultMultiplierForFinalKeyIteration,
+    false
+  );
+  jwk = null; // Clear the JWK reference to free up memory
 
-    // Perform AES-GCM decryption with the final encryption key, IV, and AAD
-    const decryptedResult = await decryptWithAesGcm(
-        finalEncryptionKey.key,
-        ciphertext,
-        iv,
-        aad
-    );
+  // Perform AES-GCM decryption with the final encryption key, IV, and AAD
+  const decryptedResult = await decryptWithAesGcm(
+    finalEncryptionKey.key,
+    ciphertext,
+    iv,
+    aad
+  );
 
-    return decryptedResult.decryptedData;
+  return decryptedResult.decryptedData;
 }
 
 /**
@@ -236,46 +270,46 @@ async function decrypt(encodedKey, base64EncodedData, aad = "") {
  *          }
  */
 function extractEmbeddedData(base64Encoded) {
-    // Decode the Base64 string back to a Uint8Array
-    const embeddedData = base64ToUint8Array(base64Encoded);
+  // Decode the Base64 string back to a Uint8Array
+  const embeddedData = base64ToUint8Array(base64Encoded);
 
-    // Get the AAD flag (1 byte)
-    const aadUsed = embeddedData[0] === 1;
+  // Get the AAD flag (1 byte)
+  const aadUsed = embeddedData[0] === 1;
 
-    // Extract the current date (always 10 bytes for YYYY-MM-DD format)
-    const dateStart = 1; // After the AAD flag byte
-    const dateEnd = dateStart + cryptoConfig.currentDateLengthInBytes; // 10 bytes for the date
-    const encodedDate = embeddedData.slice(dateStart, dateEnd);
-    const date = new TextDecoder().decode(encodedDate);
+  // Extract the current date (always 10 bytes for YYYY-MM-DD format)
+  const dateStart = 1; // After the AAD flag byte
+  const dateEnd = dateStart + cryptoConfig.currentDateLengthInBytes; // 10 bytes for the date
+  const encodedDate = embeddedData.slice(dateStart, dateEnd);
+  const date = new TextDecoder().decode(encodedDate);
 
-    // Extract the salt used for final key generation
-    const saltStart = dateEnd;
-    const saltEnd = saltStart + cryptoConfig.keySaltLengthInBytes;
-    const salt = embeddedData.slice(saltStart, saltEnd);
+  // Extract the salt used for final key generation
+  const saltStart = dateEnd;
+  const saltEnd = saltStart + cryptoConfig.keySaltLengthInBytes;
+  const salt = embeddedData.slice(saltStart, saltEnd);
 
-    // Extract the IV (initialization vector)
-    const ivStart = saltEnd;
-    const ivEnd = ivStart + cryptoConfig.aesGcmIvLengthInBytes;
-    const iv = embeddedData.slice(ivStart, ivEnd);
+  // Extract the IV (initialization vector)
+  const ivStart = saltEnd;
+  const ivEnd = ivStart + cryptoConfig.aesGcmIvLengthInBytes;
+  const iv = embeddedData.slice(ivStart, ivEnd);
 
-    // Extract the ciphertext itself
-    const cipherStart = ivEnd;
-    const cipherEnd = embeddedData.length - 1;
-    const ciphertext = embeddedData.slice(cipherStart, cipherEnd);
+  // Extract the ciphertext itself
+  const cipherStart = ivEnd;
+  const cipherEnd = embeddedData.length - 1;
+  const ciphertext = embeddedData.slice(cipherStart, cipherEnd);
 
-    // Extract the final key iteration count (1 byte)
-    const iterationStart = cipherEnd;
-    const iterations = embeddedData[iterationStart];
+  // Extract the final key iteration count (1 byte)
+  const iterationStart = cipherEnd;
+  const iterations = embeddedData[iterationStart];
 
-    // Return an object with all extracted parts
-    return {
-        aadUsed,
-        date,
-        salt,
-        iv,
-        ciphertext,
-        iterations
-    };
+  // Return an object with all extracted parts
+  return {
+    aadUsed,
+    date,
+    salt,
+    iv,
+    ciphertext,
+    iterations
+  };
 }
 
 /**
@@ -296,36 +330,41 @@ function extractEmbeddedData(base64Encoded) {
  * @returns {Promise<string>} A promise that resolves to the signed message in Base64 format.
  */
 async function sign(secret, dataStr) {
-    const jwk = getJwkFromEncryptionKey(secret);
-    const encoder = new TextEncoder();
-    const data = encoder.encode(dataStr);
-    const salt = generateRandomValues(cryptoConfig.keySaltLengthInBytes); // 32 bytes salt
+  const jwk = getJwkFromEncryptionKey(secret);
+  const encoder = new TextEncoder();
+  const data = encoder.encode(dataStr);
+  const salt = generateRandomValues(cryptoConfig.keySaltLengthInBytes); // 32 bytes salt
 
-    const iterations = getRandomIterations();
-    // Derive the signing key using PBKDF2
-    const derivedKey = await generateHmacKeyWithPBKDF2(jwk.k, salt, iterations * cryptoConfig.defaultMultiplierForFinalKeyIteration);
+  const iterations = getRandomIterations();
+  // Derive the signing key using PBKDF2
+  const derivedKey = await generateHmacKeyWithPBKDF2(
+    jwk.k,
+    salt,
+    iterations * cryptoConfig.defaultMultiplierForFinalKeyIteration
+  );
 
-    // Create the HMAC signature
-    const signature = await crypto.subtle.sign(
-        { name: "HMAC", hash: { name: "SHA-256" } },
-        derivedKey.key,
-        data
-    );
-    const signatureArray = new Uint8Array(signature);
+  // Create the HMAC signature
+  const signature = await crypto.subtle.sign(
+    { name: "HMAC", hash: { name: "SHA-256" } },
+    derivedKey.key,
+    data
+  );
+  const signatureArray = new Uint8Array(signature);
 
-    // Combine salt, iteration count, and signature into one message
-    const totalLength = cryptoConfig.keySaltLengthInBytes + 1 + signature.byteLength;
-    const message = new Uint8Array(totalLength);
-    const iterationArray = new Uint8Array(1);
-    iterationArray.set([iterations]);
+  // Combine salt, iteration count, and signature into one message
+  const totalLength =
+    cryptoConfig.keySaltLengthInBytes + 1 + signature.byteLength;
+  const message = new Uint8Array(totalLength);
+  const iterationArray = new Uint8Array(1);
+  iterationArray.set([iterations]);
 
-    // Copy salt, iteration count, and the signature into the message
-    message.set(salt, 0); // Salt at the start
-    message.set(iterationArray, cryptoConfig.keySaltLengthInBytes);
-    message.set(signatureArray, cryptoConfig.keySaltLengthInBytes + 1);
+  // Copy salt, iteration count, and the signature into the message
+  message.set(salt, 0); // Salt at the start
+  message.set(iterationArray, cryptoConfig.keySaltLengthInBytes);
+  message.set(signatureArray, cryptoConfig.keySaltLengthInBytes + 1);
 
-    // Return the message as Base64
-    return uint8ArrayToBase64(message);
+  // Return the message as Base64
+  return uint8ArrayToBase64(message);
 }
 
 /**
@@ -341,37 +380,35 @@ async function sign(secret, dataStr) {
  * @returns {Promise<boolean>} A promise that resolves to `true` if the signature is valid, otherwise `false`.
  */
 async function verify(secret, signedMessageBase64, dataStr) {
-    // Decode the signed message from Base64 into a Uint8Array
-    const jwk = getJwkFromEncryptionKey(secret);
-    const encoder = new TextEncoder();
-    const data = encoder.encode(dataStr);
-    const signedMessage = base64ToUint8Array(signedMessageBase64);
+  // Decode the signed message from Base64 into a Uint8Array
+  const jwk = getJwkFromEncryptionKey(secret);
+  const encoder = new TextEncoder();
+  const data = encoder.encode(dataStr);
+  const signedMessage = base64ToUint8Array(signedMessageBase64);
 
-    // Extract salt (first N bytes as per config)
-    const salt = signedMessage.slice(0, cryptoConfig.keySaltLengthInBytes);
+  // Extract salt (first N bytes as per config)
+  const salt = signedMessage.slice(0, cryptoConfig.keySaltLengthInBytes);
 
-    // Extract iteration count (next 1 byte)
-    const iterations = signedMessage[cryptoConfig.keySaltLengthInBytes];
+  // Extract iteration count (next 1 byte)
+  const iterations = signedMessage[cryptoConfig.keySaltLengthInBytes];
 
-    // Extract the signature (remaining bytes)
-    const signature = signedMessage.slice(cryptoConfig.keySaltLengthInBytes + 1);
+  // Extract the signature (remaining bytes)
+  const signature = signedMessage.slice(cryptoConfig.keySaltLengthInBytes + 1);
 
-    // Derive the key using PBKDF2 from the secret, extracted salt, and iterations multiplier from config
-    const derivedKey = await generateHmacKeyWithPBKDF2(jwk.k, salt, iterations * cryptoConfig.defaultMultiplierForFinalKeyIteration);
+  // Derive the key using PBKDF2 from the secret, extracted salt, and iterations multiplier from config
+  const derivedKey = await generateHmacKeyWithPBKDF2(
+    jwk.k,
+    salt,
+    iterations * cryptoConfig.defaultMultiplierForFinalKeyIteration
+  );
 
-    // Recompute the HMAC using the derived key and the provided data
-    return await crypto.subtle.verify(
-        { name: "HMAC", hash: { name: "SHA-256" } },
-        derivedKey.key,
-        signature,
-        data
-    );
+  // Recompute the HMAC using the derived key and the provided data
+  return await crypto.subtle.verify(
+    { name: "HMAC", hash: { name: "SHA-256" } },
+    derivedKey.key,
+    signature,
+    data
+  );
 }
 
-export {
-    generateEncryptionKeyFromMasterKey,
-    encrypt,
-    decrypt,
-    sign,
-    verify
-};
+export { generateEncryptionKeyFromMasterKey, encrypt, decrypt, sign, verify };

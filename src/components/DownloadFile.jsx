@@ -4,9 +4,10 @@ import PropTypes from "prop-types";
 import passwordManagerConfig from "../config/PasswordManagerConfig";
 
 const DownloadFile = ({ content }) => {
-
   const generateDownloadUrl = () => {
-    const blob = new Blob([content], { type: passwordManagerConfig.fileType[0] });
+    const blob = new Blob([content], {
+      type: passwordManagerConfig.fileType[0]
+    });
     return URL.createObjectURL(blob);
   };
 
@@ -39,7 +40,7 @@ const DownloadFile = ({ content }) => {
 };
 
 DownloadFile.propTypes = {
-  content: PropTypes.string.isRequired,
+  content: PropTypes.string.isRequired
 };
 
 export default DownloadFile;

@@ -5,13 +5,13 @@ import {
   TextField,
   Button,
   Stack,
-  IconButton,
+  IconButton
 } from "@mui/material";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import CheckIcon from "@mui/icons-material/Check";
 import {
   sha256HashWithIterations,
-  uint8ArrayToBase64,
+  uint8ArrayToBase64
 } from "../utils/CryptoUtils";
 
 const ShaHash = () => {
@@ -19,7 +19,7 @@ const ShaHash = () => {
   const [hash, setHash] = useState("");
   const [copied, setCopied] = useState(false);
 
-  const handleHash = async () => {
+  const handleHash = async() => {
     const hashedValue = await sha256HashWithIterations(input, 1);
     setHash(uint8ArrayToBase64(hashedValue.hash));
   };
@@ -57,13 +57,13 @@ const ShaHash = () => {
               flexGrow: 1,
               border: "1px solid rgba(0, 0, 0, 0.23)",
               borderRadius: "4px",
-              padding: "10px",
+              padding: "10px"
             }}
           >
             {hash}
           </Typography>
           <IconButton onClick={handleCopyToClipboard}>
-          {copied ? <CheckIcon /> : <ContentCopyIcon />}
+            {copied ? <CheckIcon /> : <ContentCopyIcon />}
           </IconButton>
         </Stack>
         <Button

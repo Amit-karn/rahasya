@@ -5,12 +5,14 @@ A completely offline, browser-based password manager that prioritizes security a
 ## Key Principles
 
 ### 🔒 Zero Trust & Zero Storage
+
 - **No Storage Service**: Rahasya doesn't store your data anywhere - it only encrypts and gives you the file
 - **Storage Freedom**: Store your encrypted files wherever you want (cloud, local drive, USB)
 - **Complete Control**: You own your data and decide where it lives
 - **Zero Trust**: Works completely offline, no server communication ever
 
 ### 🔐 Core Security Features
+
 - Client-side encryption using AES-GCM
 - Two-level key derivation for enhanced security
 - Optional Additional Authenticated Data (AAD) support
@@ -19,13 +21,16 @@ A completely offline, browser-based password manager that prioritizes security a
 ## Features
 
 ### 🛠️ Key Tools
+
 1. **Password Manager**
+
    - Encrypt and store passwords/credentials
    - Secure file format for credential storage
    - Password strength analysis
    - Two-way file encryption support
 
 2. **Password Generator**
+
    - Configurable password generation
    - Support for various character sets
    - Real-time password strength feedback
@@ -39,10 +44,12 @@ A completely offline, browser-based password manager that prioritizes security a
 ## Getting Started
 
 ### Prerequisites
+
 - Node.js >= 18.0.0
 - npm >= 9.0.0
 
 ### Local Development Setup
+
 ```bash
 # Clone the repository
 git clone https://github.com/Amit-karn/rahasya.git
@@ -58,6 +65,7 @@ npm run dev
 ```
 
 ### Production Build
+
 ```bash
 # Create production build
 npm run build
@@ -69,6 +77,7 @@ npm run preview
 ## How It Works
 
 1. **Encryption**
+
    - Enter your secrets
    - Set a master key
    - Add your secrets
@@ -82,7 +91,9 @@ npm run preview
    - File never leaves your browser
 
 ### Storage Options
+
 You can store your encrypted files:
+
 - On cloud services (Dropbox, Google Drive, iCloud)
 - On local hard drives
 - On USB drives
@@ -94,12 +105,14 @@ You can store your encrypted files:
 ### Password Manager
 
 1. **Setting Up**
+
    - Add a master key (16-32 characters)
    - Select iteration count (higher = more secure but slower)
    - Generate new file or upload existing
 
 2. **Adding Secrets**
-   - Click "Add Secret" button 
+
+   - Click "Add Secret" button
    - Enter secret details
    - Optionally add AAD for extra security
    - Save and download encrypted file
@@ -120,11 +133,13 @@ You can store your encrypted files:
 ## Security Best Practices
 
 1. **Master Key**
+
    - Use strong, unique password
    - Don't reuse master keys
    - Consider higher iteration counts
 
 2. **File Management**
+
    - Keep secure backups of encrypted files
    - Don't share master keys
    - Use AAD when possible
@@ -144,6 +159,7 @@ You can store your encrypted files:
 ## Development Notes
 
 ### Directory Structure
+
 ```
 src/
   ├── components/    # UI components
@@ -154,6 +170,7 @@ src/
 ```
 
 ### Build Configuration
+
 - Uses Vite for fast builds
 - PWA support included
 - ESLint configured
@@ -169,6 +186,7 @@ src/
 - No built-in storage - you control where your data lives
 
 ## License
+
 MIT
 
 ---

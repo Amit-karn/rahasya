@@ -7,7 +7,7 @@ import passwordManagerConfig from "../config/PasswordManagerConfig";
  * @returns {number} The size in megabytes.
  */
 const bytesToMB = (bytes) => {
-    return bytes / (1024 * 1024);
+  return bytes / (1024 * 1024);
 };
 
 /**
@@ -19,8 +19,13 @@ const bytesToMB = (bytes) => {
  * @returns {string} The masked master key, or an empty string if the key is too short.
  */
 const maskMasterKey = (key) => {
-    if (key.length <= 5) return "";
-    return `${key.slice(0, 2)}${"*".repeat(key.length - 5)}${key.slice(-3)}`.slice(0, 20);
+  if (key.length <= 5) {
+    return "";
+  }
+  return `${key.slice(0, 2)}${"*".repeat(key.length - 5)}${key.slice(-3)}`.slice(
+    0,
+    20
+  );
 };
 
 /**
@@ -31,8 +36,10 @@ const maskMasterKey = (key) => {
  * @returns {string} The masked secret.
  */
 const maskSecret = (secret) => {
-    if (secret.length <= 2) return secret;
-    return `${"*".repeat(secret.length - 2)}${secret.slice(-2)}`;
+  if (secret.length <= 2) {
+    return secret;
+  }
+  return `${"*".repeat(secret.length - 2)}${secret.slice(-2)}`;
 };
 
 /**
@@ -58,21 +65,23 @@ const maskSecret = (secret) => {
  * @returns {string} The generated preview content. Returns an empty string if required data is missing.
  */
 const generateFileContentForPreview = (fileContentJson) => {
-    if (
-        !fileContentJson ||
-        !fileContentJson?.secrets ||
-        !fileContentJson?.integrity
-    ) {
-        return "";
-    }
-    const secretKeys = Object.keys(fileContentJson.secrets);
-    const integrityKeys = Object.keys(fileContentJson.integrity);
+  if (
+    !fileContentJson ||
+    !fileContentJson?.secrets ||
+    !fileContentJson?.integrity
+  ) {
+    return "";
+  }
+  const secretKeys = Object.keys(fileContentJson.secrets);
+  const integrityKeys = Object.keys(fileContentJson.integrity);
 
-    return `${passwordManagerConfig.encryptedFileHeader}\n${passwordManagerConfig.encryptedFileIntegrityHeader}\n${secretKeys
-        .map((key) => `${key}: ${fileContentJson.secrets[key]}`)
-        .join("\n")}\n${passwordManagerConfig.encryptedFileIntegritySeparator}\n${integrityKeys
-            .map((key) => `${key}: ${fileContentJson.integrity[key]}`)
-            .join("\n")}\n${passwordManagerConfig.encryptedFileIntegrityFooter}`;
+  return `${passwordManagerConfig.encryptedFileHeader}\n${passwordManagerConfig.encryptedFileIntegrityHeader}\n${secretKeys
+    .map((key) => `${key}: ${fileContentJson.secrets[key]}`)
+    .join(
+      "\n"
+    )}\n${passwordManagerConfig.encryptedFileIntegritySeparator}\n${integrityKeys
+    .map((key) => `${key}: ${fileContentJson.integrity[key]}`)
+    .join("\n")}\n${passwordManagerConfig.encryptedFileIntegrityFooter}`;
 };
 
 /**
@@ -82,13 +91,13 @@ const generateFileContentForPreview = (fileContentJson) => {
  * @returns {boolean} True if the object has no own properties; otherwise false.
  */
 const isEmptyObj = (obj) => {
-    return Object.keys(obj).length === 0;
+  return Object.keys(obj).length === 0;
 };
 
 export {
-    bytesToMB,
-    maskMasterKey,
-    maskSecret,
-    generateFileContentForPreview,
-    isEmptyObj
+  bytesToMB,
+  maskMasterKey,
+  maskSecret,
+  generateFileContentForPreview,
+  isEmptyObj
 };

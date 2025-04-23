@@ -1,10 +1,17 @@
 import PropTypes from "prop-types";
-import { Button, Input, Typography, Stack, IconButton } from "@mui/material";
-import { AddCircleOutline, CloseOutlined } from "@mui/icons-material";
+import { Button, Input } from "@mui/material";
+import { AddCircleOutline } from "@mui/icons-material";
 import passwordManagerConfig from "../config/PasswordManagerConfig";
 import { useRef } from "react";
 
-function FileUpload({ file, handleFileChange, buttonVariant, reset, disabled, isGeneratingFile }) {
+function FileUpload({
+  file,
+  handleFileChange,
+  buttonVariant,
+  reset,
+  disabled,
+  isGeneratingFile
+}) {
   const fileInputRef = useRef(null);
 
   // Ask for confirmation before opening file picker
@@ -42,7 +49,7 @@ function FileUpload({ file, handleFileChange, buttonVariant, reset, disabled, is
       {/* Button to trigger file upload */}
       <label htmlFor="file-upload-input">
         <Button
-          variant={isGeneratingFile ? "outlined": (buttonVariant || "contained")}
+          variant={isGeneratingFile ? "outlined" : buttonVariant || "contained"}
           color="primary"
           startIcon={<AddCircleOutline />}
           component="span"
@@ -98,7 +105,7 @@ FileUpload.propTypes = {
   buttonVariant: PropTypes.oneOf(["outlined", "contained", "text"]),
   reset: PropTypes.func.isRequired,
   disabled: PropTypes.bool.isRequired,
-  isGeneratingFile: PropTypes.bool,
+  isGeneratingFile: PropTypes.bool
 };
 
 export default FileUpload;

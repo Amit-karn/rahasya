@@ -31,7 +31,7 @@ const CryptoTools = () => {
         backgroundSize: "cover",
         backgroundPosition: "center",
         backgroundRepeat: "no-repeat",
-        backgroundAttachment: "fixed",
+        backgroundAttachment: "fixed"
       }}
     >
       <Box
@@ -44,7 +44,7 @@ const CryptoTools = () => {
           position: "sticky",
           top: 0,
           zIndex: 1000,
-          backgroundColor: "white",
+          backgroundColor: "white"
         }}
       >
         <Typography
@@ -57,7 +57,7 @@ const CryptoTools = () => {
             background: "linear-gradient(45deg, #000000 30%, #444444 90%)",
             WebkitBackgroundClip: "text",
             WebkitTextFillColor: "transparent",
-            letterSpacing: "0.05em",
+            letterSpacing: "0.05em"
           }}
         >
           {passwordManagerConfig.rahaysa}
@@ -77,8 +77,8 @@ const CryptoTools = () => {
             transition: "transform 0.2s, box-shadow 0.2s",
             "&:hover": {
               transform: "translateY(-4px)",
-              boxShadow: "0 12px 48px rgba(0, 0, 0, 0.12)",
-            },
+              boxShadow: "0 12px 48px rgba(0, 0, 0, 0.12)"
+            }
           },
           "& .MuiButton-root": {
             background: "#000",
@@ -87,24 +87,24 @@ const CryptoTools = () => {
             textTransform: "none",
             py: 1.5,
             "&:hover": {
-              background: "#222",
-            },
+              background: "#222"
+            }
           },
           "& .MuiTextField-root": {
             "& .MuiOutlinedInput-root": {
               borderRadius: "8px",
               "& fieldset": {
-                borderColor: "rgba(0, 0, 0, 0.1)",
+                borderColor: "rgba(0, 0, 0, 0.1)"
               },
               "&:hover fieldset": {
-                borderColor: "rgba(0, 0, 0, 0.2)",
-              },
-            },
+                borderColor: "rgba(0, 0, 0, 0.2)"
+              }
+            }
           },
           "& .MuiTypography-h6": {
             fontWeight: 600,
-            mb: 3,
-          },
+            mb: 3
+          }
         }}
         direction={{ sm: "column", md: "row" }}
       >

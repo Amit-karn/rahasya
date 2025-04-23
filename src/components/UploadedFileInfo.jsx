@@ -3,7 +3,9 @@ import { CloseOutlined } from "@mui/icons-material";
 import PropTypes from "prop-types";
 
 const UploadedFileInfo = ({ file, onReset }) => {
-  if (!file) return null;
+  if (!file) {
+    return null;
+  }
 
   const displayedName =
     file?.name?.slice(0, 20) + (file?.name?.length > 20 ? "..." : "");
@@ -22,7 +24,7 @@ const UploadedFileInfo = ({ file, onReset }) => {
           maxWidth: "200px",
           overflow: "hidden",
           textOverflow: "ellipsis",
-          whiteSpace: "nowrap",
+          whiteSpace: "nowrap"
         }}
       >
         {displayedName}
@@ -33,8 +35,8 @@ const UploadedFileInfo = ({ file, onReset }) => {
         sx={{
           padding: "2px",
           "&:hover": {
-            backgroundColor: "rgba(0, 0, 0, 0.04)",
-          },
+            backgroundColor: "rgba(0, 0, 0, 0.04)"
+          }
         }}
       >
         <CloseOutlined sx={{ fontSize: "0.875rem" }} />
@@ -45,7 +47,7 @@ const UploadedFileInfo = ({ file, onReset }) => {
 
 UploadedFileInfo.propTypes = {
   file: PropTypes.object,
-  onReset: PropTypes.func.isRequired,
+  onReset: PropTypes.func.isRequired
 };
 
 export default UploadedFileInfo;

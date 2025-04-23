@@ -1,6 +1,10 @@
-import { Container, Stack, Button, Typography, IconButton, Box } from "@mui/material";
+import { Container, Stack, Typography, IconButton } from "@mui/material";
 import { Close } from "@mui/icons-material";
-import { generateFileContentForPreview, isEmptyObj, maskMasterKey } from "../utils/DataUtils";
+import {
+  generateFileContentForPreview,
+  isEmptyObj,
+  maskMasterKey
+} from "../utils/DataUtils";
 import PropTypes from "prop-types";
 import TopHeader from "./TopHeader";
 import DownloadFile from "./DownloadFile";
@@ -21,14 +25,14 @@ export const BaseLayout = ({
         padding: {
           xs: 2,
           sm: 3,
-          md: 4,
+          md: 4
         },
         width: "90%",
-        margin: "0 auto",
+        margin: "0 auto"
       }}
     >
       {/* Top Header */}
-      <TopHeader mode={mode}/>
+      <TopHeader mode={mode} />
 
       {/* Header Actions and Main Actions */}
       <Stack
@@ -80,7 +84,7 @@ BaseLayout.propTypes = {
   headerActions: PropTypes.node, // Actions to display in the header
   mainActions: PropTypes.node, // Main actions to display
   fileData: PropTypes.shape({
-    secrets: PropTypes.object, // Secrets object in fileData
+    secrets: PropTypes.object // Secrets object in fileData
   }), // File data to be used in the layout
-  mode: PropTypes.oneOf(["encrypt", "decrypt"]).isRequired, // Mode of the layout (encrypt or decrypt)
-}
+  mode: PropTypes.oneOf(["encrypt", "decrypt"]).isRequired // Mode of the layout (encrypt or decrypt)
+};
