@@ -12,14 +12,14 @@ import {
   ToggleButton,
   ToggleButtonGroup,
   IconButton,
-  InputAdornment,
+  InputAdornment
 } from "@mui/material";
 import ErrorIcon from "@mui/icons-material/Error";
 import { Delete, Visibility, VisibilityOff } from "@mui/icons-material";
 import {
   generateEncryptionKeyFromMasterKey,
   encrypt,
-  decrypt,
+  decrypt
 } from "../utils/CredLockerUtils";
 import passwordManagerConfig from "../config/PasswordManagerConfig";
 import PasswordFeedback from "./PasswordFeedback";
@@ -67,7 +67,7 @@ const FileEncryptor = () => {
     }
   };
 
-  const encryptFile = async () => {
+  const encryptFile = async() => {
     if (!file || !secret) {
       setError("Please select a file and enter a secret key");
       return;
@@ -98,12 +98,12 @@ const FileEncryptor = () => {
       const fileMetadata = {
         filename: file.name,
         type: file.type,
-        data: encryptedBase64,
+        data: encryptedBase64
       };
 
       // Create and download encrypted file
       const blob = new Blob([JSON.stringify(fileMetadata)], {
-        type: "application/json",
+        type: "application/json"
       });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -123,7 +123,7 @@ const FileEncryptor = () => {
     }
   };
 
-  const decryptFile = async (e) => {
+  const decryptFile = async(e) => {
     e.preventDefault();
 
     if (!file || !secret) {
@@ -152,10 +152,10 @@ const FileEncryptor = () => {
       // Use the decrypt function from CredLockerUtils.
       const decryptedStr = await decrypt(encodedKey, fileMetadata.data, "");
       encodedKey = null; // Clear the key from memory
-      
+
       // Create a blob from the decrypted string
       const blob = new Blob([convertStringToArrayBuffer(decryptedStr)], {
-        type: fileMetadata.type,
+        type: fileMetadata.type
       });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -175,7 +175,7 @@ const FileEncryptor = () => {
     }
   };
 
-  const handleFileChange = async (e) => {
+  const handleFileChange = async(e) => {
     const selectedFile = e.target.files[0];
     if (selectedFile) {
       setFile(selectedFile);
@@ -259,18 +259,17 @@ const FileEncryptor = () => {
                     {showPassword ? <Visibility /> : <VisibilityOff />}
                   </IconButton>
                 </InputAdornment>
-              ),
-            },
+              )
+            }
           }}
         />
 
-        {secret && operation !== "decrypt" && 
+        {secret &&
+          operation !== "decrypt" &&
           secret.length >= passwordManagerConfig.masterKeyMinLength &&
           secret.length <= passwordManagerConfig.masterKeyMaxLength && (
-            <PasswordFeedback
-              password={secret}
-            />
-          )}
+          <PasswordFeedback password={secret} />
+        )}
 
         {operation === "decrypt" ? (
           <Button

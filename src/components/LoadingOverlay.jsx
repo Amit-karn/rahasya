@@ -18,7 +18,7 @@ function LoadingOverlay({ open }) {
 }
 
 LoadingOverlay.propTypes = {
-  open: PropTypes.bool.isRequired,
+  open: PropTypes.bool.isRequired
 };
 
 export default LoadingOverlay;

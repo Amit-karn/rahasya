@@ -15,16 +15,16 @@ const iterations = 1000000; // From config
 ```js
 // Generate salt from master password using SHA-256
 const salt = await sha256HashWithIterations(
-    masterPassword.trim(), 
-    masterKeyIteration
+  masterPassword.trim(),
+  masterKeyIteration,
 );
 
 // Generate initial key using PBKDF2
 const initialKey = await generateKeyWithPBKDF2(
-    masterPassword,
-    salt,
-    iterations,
-    true  // extractable
+  masterPassword,
+  salt,
+  iterations,
+  true, // extractable
 );
 
 // Export to JWK format
@@ -44,14 +44,15 @@ const iterationCount = getRandomIterations(); // 1-10
 
 // Generate final encryption key
 const finalKey = await generateKeyWithPBKDF2(
-    jwk.k,
-    saltForFinalKey,
-    iterationCount * 1000000, // multiplier from config
-    false  // non-extractable
+  jwk.k,
+  saltForFinalKey,
+  iterationCount * 1000000, // multiplier from config
+  false, // non-extractable
 );
 ```
 
 Data Encryption Process
+
 1. Prepare for Encryption
 
 ```js
@@ -67,12 +68,7 @@ const iv = generateRandomValues(12); // 12 bytes
 
 ```js
 // Encrypt using AES-GCM
-const encryptedResult = await encryptWithAesGcm(
-    finalKey,
-    data,
-    iv,
-    aad
-);
+const encryptedResult = await encryptWithAesGcm(finalKey, data, iv, aad);
 ```
 
 3. Create Embedded Format
@@ -81,28 +77,30 @@ const encryptedResult = await encryptWithAesGcm(
 // Embedded data format:
 // [AAD flag (1)][Date (10)][Salt (32)][IV (12)][CT][Iter (1)]
 const embeddedOutput = new Uint8Array([
-    aad ? 1 : 0,                // AAD flag
-    ...currentDateBytes,        // YYYY-MM-DD
-    ...saltForFinalKey,        // Salt used
-    ...iv,                     // IV used
-    ...encryptedResult,        // Encrypted data
-    iterationCount            // Iterations used
+  aad ? 1 : 0, // AAD flag
+  ...currentDateBytes, // YYYY-MM-DD
+  ...saltForFinalKey, // Salt used
+  ...iv, // IV used
+  ...encryptedResult, // Encrypted data
+  iterationCount, // Iterations used
 ]);
 
 // Convert to Base64
 const finalOutput = uint8ArrayToBase64(embeddedOutput);
 ```
+
 Data Decryption Process
+
 1. Extract Embedded Data
 
 ```js
 const {
-    aadUsed,        // Boolean
-    date,           // YYYY-MM-DD
-    salt,           // Uint8Array
-    iv,             // Uint8Array
-    ciphertext,     // Uint8Array
-    iterations      // Number
+  aadUsed, // Boolean
+  date, // YYYY-MM-DD
+  salt, // Uint8Array
+  iv, // Uint8Array
+  ciphertext, // Uint8Array
+  iterations, // Number
 } = extractEmbeddedData(base64EncodedData);
 ```
 
@@ -111,19 +109,14 @@ const {
 ```js
 // Derive final decryption key
 const finalKey = await generateKeyWithPBKDF2(
-    jwk.k,
-    salt,
-    iterations * 1000000,
-    false
+  jwk.k,
+  salt,
+  iterations * 1000000,
+  false,
 );
 
 // Decrypt data
-const decrypted = await decryptWithAesGcm(
-    finalKey,
-    ciphertext,
-    iv,
-    aad
-);
+const decrypted = await decryptWithAesGcm(finalKey, ciphertext, iv, aad);
 ```
 
 Example Usage
@@ -135,10 +128,7 @@ const data = "Secret message";
 const aad = "additional data";
 
 // Generate master key
-const encodedKey = await generateEncryptionKeyFromMasterKey(
-    masterKey, 
-    1000000
-);
+const encodedKey = await generateEncryptionKeyFromMasterKey(masterKey, 1000000);
 
 // Encrypt data
 const encrypted = await encrypt(encodedKey, data, aad);
@@ -147,7 +137,9 @@ const encrypted = await encrypt(encodedKey, data, aad);
 const decrypted = await decrypt(encodedKey, encrypted, aad);
 // Result: "Secret message"
 ```
+
 Security Notes
+
 1. Uses multiple key derivation steps for added security
 2. Embeds all necessary values except master password
 3. Supports Additional Authenticated Data (AAD)

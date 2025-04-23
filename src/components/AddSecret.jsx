@@ -11,7 +11,7 @@ import {
   IconButton,
   InputAdornment,
   Typography,
-  CircularProgress,
+  CircularProgress
 } from "@mui/material";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 import PropTypes from "prop-types";
@@ -24,7 +24,7 @@ const initialState = {
   secretDetails: {
     keyName: "",
     secretValue: "",
-    additionalData: "", // Additional authenticated data (AAD)
+    additionalData: "" // Additional authenticated data (AAD)
   },
   isAADVisible: false,
   keyNameError: "",
@@ -40,51 +40,51 @@ const initialState = {
     algorithm: "",
     masterKey: "",
     additionalData: "",
-    encryptedSecret: "",
+    encryptedSecret: ""
   },
   isEncrypting: false,
-  isAddingSecret: false,
+  isAddingSecret: false
 };
 
 function addSecretReducer(state, action) {
   switch (action.type) {
-    case "SET_SECRET_DETAILS":
-      return {
-        ...state,
-        secretDetails: { ...state.secretDetails, ...action.payload },
-      };
-    case "SET_KEY_NAME_ERROR":
-      return { ...state, keyNameError: action.payload };
-    case "SET_SECRET_VALUE_ERROR":
-      return { ...state, secretValueError: action.payload };
-    case "SET_ADDITIONAL_DATA_ERROR":
-      return { ...state, additionalDataError: action.payload };
-    case "TOGGLE_AAD_ENABLED":
-      return { ...state, isAADEnabled: !state.isAADEnabled };
-    case "TOGGLE_AAD_VISIBILITY":
-      return { ...state, isAADVisible: !state.isAADVisible };
-    case "TOGGLE_SECRET_VISIBILITY":
-      return { ...state, isSecretVisible: !state.isSecretVisible };
-    case "TOGGLE_CONFIRMATION_SECRET_VISIBILITY":
-      return {
-        ...state,
-        isConfirmationSecretVisible: !state.isConfirmationSecretVisible,
-      };
-    case "SET_ENCRYPTION_RESULT":
-      return { ...state, encryptionResult: action.payload };
-    case "SET_IS_ENCRYPTING":
-      return { ...state, isEncrypting: action.payload };
-    case "TOGGLE_CONFIRMATION_DIALOG":
-      return {
-        ...state,
-        isConfirmationDialogVisible: !state.isConfirmationDialogVisible,
-      };
-    case "SET_IS_ADDING_SECRET":
-      return { ...state, isAddingSecret: action.payload };
-    case "RESET_STATE":
-      return initialState;
-    default:
-      return state;
+  case "SET_SECRET_DETAILS":
+    return {
+      ...state,
+      secretDetails: { ...state.secretDetails, ...action.payload }
+    };
+  case "SET_KEY_NAME_ERROR":
+    return { ...state, keyNameError: action.payload };
+  case "SET_SECRET_VALUE_ERROR":
+    return { ...state, secretValueError: action.payload };
+  case "SET_ADDITIONAL_DATA_ERROR":
+    return { ...state, additionalDataError: action.payload };
+  case "TOGGLE_AAD_ENABLED":
+    return { ...state, isAADEnabled: !state.isAADEnabled };
+  case "TOGGLE_AAD_VISIBILITY":
+    return { ...state, isAADVisible: !state.isAADVisible };
+  case "TOGGLE_SECRET_VISIBILITY":
+    return { ...state, isSecretVisible: !state.isSecretVisible };
+  case "TOGGLE_CONFIRMATION_SECRET_VISIBILITY":
+    return {
+      ...state,
+      isConfirmationSecretVisible: !state.isConfirmationSecretVisible
+    };
+  case "SET_ENCRYPTION_RESULT":
+    return { ...state, encryptionResult: action.payload };
+  case "SET_IS_ENCRYPTING":
+    return { ...state, isEncrypting: action.payload };
+  case "TOGGLE_CONFIRMATION_DIALOG":
+    return {
+      ...state,
+      isConfirmationDialogVisible: !state.isConfirmationDialogVisible
+    };
+  case "SET_IS_ADDING_SECRET":
+    return { ...state, isAddingSecret: action.payload };
+  case "RESET_STATE":
+    return initialState;
+  default:
+    return state;
   }
 }
 
@@ -95,7 +95,7 @@ const AddSecret = ({
   masterKey,
   addToSecretsList,
   existingSecrets,
-  resetParentState,
+  resetParentState
 }) => {
   const [state, dispatch] = useReducer(addSecretReducer, initialState);
 
@@ -111,7 +111,7 @@ const AddSecret = ({
     isConfirmationSecretVisible,
     encryptionResult,
     isEncrypting,
-    isAddingSecret,
+    isAddingSecret
   } = state;
 
   // Add state sanitization
@@ -132,7 +132,7 @@ const AddSecret = ({
       if (existingSecrets.includes(value)) {
         dispatch({
           type: "SET_KEY_NAME_ERROR",
-          payload: "Key: A secret with this key name already exists.",
+          payload: "Key: A secret with this key name already exists."
         });
       } else {
         dispatch({ type: "SET_KEY_NAME_ERROR", payload: "" });
@@ -144,7 +144,7 @@ const AddSecret = ({
       ) {
         dispatch({
           type: "SET_SECRET_VALUE_ERROR",
-          payload: `Secret: It should be between ${passwordManagerConfig.secretMinLength} and ${passwordManagerConfig.secretMaxLength} characters.`,
+          payload: `Secret: It should be between ${passwordManagerConfig.secretMinLength} and ${passwordManagerConfig.secretMaxLength} characters.`
         });
       } else {
         dispatch({ type: "SET_SECRET_VALUE_ERROR", payload: "" });
@@ -156,7 +156,7 @@ const AddSecret = ({
       ) {
         dispatch({
           type: "SET_ADDITIONAL_DATA_ERROR",
-          payload: `AAD: The length should be between ${passwordManagerConfig.aadMinLength} and ${passwordManagerConfig.aadMaxLength} characters.`,
+          payload: `AAD: The length should be between ${passwordManagerConfig.aadMinLength} and ${passwordManagerConfig.aadMaxLength} characters.`
         });
       } else {
         dispatch({ type: "SET_ADDITIONAL_DATA_ERROR", payload: "" });
@@ -165,7 +165,7 @@ const AddSecret = ({
     dispatch({ type: "SET_SECRET_DETAILS", payload: { [name]: value } });
   };
 
-  const handleEncrypt = async () => {
+  const handleEncrypt = async() => {
     dispatch({ type: "SET_IS_ENCRYPTING", payload: true });
     const encryptedOutput = await encrypt(
       masterKey,
@@ -180,14 +180,14 @@ const AddSecret = ({
         algorithm: algorithm,
         masterKey: masterKey,
         additionalData: secretDetails.additionalData,
-        encryptedSecret: encryptedOutput,
-      },
+        encryptedSecret: encryptedOutput
+      }
     });
     dispatch({ type: "SET_IS_ENCRYPTING", payload: false });
     dispatch({ type: "TOGGLE_CONFIRMATION_DIALOG" });
   };
 
-  const handleConfirmEncryptAndAdd = async () => {
+  const handleConfirmEncryptAndAdd = async() => {
     dispatch({ type: "SET_IS_ADDING_SECRET", payload: true });
     await addToSecretsList(
       encryptionResult.keyName,
@@ -277,8 +277,8 @@ const AddSecret = ({
                       {isSecretVisible ? <Visibility /> : <VisibilityOff />}
                     </IconButton>
                   </InputAdornment>
-                ),
-              },
+                )
+              }
             }}
           />
           {/* Password Feedback */}
@@ -297,8 +297,8 @@ const AddSecret = ({
             value={maskMasterKey(masterKey)}
             slotProps={{
               input: {
-                readOnly: true,
-              },
+                readOnly: true
+              }
             }}
           />
           {/* Algorithm Input */}
@@ -312,8 +312,8 @@ const AddSecret = ({
             value={algorithm}
             slotProps={{
               input: {
-                readOnly: true,
-              },
+                readOnly: true
+              }
             }}
           />
           {/* AAD Checkbox */}
@@ -366,8 +366,8 @@ const AddSecret = ({
                         {isAADVisible ? <Visibility /> : <VisibilityOff />}
                       </IconButton>
                     </InputAdornment>
-                  ),
-                },
+                  )
+                }
               }}
             />
           )}
@@ -400,7 +400,7 @@ const AddSecret = ({
             display: "flex",
             flexDirection: "column",
             gap: 1,
-            wordBreak: "break-word",
+            wordBreak: "break-word"
           }}
         >
           <Typography variant="body1">
@@ -428,7 +428,7 @@ const AddSecret = ({
           <Typography
             variant="body1"
             sx={{
-              wordWrap: "break-word",
+              wordWrap: "break-word"
             }}
           >
             <strong>Master Key:</strong>{" "}
@@ -476,7 +476,7 @@ AddSecret.propTypes = {
   masterKey: PropTypes.string.isRequired,
   addToSecretsList: PropTypes.func.isRequired,
   existingSecrets: PropTypes.array.isRequired,
-  resetParentState: PropTypes.func.isRequired,
+  resetParentState: PropTypes.func.isRequired
 };
 
 export default AddSecret;

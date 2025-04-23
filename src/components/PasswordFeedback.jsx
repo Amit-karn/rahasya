@@ -1,15 +1,32 @@
 import React, { useState } from "react";
 import PropTypes from "prop-types";
 import { Typography, Button, Collapse, Box, Stack, Chip } from "@mui/material";
-import { Warning, Info, HardwareOutlined, Check, Close, KeyboardArrowUp, KeyboardArrowDown } from "@mui/icons-material";
+import {
+  Warning,
+  Info,
+  HardwareOutlined,
+  Check,
+  Close,
+  KeyboardArrowUp,
+  KeyboardArrowDown
+} from "@mui/icons-material";
 import { checkPasswordStrength } from "../utils/PasswordStrengthUtils";
 
-const FeedbackSection = ({ title, items, icon: Icon, color, isOpen, onToggle }) => (
-  <Box sx={{ 
-    borderColor: `${color}.light`,
-    borderRadius: 1,
-    overflow: "hidden"
-  }}>
+const FeedbackSection = ({
+  title,
+  items,
+  icon: Icon,
+  color,
+  isOpen,
+  onToggle
+}) => (
+  <Box
+    sx={{
+      borderColor: `${color}.light`,
+      borderRadius: 1,
+      overflow: "hidden"
+    }}
+  >
     <Button
       fullWidth
       variant="outlined"
@@ -61,12 +78,12 @@ const PasswordFeedback = ({ password }) => {
   });
 
   // Calculate strength and feedback on each render
-  const { strength, warning, suggestions, passwordCrackDetails } = password ? 
-    checkPasswordStrength(password) : 
-    { strength: "", warning: [], suggestions: [], passwordCrackDetails: [] };
+  const { strength, warning, suggestions, passwordCrackDetails } = password
+    ? checkPasswordStrength(password)
+    : { strength: "", warning: [], suggestions: [], passwordCrackDetails: [] };
 
   const toggleSection = (section) => {
-    setOpenSections(prev => ({
+    setOpenSections((prev) => ({
       ...prev,
       [section]: !prev[section]
     }));
@@ -81,7 +98,9 @@ const PasswordFeedback = ({ password }) => {
     return styles[strength.toLowerCase()] || { color: "default", icon: null };
   };
 
-  if (!password) return null;
+  if (!password) {
+    return null;
+  }
 
   const strengthStyle = getPasswordStrengthColor(strength);
 
@@ -131,19 +150,21 @@ const PasswordFeedback = ({ password }) => {
       )}
 
       <Stack spacing={1}>
-        {feedbackSections.map(section => (
-          Array.isArray(section.items) && section.items.length > 0 && (
-            <FeedbackSection
-              key={section.id}
-              title={section.title}
-              items={section.items}
-              icon={section.icon}
-              color={section.color}
-              isOpen={section.isOpen}
-              onToggle={() => toggleSection(section.id)}
-            />
-          )
-        ))}
+        {feedbackSections.map(
+          (section) =>
+            Array.isArray(section.items) &&
+            section.items.length > 0 && (
+              <FeedbackSection
+                key={section.id}
+                title={section.title}
+                items={section.items}
+                icon={section.icon}
+                color={section.color}
+                isOpen={section.isOpen}
+                onToggle={() => toggleSection(section.id)}
+              />
+            )
+        )}
       </Stack>
     </Box>
   );

@@ -14,13 +14,13 @@ import {
   FormControl,
   InputLabel,
   Select,
-  MenuItem,
+  MenuItem
 } from "@mui/material";
 import {
   Visibility,
   VisibilityOff,
   ArrowDropDownTwoTone,
-  ArrowDropUpTwoTone,
+  ArrowDropUpTwoTone
 } from "@mui/icons-material";
 import { maskMasterKey } from "../utils/DataUtils";
 import passwordManagerConfig from "../config/PasswordManagerConfig";
@@ -34,35 +34,35 @@ const initialState = {
   isEncryptionKeyVisible: false, // Toggles visibility of the encryption key
   inputError: "", // Error message for invalid input
   isIterationsDropdownVisible: false, // Toggles visibility of the iterations dropdown
-  iterationsCount: passwordManagerConfig.masterKeyDefaultIteraion, // Default iteration count
+  iterationsCount: passwordManagerConfig.masterKeyDefaultIteraion // Default iteration count
 };
 
 const masterKeyReducer = (state, action) => {
   switch (action.type) {
-    case "SET_MASTER_KEY_INPUT":
-      return { ...state, masterKeyInput: action.payload };
-    case "SET_IS_KEY_BEING_GENERATED":
-      return { ...state, isKeyBeingGenerated: action.payload };
-    case "TOGGLE_MASTER_KEY_VISIBILITY":
-      return { ...state, isMasterKeyVisible: !state.isMasterKeyVisible };
-    case "TOGGLE_ENCRYPTION_KEY_VISIBILITY":
-      return {
-        ...state,
-        isEncryptionKeyVisible: !state.isEncryptionKeyVisible,
-      };
-    case "SET_INPUT_ERROR":
-      return { ...state, inputError: action.payload };
-    case "TOGGLE_ITERATIONS_DROPDOWN":
-      return {
-        ...state,
-        isIterationsDropdownVisible: !state.isIterationsDropdownVisible,
-      };
-    case "SET_ITERATIONS_COUNT":
-      return { ...state, iterationsCount: action.payload };
-    case "RESET_STATE":
-      return initialState;
-    default:
-      return state;
+  case "SET_MASTER_KEY_INPUT":
+    return { ...state, masterKeyInput: action.payload };
+  case "SET_IS_KEY_BEING_GENERATED":
+    return { ...state, isKeyBeingGenerated: action.payload };
+  case "TOGGLE_MASTER_KEY_VISIBILITY":
+    return { ...state, isMasterKeyVisible: !state.isMasterKeyVisible };
+  case "TOGGLE_ENCRYPTION_KEY_VISIBILITY":
+    return {
+      ...state,
+      isEncryptionKeyVisible: !state.isEncryptionKeyVisible
+    };
+  case "SET_INPUT_ERROR":
+    return { ...state, inputError: action.payload };
+  case "TOGGLE_ITERATIONS_DROPDOWN":
+    return {
+      ...state,
+      isIterationsDropdownVisible: !state.isIterationsDropdownVisible
+    };
+  case "SET_ITERATIONS_COUNT":
+    return { ...state, iterationsCount: action.payload };
+  case "RESET_STATE":
+    return initialState;
+  default:
+    return state;
   }
 };
 
@@ -71,7 +71,7 @@ const AddMasterKey = ({
   setMasterKey,
   openMasterKeyDialog,
   setOpenMasterKeyDialog,
-  setStatusBar,
+  setStatusBar
 }) => {
   const [state, dispatch] = useReducer(masterKeyReducer, initialState);
 
@@ -82,7 +82,7 @@ const AddMasterKey = ({
     isEncryptionKeyVisible,
     inputError,
     isIterationsDropdownVisible,
-    iterationsCount,
+    iterationsCount
   } = state;
 
   // Add state sanitization
@@ -97,14 +97,14 @@ const AddMasterKey = ({
     setOpenMasterKeyDialog(false);
   };
 
-  const generateMasterKey = async () => {
+  const generateMasterKey = async() => {
     if (
       masterKeyInput.length < passwordManagerConfig.masterKeyMinLength ||
       masterKeyInput.length > passwordManagerConfig.masterKeyMaxLength
     ) {
       dispatch({
         type: "SET_INPUT_ERROR",
-        payload: `Master key length must be between ${passwordManagerConfig.masterKeyMinLength} and ${passwordManagerConfig.masterKeyMaxLength} characters.`,
+        payload: `Master key length must be between ${passwordManagerConfig.masterKeyMinLength} and ${passwordManagerConfig.masterKeyMaxLength} characters.`
       });
       return;
     }
@@ -154,7 +154,7 @@ const AddMasterKey = ({
             <Typography
               variant="body1"
               sx={{
-                wordWrap: "break-word",
+                wordWrap: "break-word"
               }}
             >
               <strong>Master Key: </strong>
@@ -192,7 +192,7 @@ const AddMasterKey = ({
             } else {
               dispatch({
                 type: "SET_INPUT_ERROR",
-                payload: `Master key length must be between ${passwordManagerConfig.masterKeyMinLength} and ${passwordManagerConfig.masterKeyMaxLength} characters.`,
+                payload: `Master key length must be between ${passwordManagerConfig.masterKeyMinLength} and ${passwordManagerConfig.masterKeyMaxLength} characters.`
               });
             }
           }}
@@ -212,14 +212,14 @@ const AddMasterKey = ({
                     {isMasterKeyVisible ? <Visibility /> : <VisibilityOff />}
                   </IconButton>
                 </InputAdornment>
-              ),
-            },
+              )
+            }
           }}
         />
         {masterKeyInput.length >= passwordManagerConfig.masterKeyMinLength &&
           masterKeyInput.length <= passwordManagerConfig.masterKeyMaxLength && (
-            <PasswordFeedback password={masterKeyInput} />
-          )}
+          <PasswordFeedback password={masterKeyInput} />
+        )}
         {isKeyBeingGenerated && (
           <Typography variant="body2" color="info">
             Key generation might take a minute or two. Please wait...
@@ -244,7 +244,7 @@ const AddMasterKey = ({
               onChange={(e) =>
                 dispatch({
                   type: "SET_ITERATIONS_COUNT",
-                  payload: e.target.value,
+                  payload: e.target.value
                 })
               }
               label="Iterations"
@@ -285,7 +285,7 @@ AddMasterKey.propTypes = {
   setMasterKey: PropTypes.func.isRequired,
   openMasterKeyDialog: PropTypes.bool.isRequired,
   setOpenMasterKeyDialog: PropTypes.func.isRequired,
-  setStatusBar: PropTypes.func.isRequired,
+  setStatusBar: PropTypes.func.isRequired
 };
 
 export default AddMasterKey;

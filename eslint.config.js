@@ -1,38 +1,61 @@
-import js from '@eslint/js'
-import globals from 'globals'
-import react from 'eslint-plugin-react'
-import reactHooks from 'eslint-plugin-react-hooks'
-import reactRefresh from 'eslint-plugin-react-refresh'
+import js from "@eslint/js";
+import globals from "globals";
+import pluginReact from "eslint-plugin-react";
+import { defineConfig } from "eslint/config";
 
-export default [
-  { ignores: ['dist'] },
+export default defineConfig([
+  // ESLint recommended rules
   {
-    files: ['**/*.{js,jsx}'],
-    languageOptions: {
-      ecmaVersion: 2020,
-      globals: globals.browser,
-      parserOptions: {
-        ecmaVersion: 'latest',
-        ecmaFeatures: { jsx: true },
-        sourceType: 'module',
-      },
-    },
-    settings: { react: { version: '18.3' } },
-    plugins: {
-      react,
-      'react-hooks': reactHooks,
-      'react-refresh': reactRefresh,
-    },
-    rules: {
-      ...js.configs.recommended.rules,
-      ...react.configs.recommended.rules,
-      ...react.configs['jsx-runtime'].rules,
-      ...reactHooks.configs.recommended.rules,
-      'react/jsx-no-target-blank': 'off',
-      'react-refresh/only-export-components': [
-        'warn',
-        { allowConstantExport: true },
-      ],
-    },
+    files: ["**/*.{js,mjs,cjs,jsx}"],
+    plugins: { js },
+    extends: ["js/recommended"]
   },
-]
+
+  // Enable browser environment
+  {
+    files: ["**/*.{js,mjs,cjs,jsx}"],
+    languageOptions: {
+      globals: globals.browser,
+      ecmaVersion: "latest",
+      sourceType: "module"
+    }
+  },
+
+  // React rules
+  {
+    ...pluginReact.configs.flat.recommended,
+    files: ["**/*.{js,jsx}"],
+    settings: {
+      react: {
+        version: "detect"
+      }
+    }
+  },
+
+  // Your custom rules
+  {
+    files: ["**/*.{js,jsx}"],
+    rules: {
+      // Code style rules
+      quotes: ["error", "double"],
+      semi: ["error", "always"],
+      indent: ["error", 2],
+      "no-trailing-spaces": "error",
+      "comma-dangle": ["error", "never"],
+      eqeqeq: ["error", "always"],
+      "no-var": "error",
+      "prefer-const": "error",
+      curly: "error",
+      "object-curly-spacing": ["error", "always"],
+      "arrow-spacing": ["error", { before: true, after: true }],
+      "key-spacing": ["error", { beforeColon: false, afterColon: true }],
+      "space-before-function-paren": ["error", "never"],
+
+      // React specific override
+      "react/react-in-jsx-scope": "off",
+
+      // Unused variable rule
+      "no-unused-vars": ["warn", { argsIgnorePattern: "^_" }]
+    }
+  }
+]);

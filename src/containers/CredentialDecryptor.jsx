@@ -15,7 +15,7 @@ import { generateFileContentForPreview, isEmptyObj } from "../utils/DataUtils";
 import {
   validateFileTypeAndSize,
   processAndDisplayUploadedFile,
-  handleFileUpload,
+  handleFileUpload
 } from "../utils/FileUtils";
 import UploadedFileInfo from "../components/UploadedFileInfo";
 import { validateSecurityRequirements } from "../utils/SecurityUtils";
@@ -24,7 +24,7 @@ const initialState = {
   file: null, // The uploaded file object
   fileData: {
     secrets: {}, // Stores secrets read from file
-    integrity: {}, // Stores integrity data
+    integrity: {} // Stores integrity data
   },
   masterKey: null, // The master key for decryption
   isMasterKeyDialogOpen: false, // Controls visibility of Add/Update Master Key dialog
@@ -34,50 +34,50 @@ const initialState = {
   isLoading: false, // Controls visibility of the loading overlay
   isStatusBarVisible: false, // Controls visibility of the status bar
   statusBarError: false, // Indicates error state for status bar
-  statusBarMessage: "", // Message to display in the status bar
+  statusBarMessage: "" // Message to display in the status bar
 };
 
 function credentialDecryptorReducer(state, action) {
   switch (action.type) {
-    case "SET_FILE":
-      return { ...state, file: action.payload };
-    case "SET_FILE_DATA":
-      return { ...state, fileData: action.payload };
-    case "SET_MASTER_KEY":
-      return { ...state, masterKey: action.payload };
-    case "TOGGLE_MASTER_KEY_DIALOG":
-      return { ...state, isMasterKeyDialogOpen: action.payload };
-    case "SHOW_MESSAGE_DIALOG":
-      return {
-        ...state,
-        isMessageDialogOpen: true,
-        messageDialogTitle: action.payload.title,
-        messageDialogContent: action.payload.content,
-      };
-    case "HIDE_MESSAGE_DIALOG":
-      return { ...state, isMessageDialogOpen: false };
-    case "SET_LOADING":
-      return { ...state, isLoading: action.payload };
-    case "SHOW_STATUS_BAR":
-      return {
-        ...state,
-        isStatusBarVisible: true,
-        statusBarError: action.payload.isError,
-        statusBarMessage: action.payload.message,
-      };
-    case "HIDE_STATUS_BAR":
-      return { ...state, isStatusBarVisible: false };
+  case "SET_FILE":
+    return { ...state, file: action.payload };
+  case "SET_FILE_DATA":
+    return { ...state, fileData: action.payload };
+  case "SET_MASTER_KEY":
+    return { ...state, masterKey: action.payload };
+  case "TOGGLE_MASTER_KEY_DIALOG":
+    return { ...state, isMasterKeyDialogOpen: action.payload };
+  case "SHOW_MESSAGE_DIALOG":
+    return {
+      ...state,
+      isMessageDialogOpen: true,
+      messageDialogTitle: action.payload.title,
+      messageDialogContent: action.payload.content
+    };
+  case "HIDE_MESSAGE_DIALOG":
+    return { ...state, isMessageDialogOpen: false };
+  case "SET_LOADING":
+    return { ...state, isLoading: action.payload };
+  case "SHOW_STATUS_BAR":
+    return {
+      ...state,
+      isStatusBarVisible: true,
+      statusBarError: action.payload.isError,
+      statusBarMessage: action.payload.message
+    };
+  case "HIDE_STATUS_BAR":
+    return { ...state, isStatusBarVisible: false };
     // Action: Reset all state except master key.
-    case "RESET_STATE_EXCEPT_MASTER_KEY":
-      return {
-        ...initialState,
-        masterKey: state.masterKey,
-      };
+  case "RESET_STATE_EXCEPT_MASTER_KEY":
+    return {
+      ...initialState,
+      masterKey: state.masterKey
+    };
     // Reset entire component state (including master key)
-    case "RESET_STATE":
-      return initialState;
-    default:
-      return state;
+  case "RESET_STATE":
+    return initialState;
+  default:
+    return state;
   }
 }
 
@@ -101,14 +101,14 @@ const CredentialDecryptor = () => {
     isLoading,
     isStatusBarVisible,
     statusBarError,
-    statusBarMessage,
+    statusBarMessage
   } = state;
 
   // Utility to update status bar
   const setStatusBar = (isError, message) => {
     dispatch({
       type: "SHOW_STATUS_BAR",
-      payload: { isError, message },
+      payload: { isError, message }
     });
   };
 
@@ -117,14 +117,14 @@ const CredentialDecryptor = () => {
     dispatch({ type: "SET_LOADING", payload: isVisible });
   };
 
-  const handleFileUploadWrapper = async (event) => {
+  const handleFileUploadWrapper = async(event) => {
     await handleFileUpload(
       event,
       masterKey,
       setStatusBar,
       setBackDrop,
       (file) => validateFileTypeAndSize(file, setStatusBar),
-      async (file) =>
+      async(file) =>
         await processAndDisplayUploadedFile(
           file,
           (content) => dispatch({ type: "SET_FILE_DATA", payload: content }),
@@ -146,8 +146,8 @@ const CredentialDecryptor = () => {
       type: "SHOW_MESSAGE_DIALOG",
       payload: {
         title: "Master Key Required",
-        content: "Please add your master key to proceed.",
-      },
+        content: "Please add your master key to proceed."
+      }
     });
     return () => {
       dispatch({ type: "RESET_STATE" });
@@ -251,7 +251,7 @@ const CredentialDecryptor = () => {
             gap: { xs: 2, md: 1 },
             marginTop: 1,
             height: { xs: "80vh", md: "calc(100vh - 200px)" },
-            width: "100%",
+            width: "100%"
           }}
         >
           <SecretsList
@@ -275,8 +275,8 @@ const CredentialDecryptor = () => {
               isError: false,
               message: masterKey
                 ? "Master key updated successfully"
-                : "Master key added successfully",
-            },
+                : "Master key added successfully"
+            }
           });
         }}
         openMasterKeyDialog={isMasterKeyDialogOpen}

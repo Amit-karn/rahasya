@@ -9,18 +9,18 @@ import passwordManagerConfig from "../config/PasswordManagerConfig";
  * @returns {boolean} - Returns true if the file is valid, otherwise false.
  */
 const validateFileTypeAndSize = (file, setStatusBar) => {
-    if (file.size > passwordManagerConfig.fileSize) {
-        setStatusBar(
-            true,
-            `File size exceeds ${bytesToMB(passwordManagerConfig.fileSize)} MB`
-        );
-        return false;
-    }
-    if (!passwordManagerConfig.fileType.includes(file.type)) {
-        setStatusBar(true, "Invalid file type. Please upload the correct file.");
-        return false;
-    }
-    return true;
+  if (file.size > passwordManagerConfig.fileSize) {
+    setStatusBar(
+      true,
+      `File size exceeds ${bytesToMB(passwordManagerConfig.fileSize)} MB`
+    );
+    return false;
+  }
+  if (!passwordManagerConfig.fileType.includes(file.type)) {
+    setStatusBar(true, "Invalid file type. Please upload the correct file.");
+    return false;
+  }
+  return true;
 };
 
 /**
@@ -29,12 +29,12 @@ const validateFileTypeAndSize = (file, setStatusBar) => {
  * @returns {Promise<string>} - Resolves to the file content as text.
  */
 const readFileContent = (uploadedFile) => {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = (e) => resolve(e.target.result);
-        reader.onerror = () => reject(new Error("Error reading file"));
-        reader.readAsText(uploadedFile);
-    });
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => resolve(e.target.result);
+    reader.onerror = () => reject(new Error("Error reading file"));
+    reader.readAsText(uploadedFile);
+  });
 };
 
 /**
@@ -45,7 +45,7 @@ const readFileContent = (uploadedFile) => {
  * @returns {Promise<boolean>} - Returns true if the HMAC is valid.
  */
 async function validateFileHmac(masterKey, hmac, lines) {
-    return await verify(masterKey, hmac, lines.join("\n"));
+  return await verify(masterKey, hmac, lines.join("\n"));
 }
 
 /**
@@ -55,20 +55,34 @@ async function validateFileHmac(masterKey, hmac, lines) {
  * @returns {Promise<boolean>} - Returns true if the file format is valid.
  */
 async function validateFileIntegrity(masterKey, lines) {
-    if (lines.length === 0 || lines[lines.length - 1] !== passwordManagerConfig.encryptedFileIntegrityFooter) {
-        throw new Error("Invalid file format. Ensure the file contains the correct markers and structure.");
-    }
+  if (
+    lines.length === 0 ||
+    lines[lines.length - 1] !==
+      passwordManagerConfig.encryptedFileIntegrityFooter
+  ) {
+    throw new Error(
+      "Invalid file format. Ensure the file contains the correct markers and structure."
+    );
+  }
 
-    const hmacLine = lines[lines.length - 2].split(":");
-    if (hmacLine[0] !== "HMAC") {
-        throw new Error("Invalid file format. Ensure the file contains the correct markers and structure.");
-    }
+  const hmacLine = lines[lines.length - 2].split(":");
+  if (hmacLine[0] !== "HMAC") {
+    throw new Error(
+      "Invalid file format. Ensure the file contains the correct markers and structure."
+    );
+  }
 
-    const isValidHmac = await validateFileHmac(masterKey, hmacLine[1], lines.slice(0, lines.length - 2));
-    if (!isValidHmac) {
-        throw new Error("File has been tampered or Master key is invalid. Please retry with a valid file.");
-    }
-    return true;
+  const isValidHmac = await validateFileHmac(
+    masterKey,
+    hmacLine[1],
+    lines.slice(0, lines.length - 2)
+  );
+  if (!isValidHmac) {
+    throw new Error(
+      "File has been tampered or Master key is invalid. Please retry with a valid file."
+    );
+  }
+  return true;
 }
 
 /**
@@ -78,43 +92,45 @@ async function validateFileIntegrity(masterKey, lines) {
  * @returns {Promise<Array>} - Returns an array with status and result (success or error message).
  */
 async function readFileLineByLine(fileContent, encryptionKey) {
-    try {
-        const lines = fileContent.split("\n").map(line => line.trim());
-        while (lines.length > 0 && lines[lines.length - 1] === "") {
-            lines.pop();
-        }
-
-        if (!await validateFileIntegrity(encryptionKey, lines)) {
-            return ["error", "File integrity validation failed."];
-        }
-
-        const secretsLines = [];
-        const integrityLines = [];
-        let isInsideSecrets = false;
-        let isInsideIntegrity = false;
-
-        for (const line of lines) {
-            if (line === passwordManagerConfig.encryptedFileIntegrityHeader) {
-                isInsideSecrets = !isInsideSecrets;
-            } else if (line === passwordManagerConfig.encryptedFileIntegritySeparator) {
-                isInsideIntegrity = true;
-            } else if (line === passwordManagerConfig.encryptedFileIntegrityFooter) {
-                break;
-            } else if (isInsideIntegrity) {
-                integrityLines.push(line);
-            } else if (isInsideSecrets) {
-                secretsLines.push(line);
-            }
-        }
-
-        const secrets = processSecrets(secretsLines);
-        const integrity = processIntegrity(integrityLines);
-
-        return ["success", { secrets, integrity }];
-    } catch (error) {
-        console.error("Error reading file: " + error.message);
-        return ["error", error.message];
+  try {
+    const lines = fileContent.split("\n").map((line) => line.trim());
+    while (lines.length > 0 && lines[lines.length - 1] === "") {
+      lines.pop();
     }
+
+    if (!(await validateFileIntegrity(encryptionKey, lines))) {
+      return ["error", "File integrity validation failed."];
+    }
+
+    const secretsLines = [];
+    const integrityLines = [];
+    let isInsideSecrets = false;
+    let isInsideIntegrity = false;
+
+    for (const line of lines) {
+      if (line === passwordManagerConfig.encryptedFileIntegrityHeader) {
+        isInsideSecrets = !isInsideSecrets;
+      } else if (
+        line === passwordManagerConfig.encryptedFileIntegritySeparator
+      ) {
+        isInsideIntegrity = true;
+      } else if (line === passwordManagerConfig.encryptedFileIntegrityFooter) {
+        break;
+      } else if (isInsideIntegrity) {
+        integrityLines.push(line);
+      } else if (isInsideSecrets) {
+        secretsLines.push(line);
+      }
+    }
+
+    const secrets = processSecrets(secretsLines);
+    const integrity = processIntegrity(integrityLines);
+
+    return ["success", { secrets, integrity }];
+  } catch (error) {
+    console.error("Error reading file: " + error.message);
+    return ["error", error.message];
+  }
 }
 
 /**
@@ -125,27 +141,30 @@ async function readFileLineByLine(fileContent, encryptionKey) {
  * @param {Function} setStatusBar - Function to update the status bar.
  * @param {string} encryptionKey - The encryption key for processing the file.
  */
-const processAndDisplayUploadedFile = async (
-    uploadedFile,
-    setFileContentJson,
-    setFile,
-    setStatusBar,
-    encryptionKey
+const processAndDisplayUploadedFile = async(
+  uploadedFile,
+  setFileContentJson,
+  setFile,
+  setStatusBar,
+  encryptionKey
 ) => {
-    try {
-        const fileContent = await readFileContent(uploadedFile);
-        const [status, result] = await readFileLineByLine(fileContent, encryptionKey);
-        if (status === "error") {
-            setStatusBar(true, result);
-            return;
-        }
-        setFileContentJson(result);
-        setFile(uploadedFile);
-        setStatusBar(false, "File loaded successfully");
-    } catch {
-        setStatusBar(true, "Something went wrong. Please try again.");
+  try {
+    const fileContent = await readFileContent(uploadedFile);
+    const [status, result] = await readFileLineByLine(
+      fileContent,
+      encryptionKey
+    );
+    if (status === "error") {
+      setStatusBar(true, result);
+      return;
     }
-}
+    setFileContentJson(result);
+    setFile(uploadedFile);
+    setStatusBar(false, "File loaded successfully");
+  } catch {
+    setStatusBar(true, "Something went wrong. Please try again.");
+  }
+};
 
 /**
  * Handles the file upload process.
@@ -156,24 +175,24 @@ const processAndDisplayUploadedFile = async (
  * @param {Function} validateFile - Function to validate the file.
  * @param {Function} processFile - Function to process the file.
  */
-const handleFileUpload = async (
-    event,
-    encryptionKey,
-    setStatusBar,
-    setBackDrop,
-    validateFile,
-    processFile
+const handleFileUpload = async(
+  event,
+  encryptionKey,
+  setStatusBar,
+  setBackDrop,
+  validateFile,
+  processFile
 ) => {
-    if (!encryptionKey) {
-        setStatusBar(true, "Master key not added. Please add your master key.");
-        return;
-    }
-    setBackDrop(true);
-    const uploadedFile = event.target.files[0];
-    if (uploadedFile && validateFile(uploadedFile)) {
-        await processFile(uploadedFile);
-    }
-    setBackDrop(false);
+  if (!encryptionKey) {
+    setStatusBar(true, "Master key not added. Please add your master key.");
+    return;
+  }
+  setBackDrop(true);
+  const uploadedFile = event.target.files[0];
+  if (uploadedFile && validateFile(uploadedFile)) {
+    await processFile(uploadedFile);
+  }
+  setBackDrop(false);
 };
 
 /**
@@ -182,14 +201,14 @@ const handleFileUpload = async (
  * @returns {object} - Returns an object with key-value pairs.
  */
 function processSecrets(lines) {
-    const secrets = {};
-    lines.forEach((line) => {
-        const [key, value] = line.split(":").map(item => item.trim());
-        if (key && value) {
-            secrets[key] = value;
-        }
-    });
-    return secrets;
+  const secrets = {};
+  lines.forEach((line) => {
+    const [key, value] = line.split(":").map((item) => item.trim());
+    if (key && value) {
+      secrets[key] = value;
+    }
+  });
+  return secrets;
 }
 
 /**
@@ -198,14 +217,14 @@ function processSecrets(lines) {
  * @returns {object} - Returns an object with HMAC and DATE values.
  */
 function processIntegrity(lines) {
-    const integrity = {};
-    lines.forEach((line) => {
-        const [key, value] = line.split(":").map(item => item.trim());
-        if (key && value) {
-            integrity[key] = value;
-        }
-    });
-    return integrity;
+  const integrity = {};
+  lines.forEach((line) => {
+    const [key, value] = line.split(":").map((item) => item.trim());
+    if (key && value) {
+      integrity[key] = value;
+    }
+  });
+  return integrity;
 }
 
 /**
@@ -215,17 +234,17 @@ function processIntegrity(lines) {
  * @returns {Promise<string>} - Returns the generated HMAC.
  */
 async function generateFileHmac(fileContent, masterKey) {
-    const lines = fileContent.split("\n").map(line => line.trim());
-    while (lines.length > 0 && lines[lines.length - 1] === "") {
-        lines.pop();
-    }
+  const lines = fileContent.split("\n").map((line) => line.trim());
+  while (lines.length > 0 && lines[lines.length - 1] === "") {
+    lines.pop();
+  }
 
-    return await sign(masterKey, lines.join("\n"));
+  return await sign(masterKey, lines.join("\n"));
 }
 
 export {
-    validateFileTypeAndSize,
-    processAndDisplayUploadedFile,
-    handleFileUpload,
-    generateFileHmac
+  validateFileTypeAndSize,
+  processAndDisplayUploadedFile,
+  handleFileUpload,
+  generateFileHmac
 };

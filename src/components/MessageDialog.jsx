@@ -1,5 +1,13 @@
 import PropTypes from "prop-types";
-import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Button, Typography } from "@mui/material";
+import {
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+  Button,
+  Typography
+} from "@mui/material";
 
 const MessageDialog = ({ open, onClose, title, message, node }) => {
   return (

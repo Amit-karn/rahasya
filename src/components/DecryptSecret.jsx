@@ -9,7 +9,7 @@ import {
   IconButton,
   InputAdornment,
   Typography,
-  CircularProgress,
+  CircularProgress
 } from "@mui/material";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 import PropTypes from "prop-types";
@@ -24,43 +24,43 @@ const initialDecryptState = {
   showAad: false,
   showDecryptionDialog: false,
   showDecryptedSecret: false,
-  showDecryptedAad: false, 
+  showDecryptedAad: false,
   decryptionResult: {
     keyName: "",
     encryptedSecret: "",
     secretValue: "",
     algorithm: "",
     masterKey: "",
-    aad: "",
+    aad: ""
   },
   loading: false,
-  decryptionError: "",
+  decryptionError: ""
 };
 
 function decryptReducer(state, action) {
   switch (action.type) {
-    case "SET_AAD":
-      return { ...state, aad: action.payload };
-    case "SET_AAD_ERROR":
-      return { ...state, aadError: action.payload };
-    case "TOGGLE_SHOW_AAD":
-      return { ...state, showAad: !state.showAad };
-    case "SET_LOADING":
-      return { ...state, loading: action.payload };
-    case "SET_DECRYPTION_RESULT":
-      return { ...state, decryptionResult: action.payload };
-    case "SET_DECRYPTION_ERROR":
-      return { ...state, decryptionError: action.payload };
-    case "TOGGLE_SHOW_DECRYPTION_DIALOG":
-      return { ...state, showDecryptionDialog: action.payload };
-    case "TOGGLE_SHOW_DECRYPTED_SECRET":
-      return { ...state, showDecryptedSecret: !state.showDecryptedSecret };
-    case "TOGGLE_SHOW_DECRYPTED_AAD":
-      return { ...state, showDecryptedAad: !state.showDecryptedAad };
-    case "RESET_DECRYPT_STATE":
-      return initialDecryptState;
-    default:
-      return state;
+  case "SET_AAD":
+    return { ...state, aad: action.payload };
+  case "SET_AAD_ERROR":
+    return { ...state, aadError: action.payload };
+  case "TOGGLE_SHOW_AAD":
+    return { ...state, showAad: !state.showAad };
+  case "SET_LOADING":
+    return { ...state, loading: action.payload };
+  case "SET_DECRYPTION_RESULT":
+    return { ...state, decryptionResult: action.payload };
+  case "SET_DECRYPTION_ERROR":
+    return { ...state, decryptionError: action.payload };
+  case "TOGGLE_SHOW_DECRYPTION_DIALOG":
+    return { ...state, showDecryptionDialog: action.payload };
+  case "TOGGLE_SHOW_DECRYPTED_SECRET":
+    return { ...state, showDecryptedSecret: !state.showDecryptedSecret };
+  case "TOGGLE_SHOW_DECRYPTED_AAD":
+    return { ...state, showDecryptedAad: !state.showDecryptedAad };
+  case "RESET_DECRYPT_STATE":
+    return initialDecryptState;
+  default:
+    return state;
   }
 }
 
@@ -70,7 +70,7 @@ const DecryptSecret = ({
   algorithm,
   masterKey,
   keyName,
-  encryptedSecret,
+  encryptedSecret
 }) => {
   const [state, dispatch] = useReducer(decryptReducer, initialDecryptState);
   const {
@@ -82,7 +82,7 @@ const DecryptSecret = ({
     decryptionError,
     showDecryptionDialog,
     showDecryptedSecret,
-    showDecryptedAad, // Add this
+    showDecryptedAad // Add this
   } = state;
 
   // Add state sanitization
@@ -105,7 +105,7 @@ const DecryptSecret = ({
     ) {
       dispatch({
         type: "SET_AAD_ERROR",
-        payload: `AAD length must be between ${passwordManagerConfig.aadMinLength} and ${passwordManagerConfig.aadMaxLength} characters.`,
+        payload: `AAD length must be between ${passwordManagerConfig.aadMinLength} and ${passwordManagerConfig.aadMaxLength} characters.`
       });
     } else {
       dispatch({ type: "SET_AAD_ERROR", payload: "" });
@@ -113,7 +113,7 @@ const DecryptSecret = ({
     dispatch({ type: "SET_AAD", payload: value });
   };
 
-  const handleDecrypt = async () => {
+  const handleDecrypt = async() => {
     dispatch({ type: "SET_LOADING", payload: true });
     try {
       const decryptedOutput = await decrypt(masterKey, encryptedSecret, aad);
@@ -125,8 +125,8 @@ const DecryptSecret = ({
           algorithm,
           masterKey,
           aad,
-          encryptedSecret,
-        },
+          encryptedSecret
+        }
       });
       dispatch({ type: "SET_LOADING", payload: false });
       dispatch({ type: "TOGGLE_SHOW_DECRYPTION_DIALOG", payload: true });
@@ -136,7 +136,7 @@ const DecryptSecret = ({
       dispatch({ type: "TOGGLE_SHOW_DECRYPTION_DIALOG", payload: false });
       dispatch({
         type: "SET_DECRYPTION_ERROR",
-        payload: "Decryption failed. Please check your inputs.",
+        payload: "Decryption failed. Please check your inputs."
       });
     }
   };
@@ -267,8 +267,8 @@ const DecryptSecret = ({
                         {showAad ? <Visibility /> : <VisibilityOff />}
                       </IconButton>
                     </InputAdornment>
-                  ),
-                },
+                  )
+                }
               }}
             />
           )}
@@ -301,7 +301,7 @@ const DecryptSecret = ({
             display: "flex",
             flexDirection: "column",
             gap: 1,
-            wordBreak: "break-word",
+            wordBreak: "break-word"
           }}
         >
           <Typography variant="body1">
@@ -368,7 +368,7 @@ DecryptSecret.propTypes = {
   algorithm: PropTypes.string.isRequired,
   masterKey: PropTypes.string.isRequired,
   keyName: PropTypes.string.isRequired,
-  encryptedSecret: PropTypes.string.isRequired,
+  encryptedSecret: PropTypes.string.isRequired
 };
 
 export default DecryptSecret;

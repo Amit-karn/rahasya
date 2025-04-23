@@ -6,7 +6,7 @@ import {
   Button,
   Stack,
   IconButton,
-  Grid2 as Grid,
+  Grid2 as Grid
 } from "@mui/material";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import CheckIcon from "@mui/icons-material/Check";
@@ -62,7 +62,7 @@ const Base64Tool = () => {
               flexGrow: 1,
               border: "1px solid rgba(0, 0, 0, 0.23)",
               borderRadius: "4px",
-              padding: "10px",
+              padding: "10px"
             }}
           >
             {output}

@@ -7,38 +7,38 @@ const SecretItem = ({ keyName, secret, icon, handleClick, buttonContent }) => {
       sx={{
         display: "flex",
         gap: 1,
-        width: "100%",
+        width: "100%"
       }}
     >
-        <TextField
-          label="Key"
-          variant="outlined"
-          size="small"
-          value={keyName}
-          contentEditable={false}
-          fullWidth
-          sx={{ flex: 1 }}
-        />
-    
-        <TextField
-          label="Secret"
-          variant="outlined"
-          size="small"
-          value={secret}
-          contentEditable={false}
-          sx={{ flex: 2 }}
-        />
-        <Button
-          variant="contained"
-          color="primary"
-          endIcon={null}
-          startIcon={icon}
-          onClick={handleClick}
-          sx={{fontSize: 12}}
-          disableElevation
-        >
-            {buttonContent}
-        </Button>
+      <TextField
+        label="Key"
+        variant="outlined"
+        size="small"
+        value={keyName}
+        contentEditable={false}
+        fullWidth
+        sx={{ flex: 1 }}
+      />
+
+      <TextField
+        label="Secret"
+        variant="outlined"
+        size="small"
+        value={secret}
+        contentEditable={false}
+        sx={{ flex: 2 }}
+      />
+      <Button
+        variant="contained"
+        color="primary"
+        endIcon={null}
+        startIcon={icon}
+        onClick={handleClick}
+        sx={{ fontSize: 12 }}
+        disableElevation
+      >
+        {buttonContent}
+      </Button>
     </Box>
   );
 };
