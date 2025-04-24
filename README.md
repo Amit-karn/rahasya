@@ -2,6 +2,8 @@
 
 A completely offline, browser-based password manager that prioritizes security and privacy. रहस्य (Rahasya) means "secret" or "mystery" in Sanskrit.
 
+🔗 **Try it now**: [https://rahasya.vyoma.workers.dev/](https://rahasya.vyoma.workers.dev/)
+
 ## Key Principles
 
 ### 🔒 Zero Trust & Zero Storage
