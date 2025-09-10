@@ -5,7 +5,6 @@ export const cryptoConfig = {
   KeyDerivationFunction: "PBKDF2",
   keyUsage: ["encrypt", "decrypt"],
   keyAlgorithm: "AES-GCM",
-  masterKeyHashIteration: 1_000_000,
   aesGcmIvLengthInBytes: 12,
   isAadUsedLengthInBytes: 1,
   currentDateLengthInBytes: 10,

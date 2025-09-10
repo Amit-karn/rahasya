@@ -35,7 +35,7 @@ const initialDecryptState = {
   },
   loading: false,
   decryptionError: ""
-};
+}; 
 
 function decryptReducer(state, action) {
   switch (action.type) {
