@@ -25,7 +25,7 @@ const passwordManagerConfig = {
   homePage: "/",
   rahaysa: "रahasya",
   fileEncryptionIterations: 1000,
-  masterKeyHashIteration: 5_00_000,
+  masterKeyHashIteration: 10_000,
   masterKeyDefaultIteraion: 10_000,
   masterKeyIteraionList: [
     1_000, 10_000, 1_00_000, 5_00_000, 1_000_000, 5_000_000, 10_000_000, 20_000_000,
