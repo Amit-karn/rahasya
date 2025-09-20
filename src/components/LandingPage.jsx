@@ -19,7 +19,8 @@ const LandingPage = () => {
             color: "white",
             py: 4,
             px: 3,
-            borderRadius: 2
+            borderRadius: 2,
+            mx: { xs: 2, md: 0 }
           }}
         >
           <Typography
@@ -69,7 +70,7 @@ const LandingPage = () => {
             spacing={4}
             justifyContent="center"
             alignItems="stretch"
-            sx={{ width: "100%", zIndex: 2 }}
+            sx={{ width: "100%", zIndex: 2, m: { xs: 4, md: 0 } }}
           >
             {/* Encrypt Box */}
             <Paper
@@ -168,6 +169,7 @@ const LandingPage = () => {
           sx={{
             p: 4,
             mb: 6,
+            mx: { xs: 3, md: 0 },
             backgroundColor: "grey.50",
             borderRadius: 2
           }}
