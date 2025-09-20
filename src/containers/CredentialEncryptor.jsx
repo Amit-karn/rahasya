@@ -1,7 +1,7 @@
 import { useEffect, useReducer } from "react";
 import { Button, Stack, Box } from "@mui/material";
 import { KeyRounded } from "@mui/icons-material";
-import { BaseLayout } from "../components/BaseLayout";
+import BaseLayout from "../components/BaseLayout";
 import { SecretsList } from "../components/SecretsList";
 import FileUpload from "../components/FileUpload";
 import StatusBar from "../components/StatusBar";
@@ -289,6 +289,7 @@ const CredentialEncryptor = () => {
           }
           variant={encryptionKey ? "outlined" : "contained"}
           size="small"
+          sx={{ minWidth: { xs: 100, md: 150 } }}
         >
           {encryptionKey ? "Update Master Key" : "Add Master Key"}
         </Button>

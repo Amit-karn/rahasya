@@ -35,7 +35,7 @@ const initialDecryptState = {
   },
   loading: false,
   decryptionError: ""
-}; 
+};
 
 function decryptReducer(state, action) {
   switch (action.type) {
@@ -253,7 +253,7 @@ const DecryptSecret = ({
               value={aad}
               onChange={handleAadChange}
               error={!!aadError}
-              helperText={aadError}
+              helperText={aadError ? aadError : "Enter the same AAD (Additional Authenticated Data) that was used during encryption."}
               disabled={loading}
               slotProps={{
                 input: {

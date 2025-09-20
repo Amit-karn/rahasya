@@ -1,7 +1,7 @@
 import React, { useEffect, useReducer, useState } from "react";
 import { Button, Box, Stack } from "@mui/material";
 import { VpnKeyOutlined } from "@mui/icons-material";
-import { BaseLayout } from "../components/BaseLayout";
+import BaseLayout from "../components/BaseLayout";
 import { SecretsList } from "../components/SecretsList";
 import FileUpload from "../components/FileUpload";
 import StatusBar from "../components/StatusBar";
@@ -230,6 +230,7 @@ const CredentialDecryptor = () => {
 
   return (
     <BaseLayout
+      mode="decrypt"
       masterKey={masterKey}
       onUnloadMasterKey={() => {
         const userConfirmed = window.confirm(

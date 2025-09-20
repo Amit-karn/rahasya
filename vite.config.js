@@ -10,7 +10,7 @@ export default defineConfig({
       registerType: "prompt",
       manifest: {
         name: "Rahasya",
-        short_name: "र",
+        short_name: "Rahasya",
         icons: [
           {
             src: "/web-app-manifest-192x192.png",

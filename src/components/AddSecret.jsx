@@ -331,7 +331,19 @@ const AddSecret = ({
                 }
               />
             }
-            label="Use Additional Authenticated Data (AAD)"
+            label={
+              <span>
+                Use Additional Authenticated Data (AAD)
+                <a
+                  href="/aes-gcm"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ marginLeft: 8, fontSize: 13, color: "#1976d2", textDecoration: "underline", fontWeight: 500 }}
+                >
+                  (Read more)
+                </a>
+              </span>
+            }
           />
           {/* AAD Input */}
           {isAADEnabled && (
