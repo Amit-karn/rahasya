@@ -1,6 +1,6 @@
 # Rahasya - Zero Trust Password Manager
 
-A completely offline, browser-based password manager that prioritizes security and privacy. रहस्य (Rahasya) means "secret" or "mystery" in Sanskrit.
+Rahasya - A zero-trust, offline file-based password manager. No cloud storage—your encrypted vault is yours to store wherever you want. रहस्य (Rahasya) means "secret" or "mystery" in Sanskrit.
 
 🔗 **Try it now**: [https://rahasya.vyoma.workers.dev/](https://rahasya.vyoma.workers.dev/)
 

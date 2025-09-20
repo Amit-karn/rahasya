@@ -1,7 +1,7 @@
 {
   "name": "rahasya",
-  "version": "1.0.0",
-  "description": "Zero Trust Password Manager that works completely offline",
+  "version": "1.1.0",
+  "description": "Rahasya - A zero-trust, offline file-based password manager. No cloud storage—your encrypted vault is yours to store wherever you want.",
   "private": true,
   "type": "module",
   "author": {

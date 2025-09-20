@@ -1,4 +1,5 @@
 import { useEffect, useReducer } from "react";
+import { useLocation } from "react-router-dom";
 import PropTypes from "prop-types";
 import {
   TextField,
@@ -74,6 +75,7 @@ const AddMasterKey = ({
   setStatusBar
 }) => {
   const [state, dispatch] = useReducer(masterKeyReducer, initialState);
+  const location = useLocation();
 
   const {
     masterKeyInput,
@@ -171,6 +173,32 @@ const AddMasterKey = ({
             </Typography>
           </>
         )}
+        {location.pathname === "/decrypt" ? (
+          <Typography
+            variant="body2"
+            color="error"
+            sx={{ mb: 1, fontWeight: 600 }}
+          >
+            <span role="img" aria-label="warning">
+              ⚠️
+            </span>{" "}
+            Enter the <strong>same password</strong> you used for encryption. If
+            it does not match, you will not be able to decrypt your secrets.
+          </Typography>
+        ) : (
+          <Typography
+            variant="body2"
+            color="error"
+            sx={{ mb: 1, fontWeight: 600 }}
+          >
+            <span role="img" aria-label="warning">
+              ⚠️
+            </span>{" "}
+            Do <strong>not</strong> forget this password! You must enter the
+            exact same password to decrypt your secrets later. There is no way
+            to recover your data if you forget it.
+          </Typography>
+        )}
         <TextField
           required
           autoFocus
@@ -255,6 +283,11 @@ const AddMasterKey = ({
                 </MenuItem>
               ))}
             </Select>
+            <Typography variant="caption" color="text.secondary" sx={{ mt: 1 }}>
+              {location.pathname === "/decrypt"
+                ? "Enter the same iteration count you used for encryption. If it does not match, decryption will fail."
+                : "Choose an iteration count for password security. Higher is safer, but slower. Do not forget this value—you will need it for decryption."}
+            </Typography>
           </FormControl>
         )}
       </DialogContent>
