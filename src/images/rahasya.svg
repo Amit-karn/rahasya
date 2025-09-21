@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:svgjs="http://svgjs.dev/svgjs" width="32" height="32"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- Main Circle -->
+  <circle cx="16" cy="16" r="14" fill="#000000"></circle>
+  
+  <!-- Stylized 'र' (raa) in white -->
+  <path d="M11 10 H19 C20.5 10 22 11.5 22 13 C22 14.5 20.5 16 19 16 H15 L19 22" stroke="#FFFFFF" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg><style>@media (prefers-color-scheme: light) { :root { filter: contrast(1) brightness(1); } }
+@media (prefers-color-scheme: dark) { :root { filter: none; } }
+</style></svg>
