@@ -3,6 +3,7 @@ import { Box, Stack, Button, Typography, IconButton, useMediaQuery } from "@mui/
 import { HelpOutline } from "@mui/icons-material";
 import { Link, useLocation } from "react-router-dom";
 import HowItWorksDialog from "./HowItWorksDialog";
+import rahasyaLogo from "../images/rahasya.svg";
 
 const CommonHeader = () => {
   const [showHelp, setShowHelp] = useState(false);
@@ -27,7 +28,7 @@ const CommonHeader = () => {
               }}
             >
               <img
-                src="/favicon.svg"
+                src={rahasyaLogo}
                 alt="Rahasya Logo"
                 style={{ width: 36, height: 36, display: "block" }}
                 draggable={false}
