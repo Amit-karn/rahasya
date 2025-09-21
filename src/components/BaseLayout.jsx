@@ -7,7 +7,6 @@ import {
   isEmptyObj,
   maskMasterKey
 } from "../utils/DataUtils";
-import CommonHeader from "./CommonHeader";
 import DownloadFile from "./DownloadFile";
 
 const BaseLayout = ({
@@ -20,66 +19,63 @@ const BaseLayout = ({
   mode
 }) => {
   return (
-    <>
-      <CommonHeader />
-      <Container
-        maxWidth={false}
-        sx={{
-          padding: {
-            xs: 2,
-            sm: 3,
-            md: 4
-          },
-          width: "90%",
-          margin: "0 auto"
-        }}
+    <Container
+      maxWidth={false}
+      sx={{
+        padding: {
+          xs: 2,
+          sm: 3,
+          md: 4
+        },
+        width: "90%",
+        margin: "0 auto"
+      }}
+    >
+      {/* Header Actions and Main Actions */}
+      <Stack
+        direction="row"
+        justifyContent="space-between"
+        alignItems="center"
+        gap={{ xs: 3, md: 2 }}
       >
-        {/* Header Actions and Main Actions */}
+        {/* Header Actions */}
+        {headerActions}
+
+        {/* Main Actions */}
         <Stack
-          direction="row"
-          justifyContent="space-between"
-          alignItems="center"
-          gap={{ xs: 3, md: 2 }}
+          direction={{ xs: "column", md: "row" }}
+          spacing={2}
+          alignItems="flex-start"
+          justifyContent="flex-start"
+          sx={{
+            "& > *": {
+              width: { xs: "100%", md: "auto" },
+              minWidth: 0
+            }
+          }}
         >
-          {/* Header Actions */}
-          {headerActions}
+          {mode === "encrypt" && fileData && !isEmptyObj(fileData.secrets) && (
+            <DownloadFile content={generateFileContentForPreview(fileData)} />
+          )}
+          {mainActions}
 
-          {/* Main Actions */}
-          <Stack
-            direction={{ xs: "column", md: "row" }}
-            spacing={2}
-            alignItems="flex-start"
-            justifyContent="flex-start"
-            sx={{
-              "& > *": {
-                width: { xs: "100%", md: "auto" },
-                minWidth: 0
-              }
-            }}
-          >
-            {mode === "encrypt" && fileData && !isEmptyObj(fileData.secrets) && (
-              <DownloadFile content={generateFileContentForPreview(fileData)} />
-            )}
-            {mainActions}
-
-            {/* Display Masked Master Key */}
-            {masterKey && (
-              <Stack direction="row" spacing={1} alignItems="center">
-                <Typography variant="subtitle2" color="primary">
-                  Master Key: {maskMasterKey(masterKey)}
-                </Typography>
-                <IconButton size="small" onClick={onUnloadMasterKey}>
-                  <Close />
-                </IconButton>
-              </Stack>
-            )}
-          </Stack>
+          {/* Display Masked Master Key */}
+          {masterKey && (
+            <Stack direction="row" spacing={1} alignItems="center">
+              <Typography variant="subtitle2" color="primary">
+                Master Key: {maskMasterKey(masterKey)}
+              </Typography>
+              <IconButton size="small" onClick={onUnloadMasterKey}>
+                <Close />
+              </IconButton>
+            </Stack>
+          )}
         </Stack>
+      </Stack>
 
-        {/* Main Content */}
-        {children}
-      </Container>
-    </>
+      {/* Main Content */}
+      {children}
+    </Container>
   );
 };
 

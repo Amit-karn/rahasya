@@ -516,7 +516,7 @@ const HowItWorksDialog = ({ open, onClose }) => {
                 Initial Setup:
               </Typography>
               <Typography variant="body2" sx={{ pl: 2 }} gutterBottom>
-                Upload File → Enter Master Key (+AAD/iteration if used) → View Secrets
+                Upload File → Enter Master Key (iteration if changed while encryption) → View Secrets
               </Typography>
             </Box>
 
