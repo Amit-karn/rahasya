@@ -6,6 +6,7 @@ import LandingPage from "./components/LandingPage";
 import AesGcmInfo from "./components/AesGcmInfo";
 import NotFound from "./components/NotFound";
 import CryptoTools from "./containers/CryptoTools";
+import CommonHeader from "./components/CommonHeader";
 
 const App = () => {
   const theme = createTheme({
@@ -22,6 +23,7 @@ const App = () => {
   return (
     <ThemeProvider theme={theme}>
       <BrowserRouter>
+        <CommonHeader />
         <Routes>
           {/* Main Routes */}
           {/* Landing Page */}
